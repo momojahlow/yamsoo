@@ -33,16 +33,12 @@ Route::get('/', function () {
     ]);
 });
 
-// Routes d'authentification
-Route::middleware('guest')->group(function () {
-    Route::get('login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('login', [AuthController::class, 'login']);
-    Route::get('register', [AuthController::class, 'showRegister'])->name('register');
-    Route::post('register', [AuthController::class, 'register']);
+// Routes de test
+Route::get('/test-auth', function () {
+    return Inertia::render('TestAuth');
 });
 
 Route::middleware('auth')->group(function () {
-    Route::post('logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('check-auth', [AuthController::class, 'checkAuth'])->name('check-auth');
 });
 
