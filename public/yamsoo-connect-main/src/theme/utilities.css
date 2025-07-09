@@ -1,0 +1,62 @@
+
+@tailwind utilities;
+
+@layer utilities {
+  /* Z-index layers */
+  .layer-base {
+    z-index: 1;
+  }
+
+  .layer-overlay {
+    z-index: 10;
+  }
+
+  .layer-modal {
+    z-index: 20;
+  }
+
+  .layer-tooltip {
+    z-index: 30;
+  }
+
+  /* Better shadows */
+  .shadow-custom {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  /* Smooth transitions */
+  .transition-custom {
+    transition: all 0.3s ease;
+  }
+
+  /* Better focus states */
+  .focus-visible:focus {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+
+  /* Layout utilities */
+  .full-bleed {
+    width: 100vw;
+    margin-left: 50%;
+    transform: translateX(-50%);
+  }
+
+  /* Fix iOS momentum scrolling */
+  .scroll-container {
+    -webkit-overflow-scrolling: touch;
+    overflow-y: auto;
+  }
+
+  /* Grid system improvements */
+  .grid-base {
+    display: grid;
+    gap: 1rem;
+  }
+
+  @screen sm {
+    .grid-base {
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+  }
+}

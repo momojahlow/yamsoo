@@ -1,0 +1,746 @@
+{
+  "family": {
+    "requestRelation": "Demander une relation",
+    "relationLabel": "Demandez en tant que",
+    "treeNavigation": "Pour naviguer dans l'arbre, cliquez et glissez la souris dans la zone ci-dessous",
+    "horizontalScroll": "Faites défiler horizontalement pour voir tout l'arbre",
+    "selectRelation": "Sélectionnez une relation familiale",
+    "familyTree": "Arbre Généalogique",
+    "back": "Retour",
+    "loading": "Chargement de votre arbre familial...",
+    "emptyTree": "Votre arbre familial est vide",
+    "addRelatives": "Ajoutez des relations pour les voir dans votre arbre familial",
+    "treeInstructions": "Cliquez et faites glisser pour naviguer dans l'arbre",
+    "zoomControls": "Utilisez la molette de la souris pour zoomer et dézoomer",
+    "printTree": "Imprimer l'arbre",
+    "deleteRelation": "Supprimer la relation",
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer cette relation?",
+    "thisAction": "Cette action ne peut pas être annulée",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "zoomIn": "Zoomer",
+    "zoomOut": "Dézoomer",
+    "resetZoom": "Réinitialiser le zoom",
+    "legend": "Légende"
+  },
+  "common": {
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "confirm": "Confirmer",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "noData": "Aucune donnée disponible",
+    "search": "Rechercher...",
+    "create": "Créer",
+    "update": "Mettre à jour",
+    "view": "Voir",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "submit": "Soumettre",
+    "add": "Ajouter",
+    "remove": "Supprimer",
+    "close": "Fermer",
+    "open": "Ouvrir",
+    "options": "Options",
+    "actions": "Actions",
+    "filter": "Filtrer",
+    "reset": "Réinitialiser",
+    "apply": "Appliquer",
+    "clear": "Effacer",
+    "download": "Télécharger",
+    "upload": "Téléverser",
+    "import": "Importer",
+    "export": "Exporter",
+    "print": "Imprimer",
+    "today": "Aujourd'hui",
+    "yesterday": "Hier",
+    "tomorrow": "Demain",
+    "thisWeek": "Cette semaine",
+    "lastWeek": "La semaine dernière",
+    "nextWeek": "La semaine prochaine",
+    "thisMonth": "Ce mois-ci",
+    "lastMonth": "Le mois dernier",
+    "nextMonth": "Le mois prochain",
+    "thisYear": "Cette année",
+    "lastYear": "L'année dernière",
+    "nextYear": "L'année prochaine",
+    "allTime": "Tout le temps",
+    "selectAll": "Tout sélectionner",
+    "deselectAll": "Tout désélectionner",
+    "yes": "Oui",
+    "no": "Non",
+    "male": "Masculin",
+    "female": "Féminin",
+    "other": "Autre",
+    "information": "Information",
+    "warning": "Avertissement",
+    "errorOccurred": "Une erreur est survenue",
+    "pageNotFound": "Page non trouvée",
+    "unauthorized": "Non autorisé",
+    "forbidden": "Interdit",
+    "serverError": "Erreur serveur",
+    "noInternet": "Pas de connexion Internet",
+    "retry": "Réessayer",
+    "required": "Requis",
+    "invalid": "Invalide",
+    "tooShort": "Trop court",
+    "tooLong": "Trop long",
+    "minValue": "Valeur minimale",
+    "maxValue": "Valeur maximale",
+    "patternMismatch": "Motif incorrect",
+    "stepMismatch": "Pas incorrect",
+    "badInput": "Mauvaise entrée",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "firstName": "Prénom",
+    "lastName": "Nom de famille",
+    "phoneNumber": "Numéro de téléphone",
+    "address": "Adresse",
+    "city": "Ville",
+    "country": "Pays",
+    "postalCode": "Code postal",
+    "date": "Date",
+    "time": "Heure",
+    "dateTime": "Date et heure",
+    "duration": "Durée",
+    "amount": "Montant",
+    "quantity": "Quantité",
+    "percentage": "Pourcentage",
+    "description": "Description",
+    "notes": "Remarques",
+    "details": "Détails",
+    "status": "Statut",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "pending": "En attente",
+    "approved": "Approuvé",
+    "rejected": "Rejeté",
+    "completed": "Terminé",
+    "inProgress": "En cours",
+    "new": "Nouveau",
+    "old": "Ancien",
+    "high": "Élevé",
+    "medium": "Moyen",
+    "low": "Bas",
+    "priority": "Priorité",
+    "importance": "Importance",
+    "urgency": "Urgence",
+    "severity": "Sévérité",
+    "critical": "Critique",
+    "major": "Majeur",
+    "minor": "Mineur",
+    "trivial": "Trivial",
+    "blocker": "Bloquant",
+    "type": "Type",
+    "category": "Catégorie",
+    "source": "Source",
+    "destination": "Destination",
+    "location": "Emplacement",
+    "position": "Position",
+    "role": "Rôle",
+    "group": "Groupe",
+    "organization": "Organisation",
+    "department": "Département",
+    "team": "Équipe",
+    "project": "Projet",
+    "task": "Tâche",
+    "event": "Événement",
+    "meeting": "Réunion",
+    "appointment": "Rendez-vous",
+    "reminder": "Rappel",
+    "notification": "Notification",
+    "message": "Message",
+    "comment": "Commentaire",
+    "feedback": "Retour d'information",
+    "review": "Revue",
+    "rating": "Évaluation",
+    "score": "Score",
+    "level": "Niveau",
+    "version": "Version",
+    "build": "Construction",
+    "release": "Publication",
+    "environment": "Environnement",
+    "platform": "Plateforme",
+    "device": "Appareil",
+    "browser": "Navigateur",
+    "operatingSystem": "Système d'exploitation",
+    "ipAddress": "Adresse IP",
+    "userAgent": "Agent utilisateur",
+    "resolution": "Résolution",
+    "language": "Langue",
+    "currency": "Devise",
+    "timezone": "Fuseau horaire",
+    "theme": "Thème",
+    "light": "Clair",
+    "dark": "Sombre",
+    "system": "Système",
+    "auto": "Automatique",
+    "manual": "Manuel",
+    "default": "Par défaut",
+    "custom": "Personnalisé",
+    "none": "Aucun",
+    "all": "Tous",
+    "some": "Certains",
+    "every": "Chaque",
+    "each": "Chacun",
+    "one": "Un",
+    "two": "Deux",
+    "three": "Trois",
+    "four": "Quatre",
+    "five": "Cinq",
+    "six": "Six",
+    "seven": "Sept",
+    "eight": "Huit",
+    "nine": "Neuf",
+    "ten": "Dix",
+     "january": "Janvier",
+    "february": "Février",
+    "march": "Mars",
+    "april": "Avril",
+    "may": "Mai",
+    "june": "Juin",
+    "july": "Juillet",
+    "august": "Août",
+    "september": "Septembre",
+    "october": "Octobre",
+    "november": "Novembre",
+    "december": "Décembre",
+    "monday": "Lundi",
+    "tuesday": "Mardi",
+    "wednesday": "Mercredi",
+    "thursday": "Jeudi",
+    "friday": "Vendredi",
+    "saturday": "Samedi",
+    "sunday": "Dimanche"
+  },
+  "pages": {
+    "home": {
+      "title": "Accueil",
+      "description": "Bienvenue sur notre site web"
+    },
+    "about": {
+      "title": "À propos",
+      "description": "En savoir plus sur nous"
+    },
+    "contact": {
+      "title": "Contact",
+      "description": "Contactez-nous"
+    },
+     "profile": {
+      "title": "Profil",
+      "description": "Gérer votre profil"
+    },
+    "settings": {
+      "title": "Paramètres",
+      "description": "Configurer les paramètres de l'application"
+    },
+    "dashboard": {
+      "title": "Tableau de bord",
+      "description": "Vue d'ensemble de vos données"
+    },
+    "login": {
+      "title": "Se connecter",
+      "description": "Connectez-vous à votre compte"
+    },
+    "register": {
+      "title": "S'inscrire",
+      "description": "Créez un nouveau compte"
+    },
+    "forgotPassword": {
+      "title": "Mot de passe oublié",
+      "description": "Réinitialisez votre mot de passe"
+    },
+    "resetPassword": {
+      "title": "Réinitialiser le mot de passe",
+      "description": "Entrez votre nouveau mot de passe"
+    },
+    "verifyEmail": {
+      "title": "Vérifier l'e-mail",
+      "description": "Vérifiez votre adresse e-mail"
+    },
+    "logout": {
+      "title": "Se déconnecter",
+      "description": "Déconnectez-vous de votre compte"
+    },
+    "error": {
+      "title": "Erreur",
+      "description": "Une erreur est survenue"
+    },
+    "notFound": {
+      "title": "Non trouvé",
+      "description": "La page que vous recherchez n'existe pas"
+    },
+    "unauthorized": {
+      "title": "Non autorisé",
+      "description": "Vous n'êtes pas autorisé à accéder à cette page"
+    },
+    "forbidden": {
+      "title": "Interdit",
+      "description": "Vous n'avez pas la permission d'accéder à cette ressource"
+    },
+    "serverError": {
+      "title": "Erreur serveur",
+      "description": "Une erreur est survenue sur le serveur"
+    },
+     "family": {
+      "title": "Famille",
+      "description": "Gérer votre famille"
+    }
+  },
+   "components": {
+    "navbar": {
+      "home": "Accueil",
+      "about": "À propos",
+      "contact": "Contact",
+      "profile": "Profil",
+      "settings": "Paramètres",
+      "logout": "Se déconnecter"
+    },
+    "footer": {
+      "copyright": "Tous droits réservés"
+    },
+    "sidebar": {
+      "dashboard": "Tableau de bord",
+      "users": "Utilisateurs",
+      "products": "Produits",
+      "orders": "Commandes",
+      "settings": "Paramètres"
+    },
+    "dataTable": {
+      "rowsPerPage": "Lignes par page",
+      "of": "de"
+    },
+    "confirmDialog": {
+      "title": "Êtes-vous sûr?",
+      "content": "Cette action est irréversible.",
+      "confirm": "Confirmer",
+      "cancel": "Annuler"
+    },
+    "uploadDialog": {
+      "title": "Téléverser un fichier",
+      "selectFile": "Sélectionner un fichier",
+      "upload": "Téléverser",
+      "cancel": "Annuler"
+    },
+    "imageUploader": {
+      "title": "Téléverser une image",
+      "selectImage": "Sélectionner une image",
+      "upload": "Téléverser",
+      "cancel": "Annuler"
+    },
+    "datePicker": {
+      "today": "Aujourd'hui",
+      "clear": "Effacer",
+      "close": "Fermer"
+    },
+    "timePicker": {
+      "now": "Maintenant",
+      "clear": "Effacer",
+      "close": "Fermer"
+    },
+    "colorPicker": {
+      "clear": "Effacer",
+      "close": "Fermer"
+    },
+    "rating": {
+      "stars": "Étoiles"
+    },
+    "slider": {
+      "min": "Min",
+      "max": "Max"
+    },
+    "switch": {
+      "on": "Activé",
+      "off": "Désactivé"
+    },
+    "select": {
+      "placeholder": "Sélectionner une option",
+      "noOptions": "Aucune option disponible"
+    },
+    "autocomplete": {
+      "placeholder": "Rechercher...",
+      "noResults": "Aucun résultat trouvé"
+    },
+    "markdownEditor": {
+      "bold": "Gras",
+      "italic": "Italique",
+      "underline": "Souligné",
+      "strikethrough": "Barré",
+      "link": "Lien",
+      "image": "Image",
+      "code": "Code",
+      "quote": "Citation",
+      "list": "Liste",
+      "orderedList": "Liste ordonnée",
+      "taskList": "Liste de tâches",
+      "heading": "Titre",
+      "table": "Tableau",
+      "horizontalRule": "Règle horizontale",
+      "undo": "Annuler",
+      "redo": "Rétablir",
+      "fullscreen": "Plein écran",
+      "exitFullscreen": "Quitter le plein écran"
+    },
+    "codeEditor": {
+      "copy": "Copier",
+      "copied": "Copié"
+    },
+    "jsonEditor": {
+      "copy": "Copier",
+      "copied": "Copié"
+    },
+    "treeView": {
+      "expandAll": "Développer tout",
+      "collapseAll": "Réduire tout"
+    },
+    "map": {
+      "zoomIn": "Zoom avant",
+      "zoomOut": "Zoom arrière",
+      "resetView": "Réinitialiser la vue"
+    },
+    "calendar": {
+      "today": "Aujourd'hui",
+      "clear": "Effacer",
+      "close": "Fermer"
+    },
+    "kanban": {
+      "addCard": "Ajouter une carte",
+      "addColumn": "Ajouter une colonne"
+    },
+    "chat": {
+      "sendMessage": "Envoyer un message",
+      "placeholder": "Écrire un message..."
+    },
+    "form": {
+      "submit": "Soumettre",
+      "reset": "Réinitialiser",
+      "cancel": "Annuler"
+    },
+    "card": {
+      "expand": "Développer",
+      "collapse": "Réduire",
+      "close": "Fermer"
+    },
+    "alert": {
+      "close": "Fermer"
+    },
+    "badge": {
+      "new": "Nouveau"
+    },
+    "button": {
+      "loading": "Chargement..."
+    },
+    "link": {
+      "openInNewTab": "Ouvrir dans un nouvel onglet"
+    },
+    "avatar": {
+      "edit": "Modifier",
+      "delete": "Supprimer"
+    },
+    "skeleton": {
+      "loading": "Chargement..."
+    },
+    "progress": {
+      "loading": "Chargement..."
+    },
+    "spinner": {
+      "loading": "Chargement..."
+    },
+    "toast": {
+      "close": "Fermer"
+    },
+    "tooltip": {
+      "close": "Fermer"
+    },
+    "popover": {
+      "close": "Fermer"
+    },
+    "dialog": {
+      "close": "Fermer"
+    },
+    "menu": {
+      "close": "Fermer"
+    },
+    "tabs": {
+      "close": "Fermer"
+    },
+    "accordion": {
+      "expand": "Développer",
+      "collapse": "Réduire"
+    },
+    "carousel": {
+      "previous": "Précédent",
+      "next": "Suivant"
+    },
+    "pagination": {
+      "previous": "Précédent",
+      "next": "Suivant",
+      "page": "Page",
+      "of": "de"
+    },
+    "breadcrumbs": {
+      "home": "Accueil"
+    },
+    "backToTop": {
+      "backToTop": "Retour en haut"
+    },
+    "scrollable": {
+      "scrollable": "Faire défiler"
+    },
+    "resizable": {
+      "resizable": "Redimensionnable"
+    },
+    "draggable": {
+      "draggable": "Glisser-déposer"
+    },
+    "zoomable": {
+      "zoomable": "Zoomable"
+    },
+    "pannable": {
+      "pannable": "Déplaçable"
+    },
+    "rotatable": {
+      "rotatable": "Rotatif"
+    },
+    "croppable": {
+      "croppable": "Recadrable"
+    },
+    "sortable": {
+      "sortable": "Triable"
+    },
+    "filterable": {
+      "filterable": "Filtrable"
+    },
+    "searchable": {
+      "searchable": "Recherchable"
+    },
+    "editable": {
+      "editable": "Modifiable"
+    },
+    "copyable": {
+      "copyable": "Copiable"
+    },
+    "downloadable": {
+      "downloadable": "Téléchargeable"
+    },
+    "uploadable": {
+      "uploadable": "Téléversable"
+    },
+    "importable": {
+      "importable": "Importable"
+    },
+    "exportable": {
+      "exportable": "Exportable"
+    },
+    "printable": {
+      "printable": "Imprimable"
+    },
+    "responsive": {
+      "responsive": "Adaptatif"
+    },
+    "accessible": {
+      "accessible": "Accessible"
+    },
+    "localized": {
+      "localized": "Localisé"
+    },
+    "internationalized": {
+      "internationalized": "Internationalisé"
+    },
+    "themed": {
+      "themed": "Thématisé"
+    },
+    "customizable": {
+      "customizable": "Personnalisable"
+    },
+    "animated": {
+      "animated": "Animé"
+    },
+    "interactive": {
+      "interactive": "Interactif"
+    },
+    "realtime": {
+      "realtime": "Temps réel"
+    },
+    "offline": {
+      "offline": "Hors ligne"
+    },
+    "online": {
+      "online": "En ligne"
+    },
+    "secure": {
+      "secure": "Sécurisé"
+    },
+    "encrypted": {
+      "encrypted": "Chiffré"
+    },
+    "validated": {
+      "validated": "Validé"
+    },
+    "optimized": {
+      "optimized": "Optimisé"
+    },
+    "performant": {
+      "performant": "Performant"
+    },
+    "scalable": {
+      "scalable": "Évolutif"
+    },
+    "reliable": {
+      "reliable": "Fiable"
+    },
+    "robust": {
+      "robust": "Robuste"
+    },
+    "flexible": {
+      "flexible": "Flexible"
+    },
+    "versatile": {
+      "versatile": "Polyvalent"
+    },
+    "modern": {
+      "modern": "Moderne"
+    },
+    "clean": {
+      "clean": "Propre"
+    },
+    "simple": {
+      "simple": "Simple"
+    },
+    "intuitive": {
+      "intuitive": "Intuitif"
+    },
+    "userFriendly": {
+      "userFriendly": "Convivial"
+    },
+    "professional": {
+      "professional": "Professionnel"
+    },
+    "creative": {
+      "creative": "Créatif"
+    },
+    "innovative": {
+      "innovative": "Innovant"
+    },
+    "unique": {
+      "unique": "Unique"
+    },
+    "original": {
+      "original": "Original"
+    },
+    "premium": {
+      "premium": "Premium"
+    },
+    "exclusive": {
+      "exclusive": "Exclusif"
+    },
+    "official": {
+      "official": "Officiel"
+    },
+    "verified": {
+      "verified": "Vérifié"
+    },
+    "trusted": {
+      "trusted": "De confiance"
+    },
+    "recommended": {
+      "recommended": "Recommandé"
+    },
+    "popular": {
+      "popular": "Populaire"
+    },
+    "trending": {
+      "trending": "Tendance"
+    },
+    "latest": {
+      "latest": "Dernier"
+    },
+    "recent": "Récent",
+    "upcoming": "À venir",
+    "available": "Disponible",
+    "free": "Gratuit",
+    "openSource": "Open Source",
+    "community": "Communauté",
+    "support": "Support",
+    "documentation": "Documentation",
+    "tutorial": "Tutoriel",
+    "example": "Exemple",
+    "demo": "Démo",
+    "preview": "Aperçu",
+    "screenshot": "Capture d'écran",
+    "video": "Vidéo",
+    "audio": "Audio",
+    "file": "Fichier",
+    "image": "Image",
+    "text": "Texte",
+    "codeSnippet": "Extrait de code",
+    "data": "Données",
+    "statistics": "Statistiques",
+    "analytics": "Analytique",
+    "report": "Rapport",
+    "log": "Journal",
+    "activity": "Activité",
+    "history": "Historique",
+    "archive": "Archive",
+    "backup": "Sauvegarde",
+    "restore": "Restaurer",
+    "update": "Mettre à jour",
+    "upgrade": "Mettre à niveau",
+    "install": "Installer",
+    "uninstall": "Désinstaller"
+    },
+  "profile": {
+    "title": "Mon Profil",
+    "save": "Enregistrer",
+    "changePhoto": "Changer la photo",
+    "uploadPhoto": "Télécharger une photo",
+    "takePhoto": "Prendre une photo",
+    "uploading": "Téléchargement...",
+    "updateSuccess": "Profil mis à jour",
+    "updateSuccessMessage": "Votre profil a été mis à jour avec succès",
+    "updateError": "Erreur de mise à jour",
+    "noImageSelected": "Vous devez sélectionner une image à télécharger",
+    "userNotLoggedIn": "Utilisateur non connecté",
+    "photoUpdated": "Votre photo de profil a été mise à jour",
+    "unauthorized": "Accès non autorisé"
+  },
+  "form": {
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "email": "Email",
+    "mobile": "Téléphone",
+    "birthDate": "Date de naissance"
+  },
+  "gender": {
+    "label": "Genre",
+    "male": "Masculin",
+    "female": "Féminin"
+  },
+  "auth": {
+    "signIn": "Se connecter",
+    "createAccount": "Créer un compte",
+    "needAnAccount": "Vous n'avez pas de compte ?",
+    "alreadyHaveAccount": "Vous avez déjà un compte ?",
+    "signup": "Inscription",
+    "forgotPassword": "Mot de passe oublié ?",
+    "resetPassword": "Réinitialiser le mot de passe",
+    "connexion": "Connexion",
+    "subtitle": "Connectez-vous à votre compte Yamsoo",
+    "createFreeAccount": "Créer un compte gratuit",
+    "joinYamsooFree": "Rejoignez Yamsoo gratuitement",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe"
+  },
+  "terms": {
+    "text": "En vous inscrivant, vous acceptez nos",
+    "conditions": "Conditions d'utilisation",
+    "privacy": "Politique de confidentialité",
+    "and": "et",
+    "cookies": "Politique des cookies"
+  }
+}

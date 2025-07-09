@@ -1,0 +1,196 @@
+
+#root {
+  min-height: 100dvh;
+  width: 100%;
+}
+
+/* Base layout */
+.app-container {
+  display: flex;
+  min-height: 100dvh;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Content wrapper */
+.content-wrapper {
+  padding: 1rem;
+}
+
+@media (min-width: 768px) {
+  .content-wrapper {
+    padding: 2rem;
+  }
+}
+
+/* Prevent overscroll behavior on iOS */
+html, body {
+  width: 100%;
+  height: 100%;
+  overscroll-behavior: none;
+}
+
+/* Fixed positioning can cause issues with keyboard on iOS */
+@supports (-webkit-touch-callout: none) {
+  html, body {
+    position: relative;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Desktop positioning for better scrolling */
+@media (min-width: 768px) {
+  html, body {
+    position: fixed;
+    overflow: hidden;
+  }
+}
+
+/* Dragging state prevents text selection */
+body.dragging {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Better touch targets for mobile */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Safe areas for mobile devices with notches */
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-left {
+  padding-left: env(safe-area-inset-left, 0px);
+}
+
+.safe-right {
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+.safe-area {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* Custom scrollbar for WebKit browsers */
+.custom-scrollbar::-webkit-scrollbar {
+  width: var(--scrollbar-size, 8px);
+  height: var(--scrollbar-size, 8px);
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: var(--scrollbar-track, #f1f1f1);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb, rgba(155, 135, 245, 0.8));
+  border-radius: 4px;
+}
+
+/* Hide scrollbars but maintain functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
+/* Fix for input zoom on iOS */
+@media screen and (max-width: 768px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+  
+  /* Améliorer la taille des touches tactiles */
+  button, 
+  a, 
+  input[type="submit"],
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Réduire les marges sur mobile */
+  .container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+}
+
+/* Prevent pull-to-refresh on iOS */
+body {
+  overscroll-behavior-y: contain;
+}
+
+/* Fix for 100vh issue on mobile browsers */
+.h-screen, .min-h-screen {
+  height: 100dvh;
+}
+
+/* Improve scroll area for mobile */
+.scroll-container {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Remove any potential fixed bars or overlays */
+.scroll-area-viewport::after,
+.scroll-area-viewport::before {
+  display: none;
+}
+
+/* Better cursor experience for dragging */
+.cursor-grab {
+  cursor: grab;
+}
+
+.cursor-grabbing {
+  cursor: grabbing !important;
+}
+
+/* Prevent text selection during drag */
+.dragging * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+/* Better keyboard handling on iOS */
+@supports (-webkit-touch-callout: none) {
+  .pb-safe {
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+}
+
+/* Mobile navigation spacing */
+.mobile-nav-spacing {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 3.5rem);
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 4rem);
+}
+
+/* Mobile drawer handle */
+.mobile-drawer-handle {
+  width: 40px;
+  height: 5px;
+  border-radius: 3px;
+  background-color: #e2e8f0;
+  margin: 10px auto;
+}

@@ -1,0 +1,78 @@
+{
+  "family": {
+    "requestRelation": "Request Relation",
+    "relationLabel": "Request as",
+    "treeNavigation": "To navigate the tree, click and drag your mouse in the area below",
+    "horizontalScroll": "Scroll horizontally to see the entire tree",
+    "selectRelation": "Select a family relation",
+    "familyTree": "Family Tree",
+    "back": "Back",
+    "loading": "Loading your family tree...",
+    "emptyTree": "Your family tree is empty",
+    "addRelatives": "Add relatives to see them in your family tree",
+    "treeInstructions": "Click and drag to navigate the tree",
+    "zoomControls": "Use the mouse wheel to zoom in and out",
+    "printTree": "Print Tree",
+    "deleteRelation": "Delete Relation",
+    "confirmDelete": "Are you sure you want to delete this relation?",
+    "thisAction": "This action cannot be undone",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "resetZoom": "Reset zoom",
+    "legend": "Legend"
+  },
+  "profile": {
+    "title": "Profile",
+    "save": "Save",
+    "changePhoto": "Change Photo",
+    "uploadPhoto": "Upload Photo",
+    "takePhoto": "Take Photo",
+    "uploading": "Uploading...",
+    "updateSuccess": "Profile Updated",
+    "updateSuccessMessage": "Your profile has been successfully updated",
+    "updateError": "Update Error",
+    "noImageSelected": "You must select an image to upload",
+    "userNotLoggedIn": "User not logged in",
+    "photoUpdated": "Your profile photo has been updated",
+    "unauthorized": "Unauthorized access"
+  },
+  "form": {
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "mobile": "Phone Number",
+    "birthDate": "Birth Date"
+  },
+  "gender": {
+    "label": "Gender",
+    "male": "Masculine",
+    "female": "Feminine"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "createAccount": "Create Account",
+    "needAnAccount": "Don't have an account?",
+    "alreadyHaveAccount": "Already have an account?",
+    "signup": "Sign Up",
+    "forgotPassword": "Forgot Password?",
+    "resetPassword": "Reset Password",
+    "connexion": "Login",
+    "subtitle": "Sign in to your Yamsoo account",
+    "createFreeAccount": "Create a free account",
+    "joinYamsooFree": "Join Yamsoo for free",
+    "password": "Password",
+    "confirmPassword": "Confirm Password"
+  },
+  "terms": {
+    "text": "By signing up, you agree to our",
+    "conditions": "Terms of Use",
+    "privacy": "Privacy Policy",
+    "and": "and",
+    "cookies": "Cookie Policy"
+  },
+  "common": {
+    "loading": "Loading..."
+  }
+}

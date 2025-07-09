@@ -1,0 +1,100 @@
+
+@tailwind components;
+
+@layer components {
+  /* Better touch targets on mobile */
+  button, 
+  a {
+    @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
+  }
+
+  /* Improved form elements */
+  input, 
+  select, 
+  textarea {
+    @apply w-full rounded-md border border-input bg-background px-3 py-2;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary;
+    font-size: 16px !important;
+  }
+
+  /* Improved table responsiveness */
+  .table-responsive {
+    @apply w-full overflow-x-auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Better form responsiveness */
+  .form-group {
+    @apply space-y-2 mb-4;
+  }
+
+  .form-label {
+    @apply block text-sm font-medium text-gray-700;
+  }
+
+  .form-input {
+    @apply mt-1 block w-full rounded-md border-gray-300 shadow-sm;
+  }
+  
+  /* Auth container responsiveness */
+  .auth-container {
+    @apply flex items-center justify-center min-h-screen w-full;
+  }
+  
+  .auth-form {
+    @apply w-full max-w-md mx-auto;
+  }
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .container {
+    @apply px-3;
+  }
+
+  /* Improve touch targets on mobile */
+  button, a {
+    @apply p-2;
+  }
+
+  /* Adjust spacing for mobile */
+  .space-y > * + * {
+    @apply mt-3;
+  }
+
+  .space-x > * + * {
+    @apply ml-3;
+  }
+  
+  /* Fix text truncation in sidebar */
+  .sidebar-item-text {
+    @apply w-full whitespace-nowrap overflow-hidden text-ellipsis;
+  }
+  
+  /* Chat interface specific styles */
+  .chat-header {
+    @apply sticky top-0 z-30;
+  }
+  
+  .chat-messages {
+    @apply px-2;
+  }
+  
+  .chat-input-container {
+    @apply p-2;
+  }
+  
+  /* Message bubbles for better mobile display */
+  .message-bubble {
+    @apply max-w-[85%];
+  }
+}
+
+/* Specific chat fixes */
+.chat-input-wrapper {
+  @apply flex items-center gap-2;
+}
+
+.message-content {
+  @apply break-words;
+}
