@@ -33,6 +33,11 @@ Route::get('/', function () {
     ]);
 });
 
+// Route de test pour le CSS
+Route::get('/test-css', function () {
+    return Inertia::render('TestCSS');
+});
+
 // Routes d'authentification
 Route::middleware('guest')->group(function () {
     Route::get('login', [AuthController::class, 'showLogin'])->name('login');
