@@ -15,54 +15,8 @@ class AuthController extends Controller
         private AuthService $authService
     ) {}
 
-    public function showLogin(): Response
-    {
-        return Inertia::render('Auth/Login');
-    }
-
-    public function showRegister(): Response
-    {
-        return Inertia::render('Auth/Register');
-    }
-
-    public function login(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string',
-        ]);
-
-        if ($this->authService->login($validated['email'], $validated['password'])) {
-            $request->session()->regenerate();
-            return redirect()->intended(route('dashboard'));
-        }
-
-        return back()->withErrors([
-            'email' => 'Les identifiants fournis ne correspondent pas à nos enregistrements.',
-        ])->onlyInput('email');
-    }
-
-    public function register(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
-
-        $this->authService->register($validated);
-
-        return redirect()->route('dashboard');
-    }
-
-    public function logout(Request $request): RedirectResponse
-    {
-        $this->authService->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return redirect()->route('login');
-    }
+    // Méthodes d'authentification supprimées - utilisation de Laravel Breeze
+    // Les méthodes login, register, logout sont gérées par les contrôleurs Breeze
 
     public function checkAuth(): JsonResponse
     {

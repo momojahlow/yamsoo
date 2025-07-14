@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\FamilyController;
+use App\Http\Controllers\FamilyRelationController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SuggestionController;
 use App\Http\Controllers\NetworkController;
@@ -31,18 +32,12 @@ Route::get('/', function () {
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
     ]);
-});
+})->name('home');
 
-// Routes d'authentification
-Route::middleware('guest')->group(function () {
-    Route::get('login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('login', [AuthController::class, 'login']);
-    Route::get('register', [AuthController::class, 'showRegister'])->name('register');
-    Route::post('register', [AuthController::class, 'register']);
-});
+// Routes d'authentification - utilisation de Laravel Breeze
+// Les routes d'authentification sont définies dans routes/auth.php
 
 Route::middleware('auth')->group(function () {
-    Route::post('logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('check-auth', [AuthController::class, 'checkAuth'])->name('check-auth');
 });
 
@@ -84,13 +79,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('admin/messages/{message}', [AdminController::class, 'deleteMessage'])->name('admin.messages.delete');
     Route::delete('admin/families/{family}', [AdminController::class, 'deleteFamily'])->name('admin.families.delete');
 
+    // Routes pour les relations familiales
+    Route::get('family-relations', [FamilyRelationController::class, 'index'])->name('family-relations.index');
+    Route::post('family-relations', [FamilyRelationController::class, 'store'])->name('family-relations.store');
+    Route::post('family-relations/{requestId}/accept', [FamilyRelationController::class, 'accept'])->name('family-relations.accept');
+    Route::post('family-relations/{requestId}/reject', [FamilyRelationController::class, 'reject'])->name('family-relations.reject');
+    Route::get('users/search', [FamilyRelationController::class, 'searchUserByEmail'])->name('users.search-by-email');
+
     // Routes CRUD pour les entités
     Route::resource('profiles', ProfileController::class);
     Route::resource('messages', MessageController::class);
     Route::resource('families', FamilyController::class);
     Route::resource('notifications', NotificationController::class);
     Route::resource('suggestions', SuggestionController::class);
-    Route::resource('networks', NetworkController::class);
+    Route::get('networks', [FamilyRelationController::class, 'index'])->name('networks.index');
+    Route::resource('networks', NetworkController::class)->except(['index']);
 });
 
 require __DIR__.'/auth.php';

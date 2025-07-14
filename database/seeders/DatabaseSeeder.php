@@ -13,11 +13,37 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Seed les types de relations en premier
+        $this->call([
+            RelationshipTypesSeeder::class,
+        ]);
 
+        // Seed les utilisateurs avec leurs profils
+        $this->call([
+            UsersSeeder::class,
+        ]);
+
+        // Seed les relations familiales
+        $this->call([
+            FamilyRelationsSeeder::class,
+        ]);
+
+        // Seed les notifications
+        $this->call([
+            NotificationsSeeder::class,
+        ]);
+
+        // Seed les suggestions
+        $this->call([
+            SuggestionsSeeder::class,
+        ]);
+
+        // Créer un utilisateur de test pour le développement
         User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now(),
         ]);
     }
 }

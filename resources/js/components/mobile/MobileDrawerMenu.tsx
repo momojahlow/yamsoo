@@ -1,14 +1,13 @@
 
-import { useState, useEffect } from "react";
 import {
   Drawer,
   DrawerContent
 } from "@/components/ui/drawer";
-import { useProfile } from "@/hooks/useProfile";
+import { useProfile } from "@/hooks/useProfileSimple";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { Profile as NotificationProfile } from "@/types/notifications";
 import { useSuggestionCount } from "@/hooks/useSuggestionCount";
+import { logout } from "@/utils/auth";
 
 // Import the refactored components
 import { MobileDrawerHeader } from "./parts/MobileDrawerHeader";
@@ -37,24 +36,24 @@ export function MobileDrawerMenu({ open, onOpenChange }: MobileDrawerMenuProps) 
 
   const { suggestionCount } = useSuggestionCount(typedProfile);
 
-  const handleLogout = async () => {
+    const handleLogout = async () => {
     try {
       console.log("Tentative de déconnexion depuis le drawer mobile...");
-      const { error } = await supabase.auth.signOut();
 
-      if (error) {
-        throw error;
+      const success = await logout();
+
+      if (success) {
+        toast({
+          title: "Déconnexion réussie",
+          description: "Vous avez été déconnecté avec succès",
+          variant: "default",
+        });
+
+        // Close drawer when logging out
+        onOpenChange(false);
+      } else {
+        throw new Error('Erreur lors de la déconnexion');
       }
-
-      toast({
-        title: "Déconnexion réussie",
-        description: "Vous avez été déconnecté avec succès",
-        variant: "default",
-      });
-
-      // Close drawer when logging out
-      onOpenChange(false);
-      // Inertia.visit('/auth'); // This line was removed as per the edit hint
     } catch (error) {
       console.error("Erreur lors de la déconnexion:", error);
       toast({
@@ -65,8 +64,7 @@ export function MobileDrawerMenu({ open, onOpenChange }: MobileDrawerMenuProps) 
     }
   };
 
-  const handleNavigation = (path: string) => {
-    // Inertia.visit(path); // This line was removed as per the edit hint
+  const handleNavigation = () => {
     onOpenChange(false);
   };
 

@@ -31,16 +31,27 @@ class RegisteredUserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
+            'mobile' => 'required|string|max:20|unique:users,mobile',
+            'birth_date' => 'required|date|before:today',
+            'gender' => 'required|in:male,female',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
+        // Créer le nom complet pour la compatibilité
+        $fullName = trim($request->first_name . ' ' . $request->last_name);
+
         $user = User::create([
-            'name' => $request->name,
+            'name' => $fullName,
             'email' => $request->email,
+            'mobile' => $request->mobile,
             'password' => Hash::make($request->password),
         ]);
+
+        // Le profil sera créé automatiquement par l'Observer
+        // avec les informations détaillées (first_name, last_name, birth_date, gender)
 
         event(new Registered($user));
 

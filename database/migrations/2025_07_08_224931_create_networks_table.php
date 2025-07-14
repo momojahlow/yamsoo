@@ -13,7 +13,13 @@ return new class extends Migration
     {
         Schema::create('networks', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('connected_user_id')->constrained('users')->onDelete('cascade');
+            $table->enum('status', ['pending', 'accepted', 'blocked'])->default('pending');
             $table->timestamps();
+
+            // Éviter les doublons
+            $table->unique(['user_id', 'connected_user_id']);
         });
     }
 

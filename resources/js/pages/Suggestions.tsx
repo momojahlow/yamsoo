@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { EmptySuggestions } from '@/components/suggestions/EmptySuggestions';
 import { SuggestionActions } from '@/components/suggestions/SuggestionActions';
 import { RelationSelector } from '@/components/suggestions/RelationSelector';
+import AppLayout from '@/layouts/app-layout';
 
 interface Suggestion {
   id: number;
@@ -45,7 +46,7 @@ export default function Suggestions({ suggestions }: Props) {
   }
 
   return (
-    <>
+    <AppLayout>
       <Head title="Suggestions" />
 
       <div className="container mx-auto px-4 py-8">
@@ -208,6 +209,6 @@ export default function Suggestions({ suggestions }: Props) {
           </Card>
         )}
       </div>
-    </>
+    </AppLayout>
   );
 }

@@ -2,8 +2,9 @@ import { DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSep
 import { UserInfo } from '@/components/user-info';
 import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
 import { type User } from '@/types';
-import { Link, router } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import { LogOut, Settings } from 'lucide-react';
+import { route } from 'ziggy-js';
 
 interface UserMenuContentProps {
     user: User;
@@ -14,7 +15,8 @@ export function UserMenuContent({ user }: UserMenuContentProps) {
 
     const handleLogout = () => {
         cleanup();
-        router.flushAll();
+        // La déconnexion sera gérée par le Link avec method="post"
+        // Pas besoin de faire autre chose ici
     };
 
     return (

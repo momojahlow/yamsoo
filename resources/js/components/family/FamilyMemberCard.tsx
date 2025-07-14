@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { MessageSquare, Trash2 } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { Inertia } from '@inertiajs/inertia';
 
 interface FamilyMemberCardProps {
   id?: string;
@@ -14,26 +14,26 @@ interface FamilyMemberCardProps {
   style?: React.CSSProperties;
 }
 
-function getBackgroundColor(relation: string): string {
-  if (relation.includes('Grand-père') || relation.includes('Grand-mère')) {
+function getBackgroundColor(relation: string | null | undefined): string {
+  if (typeof relation === 'string' && (relation.includes('Grand-père') || relation.includes('Grand-mère'))) {
     return 'bg-purple-100 hover:bg-purple-200 border-purple-300';
   }
-  if (relation.includes('Père') || relation.includes('Mère')) {
+  if (typeof relation === 'string' && (relation.includes('Père') || relation.includes('Mère'))) {
     return 'bg-blue-100 hover:bg-blue-200 border-blue-300';
   }
-  if (relation.includes('Frère') || relation.includes('Sœur')) {
+  if (typeof relation === 'string' && (relation.includes('Frère') || relation.includes('Sœur'))) {
     return 'bg-green-100 hover:bg-green-200 border-green-300';
   }
   if (relation === 'Moi') {
     return 'bg-yellow-100 hover:bg-yellow-200 border-yellow-300';
   }
-  if (relation.includes('Fils') || relation.includes('Fille')) {
+  if (typeof relation === 'string' && (relation.includes('Fils') || relation.includes('Fille'))) {
     return 'bg-pink-100 hover:bg-pink-200 border-pink-300';
   }
-  if (relation.includes('Petit-fils') || relation.includes('Petite-fille')) {
+  if (typeof relation === 'string' && (relation.includes('Petit-fils') || relation.includes('Petite-fille'))) {
     return 'bg-orange-100 hover:bg-orange-200 border-orange-300';
   }
-  if (relation.includes('Mari') || relation.includes('Épouse')) {
+  if (typeof relation === 'string' && (relation.includes('Mari') || relation.includes('Épouse'))) {
     return 'bg-rose-100 hover:bg-rose-200 border-rose-300';
   }
   return 'bg-gray-100 hover:bg-gray-200 border-gray-300';
@@ -48,7 +48,6 @@ export function FamilyMemberCard({
   style
 }: FamilyMemberCardProps) {
   const bgColor = getBackgroundColor(relation);
-  const isMobile = useIsMobile();
 
   // Create initials from first and last name
   const nameParts = name.split(' ');
@@ -79,7 +78,7 @@ export function FamilyMemberCard({
       </Avatar>
       <div className="text-center w-full mt-1">
         <div className="font-medium truncate text-xs" title={name}>{name}</div>
-        <div className="text-xs text-gray-700 font-medium" title={relation}>{relation}</div>
+        <div className="text-xs font-bold text-blue-700 mt-1" title={relation}>{relation ?? '[relation absente]'}</div>
       </div>
       {(onDelete || relation !== 'Moi') && (
         <div className="flex gap-1 mt-1">

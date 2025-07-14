@@ -4,22 +4,28 @@ namespace App\Http\Controllers;
 
 use App\Models\Suggestion;
 use App\Models\User;
+use App\Services\SuggestionService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class SuggestionController extends Controller
 {
+    public function __construct(
+        private SuggestionService $suggestionService
+    ) {}
+
     public function index(Request $request): Response
     {
         $user = $request->user();
-        $suggestions = Suggestion::where('user_id', $user->id)
-            ->with('suggestedUser')
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $suggestions = $this->suggestionService->getUserSuggestions($user);
+        $pendingSuggestions = $this->suggestionService->getPendingSuggestions($user);
+        $acceptedSuggestions = $this->suggestionService->getAcceptedSuggestions($user);
 
         return Inertia::render('Suggestions', [
             'suggestions' => $suggestions,
+            'pendingSuggestions' => $pendingSuggestions,
+            'acceptedSuggestions' => $acceptedSuggestions,
         ]);
     }
 
@@ -38,23 +44,13 @@ class SuggestionController extends Controller
             return back()->withErrors(['error' => 'Vous ne pouvez pas vous suggérer vous-même.']);
         }
 
-        // Vérifier qu'il n'y a pas déjà une suggestion en cours
-        $existingSuggestion = Suggestion::where('user_id', $user->id)
-            ->where('suggested_user_id', $validated['suggested_user_id'])
-            ->where('status', 'pending')
-            ->first();
-
-        if ($existingSuggestion) {
-            return back()->withErrors(['error' => 'Une suggestion existe déjà pour cet utilisateur.']);
-        }
-
-        Suggestion::create([
-            'user_id' => $user->id,
-            'suggested_user_id' => $validated['suggested_user_id'],
-            'type' => $validated['type'],
-            'message' => $validated['message'],
-            'status' => 'pending',
-        ]);
+        // Utiliser le service pour créer la suggestion
+        $this->suggestionService->createSuggestion(
+            $user,
+            $validated['suggested_user_id'],
+            $validated['type'],
+            $validated['message'] ?? ''
+        );
 
         return back()->with('success', 'Suggestion envoyée avec succès.');
     }
@@ -65,7 +61,11 @@ class SuggestionController extends Controller
             'status' => 'required|in:accepted,rejected',
         ]);
 
-        $suggestion->update(['status' => $validated['status']]);
+        if ($validated['status'] === 'accepted') {
+            $this->suggestionService->acceptSuggestion($suggestion);
+        } else {
+            $this->suggestionService->rejectSuggestion($suggestion);
+        }
 
         $statusMessage = $validated['status'] === 'accepted' ? 'acceptée' : 'rejetée';
         return back()->with('success', "Suggestion {$statusMessage} avec succès.");
@@ -73,7 +73,7 @@ class SuggestionController extends Controller
 
     public function destroy(Suggestion $suggestion): \Illuminate\Http\RedirectResponse
     {
-        $suggestion->delete();
+        $this->suggestionService->deleteSuggestion($suggestion);
         return back()->with('success', 'Suggestion supprimée avec succès.');
     }
 }

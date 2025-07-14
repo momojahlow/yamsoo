@@ -1,6 +1,5 @@
 
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app/Sidebar";
+import AppLayout from '@/layouts/app-layout';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MobileNavBar } from "@/components/mobile/MobileNavBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,9 +52,8 @@ export default function Notifications({ notifications, unreadCount }: Notificati
   };
 
   return (
-    <SidebarProvider>
+    <AppLayout>
       <div className="min-h-screen flex w-full bg-background">
-        <AppSidebar />
         <main className="flex-1 p-4 md:p-8 md:ml-16 pb-20 md:pb-8">
           <div className="max-w-4xl mx-auto">
             <div className="flex justify-between items-center mb-8">
@@ -113,6 +111,6 @@ export default function Notifications({ notifications, unreadCount }: Notificati
         </main>
         {isMobile && <MobileNavBar />}
       </div>
-    </SidebarProvider>
+    </AppLayout>
   );
 }

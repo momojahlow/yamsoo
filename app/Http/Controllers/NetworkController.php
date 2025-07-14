@@ -4,30 +4,48 @@ namespace App\Http\Controllers;
 
 use App\Models\Network;
 use App\Models\User;
+use App\Services\NetworkService;
+use App\Services\SearchService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class NetworkController extends Controller
 {
+    public function __construct(
+        private NetworkService $networkService,
+        private SearchService $searchService
+    ) {}
+
     public function index(Request $request): Response
     {
         $user = $request->user();
 
-        // Récupérer tous les utilisateurs sauf l'utilisateur connecté
-        $users = User::where('id', '!=', $user->id)
-            ->with('profile')
-            ->get();
+        $users = $this->searchService->searchUsers('', $user, 20);
+        $connections = $this->networkService->getUserNetwork($user);
+        $connectedUsers = $this->networkService->getConnectedUsers($user);
+        $pendingConnections = $this->networkService->getPendingConnections($user);
 
-        // Récupérer les connexions existantes
-        $connections = Network::where('user_id', $user->id)
-            ->orWhere('connected_user_id', $user->id)
-            ->with(['user', 'connectedUser'])
-            ->get();
+        // Liste des IDs des membres de la famille
+        $familyMemberIds = [];
+        if ($user->family) {
+            $familyMemberIds = $user->family->members->pluck('id')->toArray();
+        }
+
+        $relationshipTypes = \App\Models\RelationshipType::all()->map(function($type) {
+            return [
+                'id' => $type->id,
+                'name_fr' => $type->name_fr,
+            ];
+        });
 
         return Inertia::render('Networks', [
             'users' => $users,
             'connections' => $connections,
+            'connectedUsers' => $connectedUsers,
+            'pendingConnections' => $pendingConnections,
+            'familyMemberIds' => $familyMemberIds,
+            'relationshipTypes' => $relationshipTypes,
         ]);
     }
 
@@ -44,31 +62,15 @@ class NetworkController extends Controller
             return back()->withErrors(['error' => 'Vous ne pouvez pas vous connecter à vous-même.']);
         }
 
-        // Vérifier qu'il n'y a pas déjà une connexion
-        $existingConnection = Network::where(function ($query) use ($user, $validated) {
-            $query->where('user_id', $user->id)
-                  ->where('connected_user_id', $validated['connected_user_id']);
-        })->orWhere(function ($query) use ($user, $validated) {
-            $query->where('user_id', $validated['connected_user_id'])
-                  ->where('connected_user_id', $user->id);
-        })->first();
+        // Utiliser le service pour créer la connexion
+        $this->networkService->createConnection($user, $validated['connected_user_id']);
 
-        if ($existingConnection) {
-            return back()->withErrors(['error' => 'Une connexion existe déjà avec cet utilisateur.']);
-        }
-
-        Network::create([
-            'user_id' => $user->id,
-            'connected_user_id' => $validated['connected_user_id'],
-            'status' => 'connected',
-        ]);
-
-        return back()->with('success', 'Connexion établie avec succès.');
+        return back()->with('success', 'Demande de connexion envoyée avec succès.');
     }
 
     public function destroy(Network $network): \Illuminate\Http\RedirectResponse
     {
-        $network->delete();
+        $this->networkService->removeConnection($network);
         return back()->with('success', 'Connexion supprimée avec succès.');
     }
 
@@ -77,16 +79,12 @@ class NetworkController extends Controller
         $user = $request->user();
         $search = $request->get('search', '');
 
-        $users = User::where('id', '!=', $user->id)
-            ->where(function ($query) use ($search) {
-                $query->where('name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%");
-            })
-            ->with('profile')
-            ->get();
+        $users = $this->searchService->searchUsers($search, $user, 20);
+        $connections = $this->networkService->getUserNetwork($user);
 
         return Inertia::render('Networks', [
             'users' => $users,
+            'connections' => $connections,
             'search' => $search,
         ]);
     }

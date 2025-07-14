@@ -1,16 +1,13 @@
 
-import { useState, useEffect } from "react";
 import { SidebarTrigger, SidebarContent, useSidebar } from "@/components/ui/sidebar";
-import { LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useProfile } from "@/hooks/useProfile";
+import { useProfile } from "@/hooks/useProfileSimple";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { SidebarAvatar } from "./sidebar/SidebarAvatar";
 import { SidebarMenuItems } from "./sidebar/SidebarMenuItems";
-import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { Profile as NotificationProfile } from "@/types/notifications";
 import { useSuggestionCount } from "@/hooks/useSuggestionCount";
+import { logout } from "@/utils/auth";
 
 export function AppSidebar() {
   const { toast } = useToast();
@@ -33,25 +30,21 @@ export function AppSidebar() {
   // Si on est sur mobile, ne pas afficher la sidebar
   if (isMobile) return null;
 
-  const handleLogout = async () => {
+    const handleLogout = async () => {
     try {
       console.log("Tentative de déconnexion...");
-      const { error } = await supabase.auth.signOut();
 
-      if (error) {
-        console.error('Erreur lors de la déconnexion:', error);
-        throw error;
+      const success = await logout();
+
+      if (success) {
+        toast({
+          title: "Déconnexion réussie",
+          description: "Vous avez été déconnecté avec succès",
+          variant: "default",
+        });
+      } else {
+        throw new Error('Erreur lors de la déconnexion');
       }
-
-      toast({
-        title: "Déconnexion réussie",
-        description: "Vous avez été déconnecté avec succès",
-        variant: "default",
-      });
-
-      // Redirection vers la page d'authentification après déconnexion réussie
-      console.log("Redirection vers la page d'authentification...");
-      window.location.href = "/auth";
     } catch (error) {
       console.error('Erreur détaillée lors de la déconnexion:', error);
       toast({

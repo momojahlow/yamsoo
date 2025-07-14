@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('suggestions', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('suggested_user_id')->constrained('users')->onDelete('cascade');
+            $table->string('type'); // Type de suggestion
+            $table->enum('status', ['pending', 'accepted', 'rejected'])->default('pending');
+            $table->text('message')->nullable();
             $table->timestamps();
         });
     }
