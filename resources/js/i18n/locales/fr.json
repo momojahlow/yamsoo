@@ -1,7 +1,7 @@
 {
   "family": {
     "requestRelation": "Demander une relation",
-    "relationLabel": "Demandez en tant que",
+    "relationLabel": "Ajoutez en tant que",
     "treeNavigation": "Pour naviguer dans l'arbre, cliquez et glissez la souris dans la zone ci-dessous",
     "horizontalScroll": "Faites défiler horizontalement pour voir tout l'arbre",
     "selectRelation": "Sélectionnez une relation familiale",

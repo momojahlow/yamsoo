@@ -6,6 +6,7 @@ import { MobileNavBar } from "@/components/mobile/MobileNavBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { router } from "@inertiajs/react";
 import {
   Users,
   MessageSquare,
@@ -49,6 +50,26 @@ interface DashboardProps {
 const Dashboard = ({ user, profile, notifications, messages, unreadNotifications }: DashboardProps) => {
   const isMobile = useIsMobile();
 
+  // Navigation functions for clickable cards
+  const handleCardClick = (cardType: string) => {
+    switch (cardType) {
+      case 'family':
+        router.visit('/famille');
+        break;
+      case 'messages':
+        router.visit('/messagerie');
+        break;
+      case 'notifications':
+        router.visit('/notifications');
+        break;
+      case 'relations':
+        router.visit('/reseaux');
+        break;
+      default:
+        break;
+    }
+  };
+
   const stats = [
     {
       title: "Membres de famille",
@@ -56,7 +77,8 @@ const Dashboard = ({ user, profile, notifications, messages, unreadNotifications
       icon: Users,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
-      change: "+2 ce mois"
+      change: "+2 ce mois",
+      onClick: () => handleCardClick('family')
     },
     {
       title: "Messages",
@@ -64,7 +86,8 @@ const Dashboard = ({ user, profile, notifications, messages, unreadNotifications
       icon: MessageSquare,
       color: "text-green-600",
       bgColor: "bg-green-50",
-      change: "+5 aujourd'hui"
+      change: "+5 aujourd'hui",
+      onClick: () => handleCardClick('messages')
     },
     {
       title: "Notifications",
@@ -72,7 +95,8 @@ const Dashboard = ({ user, profile, notifications, messages, unreadNotifications
       icon: Bell,
       color: "text-purple-600",
       bgColor: "bg-purple-50",
-      change: unreadNotifications > 0 ? `${unreadNotifications} non lues` : "À jour"
+      change: unreadNotifications > 0 ? `${unreadNotifications} non lues` : "À jour",
+      onClick: () => handleCardClick('notifications')
     },
     {
       title: "Relations",
@@ -80,7 +104,8 @@ const Dashboard = ({ user, profile, notifications, messages, unreadNotifications
       icon: Heart,
       color: "text-red-600",
       bgColor: "bg-red-50",
-      change: "+1 cette semaine"
+      change: "+1 cette semaine",
+      onClick: () => handleCardClick('relations')
     }
   ];
 
@@ -117,7 +142,11 @@ const Dashboard = ({ user, profile, notifications, messages, unreadNotifications
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               {stats.map((stat, index) => (
-                <Card key={index} className="border-0 shadow-sm hover:shadow-md transition-shadow">
+                <Card
+                  key={index}
+                  className="border-0 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer hover:scale-105"
+                  onClick={stat.onClick}
+                >
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
@@ -131,7 +160,7 @@ const Dashboard = ({ user, profile, notifications, messages, unreadNotifications
                           {stat.change}
                         </p>
                       </div>
-                      <div className={`p-3 rounded-lg ${stat.bgColor}`}>
+                      <div className={`p-3 rounded-lg ${stat.bgColor} transition-colors`}>
                         <stat.icon className={`w-6 h-6 ${stat.color}`} />
                       </div>
                     </div>
@@ -141,58 +170,56 @@ const Dashboard = ({ user, profile, notifications, messages, unreadNotifications
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Profile Section */}
+              {/* Profile Summary */}
               <div className="lg:col-span-2">
                 <Card className="border-0 shadow-sm">
                   <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
-                        <Users className="w-4 h-4 text-blue-600" />
+                    <CardTitle className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                          <Users className="w-4 h-4 text-blue-600" />
+                        </div>
+                        Mon Profil
                       </div>
-                      Mon Profil
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => router.visit('/profil')}
+                      >
+                        <ArrowRight className="w-4 h-4" />
+                      </Button>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                                         <div className="flex items-start space-x-4 mb-6">
-                       <ProfileAvatar
-                         avatarUrl={profile?.avatar || null}
-                         firstName={profile?.first_name || ""}
-                         lastName={profile?.last_name || ""}
-                         uploading={false}
-                         onAvatarUpload={() => {}}
-                       />
+                    <div className="flex items-start space-x-4">
+                      <ProfileAvatar
+                        avatarUrl={profile?.avatar || null}
+                        firstName={profile?.first_name || ""}
+                        lastName={profile?.last_name || ""}
+                        uploading={false}
+                        onAvatarUpload={() => {}}
+                      />
                       <div className="flex-1">
                         <h3 className="text-lg font-semibold">
                           {profile?.first_name && profile?.last_name
                             ? `${profile.first_name} ${profile.last_name}`
                             : user?.name || "Utilisateur"}
                         </h3>
-                        <p className="text-gray-600 dark:text-gray-400 text-sm">
+                        <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">
                           {profile?.bio || "Aucune bio disponible"}
                         </p>
-                        <div className="flex items-center mt-2 space-x-2">
+                        <div className="flex items-center space-x-2 mb-4">
                           <Badge variant="secondary">Membre actif</Badge>
                           <Badge variant="outline">Famille connectée</Badge>
                         </div>
+                        <Button
+                          onClick={() => router.visit('/profil')}
+                          className="w-full md:w-auto"
+                        >
+                          Voir mon profil complet
+                        </Button>
                       </div>
                     </div>
-
-                                         {profile && (
-                       <ProfileForm
-                         profile={{
-                           first_name: profile.first_name || "",
-                           last_name: profile.last_name || "",
-                           email: profile.email || "",
-                           mobile: profile.mobile || "",
-                           birth_date: profile.birth_date || "",
-                           gender: profile.gender || "",
-                           avatar_url: profile.avatar_url || profile.avatar || null
-                         }}
-                         onSubmit={() => {}}
-                         onInputChange={() => {}}
-                         onGenderChange={() => {}}
-                       />
-                     )}
                   </CardContent>
                 </Card>
               </div>

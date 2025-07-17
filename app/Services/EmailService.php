@@ -34,6 +34,7 @@ class EmailService
             'accepter' => $accepter,
             'requester' => $requester,
             'relationshipType' => $relationshipType,
+            'message' => null, // Pas de message personnalisé pour l'acceptation
         ], function (Message $message) use ($requester) {
             $message->to($requester->email)
                     ->subject('Votre demande de relation familiale a été acceptée');

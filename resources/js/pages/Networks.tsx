@@ -56,7 +56,7 @@ interface RelationshipType {
   name: string; // toujours string, valeur par défaut '' si absente
   name_fr: string;
   gender: string; // toujours string, valeur par défaut '' si absente
-  requires_mother_name?: boolean;
+  requires_mother_name: boolean;
 }
 
 interface ExistingRelation {
@@ -76,12 +76,21 @@ interface PendingRequest {
   created_at: string;
 }
 
+interface SentRequest {
+  id: number;
+  target_user_id: number;
+  target_user_email: string;
+  relationship_name: string;
+  created_at: string;
+}
+
 interface Props {
   users: User[];
   connections: Connection[];
   relationshipTypes: RelationshipType[];
   existingRelations: ExistingRelation[];
   pendingRequests: PendingRequest[];
+  sentRequests: SentRequest[];
   search?: string;
   familyMemberIds?: number[];
 }
@@ -92,6 +101,7 @@ export default function Networks({
   relationshipTypes,
   existingRelations,
   pendingRequests,
+  sentRequests,
   search = '',
   familyMemberIds = [],
 }: Props) {
@@ -102,6 +112,7 @@ export default function Networks({
   const safeConnections = connections || [];
   const safeExistingRelations = existingRelations || [];
   const safePendingRequests = pendingRequests || [];
+  const safeSentRequests = sentRequests || [];
   const safeRelationshipTypes = relationshipTypes || [];
 
   const filteredUsers = safeUsers.filter(user =>
@@ -145,6 +156,30 @@ export default function Networks({
       onError: () => {
         setIsSubmitting((prev) => ({ ...prev, [userId]: false }));
         toast({ title: 'Erreur', description: 'Impossible d\'envoyer la demande.' });
+      }
+    });
+  };
+
+  const handleAcceptRequest = (requestId: number) => {
+    router.post(`/family-relations/${requestId}/accept`, {}, {
+      onSuccess: () => {
+        toast({ title: 'Demande acceptée !', description: 'La relation a été acceptée avec succès.' });
+        router.reload({ only: ['pendingRequests', 'existingRelations', 'connections'] });
+      },
+      onError: () => {
+        toast({ title: 'Erreur', description: 'Impossible d\'accepter la demande.' });
+      }
+    });
+  };
+
+  const handleRejectRequest = (requestId: number) => {
+    router.post(`/family-relations/${requestId}/reject`, {}, {
+      onSuccess: () => {
+        toast({ title: 'Demande rejetée', description: 'La demande a été rejetée.' });
+        router.reload({ only: ['pendingRequests', 'existingRelations', 'connections'] });
+      },
+      onError: () => {
+        toast({ title: 'Erreur', description: 'Impossible de rejeter la demande.' });
       }
     });
   };
@@ -229,10 +264,22 @@ export default function Networks({
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-orange-100 text-sm font-medium">En attente</p>
+                        <p className="text-orange-100 text-sm font-medium">Reçues</p>
                         <p className="text-3xl font-bold">{safePendingRequests.length}</p>
                       </div>
                       <Clock className="w-8 h-8 text-orange-200" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white cursor-pointer hover:scale-105 transition-transform" onClick={() => scrollToSection('sent-section')}>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-blue-100 text-sm font-medium">Envoyées</p>
+                        <p className="text-3xl font-bold">{safeSentRequests.length}</p>
+                      </div>
+                      <Clock className="w-8 h-8 text-blue-200" />
                     </div>
                   </CardContent>
                 </Card>
@@ -280,25 +327,25 @@ export default function Networks({
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {safeExistingRelations.map((relation, index) => (
-                      <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white dark:bg-gray-800">
+                      <Card key={index} className="border-0 shadow-sm hover:shadow-md transition-all duration-200 bg-white dark:bg-gray-800 h-fit">
                         <CardContent className="p-6">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center mb-2">
-                                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mr-3">
-                                  <span className="text-white font-semibold text-sm">
-                                    {relation.related_user_name.charAt(0).toUpperCase()}
-                                  </span>
-                                </div>
-                                <div>
-                                  <p className="font-semibold text-gray-900 dark:text-white">{relation.related_user_name}</p>
-                                  <p className="text-sm text-gray-600 dark:text-gray-400">{relation.related_user_email}</p>
-                                </div>
-                              </div>
+                          <div className="flex items-start space-x-4">
+                            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center flex-shrink-0">
+                              <span className="text-white font-semibold text-sm">
+                                {relation.related_user_name.charAt(0).toUpperCase()}
+                              </span>
                             </div>
-                            <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
-                              {relation.relationship_name}
-                            </Badge>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-gray-900 dark:text-white truncate">
+                                {relation.related_user_name}
+                              </h3>
+                              <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                                {relation.related_user_email}
+                              </p>
+                              <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 mt-2 inline-block">
+                                {relation.relationship_name}
+                              </Badge>
+                            </div>
                           </div>
                         </CardContent>
                       </Card>
@@ -307,14 +354,14 @@ export default function Networks({
                 </div>
               )}
 
-              {/* Demandes en attente */}
+                            {/* Demandes en attente */}
               {safePendingRequests.length > 0 && (
                 <div className="mb-8" id="pending-section">
                   <div className="flex items-center mb-6">
                     <div className="w-8 h-8 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center mr-3">
                       <Clock className="w-4 h-4 text-orange-600" />
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Demandes en attente</h3>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Demandes reçues</h3>
                   </div>
                   <div className="space-y-4">
                     {safePendingRequests.map((request) => (
@@ -334,9 +381,9 @@ export default function Networks({
                                 </div>
                               </div>
                               <div className="ml-16">
-                                <p className="text-sm mb-2">
-                                  Souhaite être votre <Badge variant="outline" className="ml-1">{request.relationship_name}</Badge>
-                                </p>
+                                <div className="text-sm mb-2">
+                                  Vous a ajouté en tant que <Badge variant="outline" className="ml-1">{request.relationship_name}</Badge>
+                                </div>
                                 {request.message && (
                                   <p className="text-sm text-gray-600 dark:text-gray-400 italic mb-2">"{request.message}"</p>
                                 )}
@@ -346,14 +393,71 @@ export default function Networks({
                               </div>
                             </div>
                             <div className="flex gap-3 ml-6">
-                              <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+                                onClick={() => handleRejectRequest(request.id)}
+                              >
                                 <XCircle className="w-4 h-4 mr-1" />
                                 Rejeter
                               </Button>
-                              <Button size="sm" className="bg-green-600 hover:bg-green-700 shadow-md">
+                              <Button
+                                size="sm"
+                                className="bg-green-600 hover:bg-green-700 shadow-md"
+                                onClick={() => handleAcceptRequest(request.id)}
+                              >
                                 <CheckCircle className="w-4 h-4 mr-1" />
                                 Accepter
                               </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Demandes envoyées */}
+              {safeSentRequests.length > 0 && (
+                <div className="mb-8" id="sent-section">
+                  <div className="flex items-center mb-6">
+                    <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mr-3">
+                      <Clock className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Demandes envoyées</h3>
+                  </div>
+                  <div className="space-y-4">
+                    {safeSentRequests.map((request) => (
+                      <Card key={request.id} className="border-0 shadow-lg bg-white dark:bg-gray-800">
+                        <CardContent className="p-6">
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center mb-3">
+                                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mr-4">
+                                  <span className="text-white font-semibold">
+                                    {request.target_user_email.charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                                <div>
+                                  <p className="font-semibold text-gray-900 dark:text-white">{request.target_user_email}</p>
+                                  <p className="text-sm text-gray-600 dark:text-gray-400">En attente de réponse</p>
+                                </div>
+                              </div>
+                              <div className="ml-16">
+                                <div className="text-sm mb-2">
+                                  Demande de relation en tant que <Badge variant="outline" className="ml-1">{request.relationship_name}</Badge>
+                                </div>
+                                <p className="text-xs text-gray-500 dark:text-gray-500">
+                                  Envoyée le {new Date(request.created_at).toLocaleDateString('fr-FR')}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center ml-6">
+                              <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                                En attente
+                              </Badge>
                             </div>
                           </div>
                         </CardContent>
@@ -401,7 +505,8 @@ export default function Networks({
                   const isAlreadyFamily = familyMemberIds.includes(user.id);
                   const isExistingRelation = safeExistingRelations.some(rel => rel.related_user_email === user.email);
                   const isPending = safePendingRequests.some(req => req.requester_email === user.email);
-                  const disableButton = isAlreadyFamily || isExistingRelation || isPending;
+                  const hasSentRequest = safeSentRequests.some(req => req.target_user_email === user.email);
+                  const disableButton = isAlreadyFamily || isExistingRelation || isPending || hasSentRequest;
 
                   return (
                     <Card key={user.id} className="rounded-2xl shadow-md border border-gray-100 p-6 flex flex-col items-center">
@@ -424,7 +529,7 @@ export default function Networks({
                         <div className="text-xs text-gray-400 mb-2 text-center">{genderLabel}</div>
                       </div>
                       <div className="w-full mt-2">
-                        <label className="block text-sm font-semibold mb-1">Demandez en tant que</label>
+                        <label className="block text-sm font-semibold mb-1">Ajoutez en tant que</label>
                         <Select value={selectedRelation} onValueChange={(value) => handleSelectChange(user.id, value)}>
                           <SelectTrigger className="w-full">
                             <SelectValue placeholder="Sélectionner une relation familiale" />
@@ -445,9 +550,11 @@ export default function Networks({
                         >
                           {isAlreadyFamily || isExistingRelation
                             ? "Déjà en famille"
-                            : isPending
-                              ? "Invitation envoyée"
-                              : "Demander une relation"}
+                            : hasSentRequest
+                              ? "Demande en cours"
+                              : isPending
+                                ? "Invitation reçue"
+                                : "Demander une relation"}
                         </Button>
                         <Button
                           variant="outline"

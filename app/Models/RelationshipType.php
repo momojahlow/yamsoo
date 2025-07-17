@@ -8,8 +8,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class RelationshipType extends Model
 {
     protected $fillable = [
-        'name',
-        'description',
+        'code',
+        'name_fr',
+        'name_ar',
+        'name_en',
+        'gender',
         'requires_mother_name',
     ];
 

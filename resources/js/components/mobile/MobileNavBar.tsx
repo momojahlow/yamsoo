@@ -1,4 +1,4 @@
-import { MessageSquare, Trees, Bell, Home, Network, Sparkles } from "lucide-react";
+import { MessageSquare, Trees, Bell, Home, Network, Sparkles, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@inertiajs/react";
 
@@ -8,16 +8,17 @@ interface MobileNavBarProps {
   suggestionCount?: number;
 }
 
-export function MobileNavBar({ 
-  unreadMessages = 0, 
-  unreadNotifications = 0, 
-  suggestionCount = 0 
+export function MobileNavBar({
+  unreadMessages = 0,
+  unreadNotifications = 0,
+  suggestionCount = 0
 }: MobileNavBarProps = {}) {
   const navItems = [
     { icon: <Home size={20} />, label: "Accueil", path: "/dashboard", badge: 0 },
+    { icon: <User size={20} />, label: "Profil", path: "/profil", badge: 0 },
     { icon: <MessageSquare size={20} />, label: "Messages", path: "/messagerie", badge: unreadMessages },
     { icon: <Trees size={20} />, label: "Famille", path: "/famille", badge: 0 },
-    { icon: <Network size={20} />, label: "Réseaux", path: "/networks", badge: 0 },
+    { icon: <Network size={20} />, label: "Réseaux", path: "/reseaux", badge: 0 },
     { icon: <Sparkles size={20} />, label: "Suggestions", path: "/suggestions", badge: suggestionCount },
     { icon: <Bell size={20} />, label: "Notifs", path: "/notifications", badge: unreadNotifications },
   ];
@@ -39,8 +40,8 @@ export function MobileNavBar({
           {item.icon}
           <span className="text-xs">{item.label}</span>
           {item.badge > 0 && (
-            <Badge 
-              variant="destructive" 
+            <Badge
+              variant="destructive"
               className="absolute -top-1 -right-1 h-5 w-5 text-xs p-0 flex items-center justify-center"
             >
               {item.badge > 99 ? "99+" : item.badge}

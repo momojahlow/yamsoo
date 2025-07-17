@@ -19,7 +19,8 @@ class ProfileController extends Controller
         $user = $request->user();
         $profile = $this->profileService->getProfile($user);
 
-        return Inertia::render('Profile/Index', [
+        return Inertia::render('Profile', [
+            'user' => $user,
             'profile' => $profile,
         ]);
     }
@@ -47,16 +48,16 @@ class ProfileController extends Controller
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:500',
+            'email' => 'required|email|max:255',
+            'mobile' => 'nullable|string|max:20',
             'birth_date' => 'nullable|date',
-            'gender' => 'nullable|in:male,female,other',
+            'gender' => 'nullable|in:M,F',
             'bio' => 'nullable|string|max:1000',
         ]);
 
         $this->profileService->updateProfile($user, $validated);
 
-        return redirect()->route('profiles.index')->with('success', 'Profil mis à jour avec succès.');
+        return redirect()->route('profile.index')->with('success', 'Profil mis à jour avec succès.');
     }
 
     public function store(Request $request): \Illuminate\Http\RedirectResponse

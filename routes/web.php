@@ -44,6 +44,10 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Route pour le profil
+    Route::get('profil', [ProfileController::class, 'index'])->name('profile.index');
+    Route::patch('profil', [ProfileController::class, 'update'])->name('profile.update');
+
     // Routes pour les familles
     Route::get('famille', [FamilyController::class, 'index'])->name('family');
     Route::get('famille/arbre', [FamilyController::class, 'tree'])->name('family.tree');
@@ -92,8 +96,35 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('families', FamilyController::class);
     Route::resource('notifications', NotificationController::class);
     Route::resource('suggestions', SuggestionController::class);
-    Route::get('networks', [FamilyRelationController::class, 'index'])->name('networks.index');
+
     Route::resource('networks', NetworkController::class)->except(['index']);
 });
 
 require __DIR__.'/auth.php';
+
+// Route de debug - à supprimer après résolution
+Route::get('/debug/relations', function () {
+    $user = Auth::user();
+
+    $requests = \App\Models\RelationshipRequest::with(['requester', 'targetUser', 'relationshipType'])
+        ->where('requester_id', $user->id)
+        ->orWhere('target_user_id', $user->id)
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+    $relations = \App\Models\FamilyRelationship::with(['user', 'relatedUser', 'relationshipType'])
+        ->where('user_id', $user->id)
+        ->orWhere('related_user_id', $user->id)
+        ->get();
+
+    return response()->json([
+        'user_id' => $user->id,
+        'requests' => $requests,
+        'relations' => $relations,
+        'requests_count' => $requests->count(),
+        'relations_count' => $relations->count()
+    ]);
+})->middleware('auth');
+
+
+

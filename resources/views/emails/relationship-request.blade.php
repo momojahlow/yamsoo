@@ -10,7 +10,7 @@
         Bonjour {{ $target->name ?? '' }},
     </p>
     <p>
-        {{ $requester->name ?? 'Un utilisateur' }} souhaite vous ajouter en tant que <strong>{{ $relationshipType ?? 'relation' }}</strong> sur Yamsoo.
+        {{ $requester->name ?? 'Un utilisateur' }} vous a ajouté en tant que <strong>{{ $relationshipType ?? 'relation' }}</strong> sur Yamsoo.
     </p>
     <p>
         Connectez-vous à votre compte pour accepter ou refuser cette demande.

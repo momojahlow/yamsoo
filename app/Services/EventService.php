@@ -81,7 +81,7 @@ class EventService
                 'request_id' => $request->id,
                 'target_user_id' => $request->targetUser->id,
                 'target_user_name' => $request->targetUser->name,
-                'relationship_type' => $request->relationshipType->name,
+                'relationship_type' => $request->relationshipType->name ?? 'Relation',
             ]
         );
 
@@ -90,7 +90,7 @@ class EventService
             $this->emailService->sendRelationshipAcceptedEmail(
                 $request->targetUser,
                 $request->requester,
-                $request->relationshipType->name
+                $request->relationshipType->name_fr ?? 'Relation'
             );
         }
 

@@ -19,25 +19,21 @@ class FamilyController extends Controller
         $user = $request->user();
         $family = $this->familyService->getUserFamily($user);
 
-        // Récupérer toutes les relations acceptées où l'utilisateur est impliqué
-        $relations = \App\Models\FamilyRelationship::where(function($q) use ($user) {
-            $q->where('user_id', $user->id)
-              ->orWhere('related_user_id', $user->id);
-        })
+        // Récupérer toutes les relations acceptées où l'utilisateur est user_id (éviter les doublons)
+        $relations = \App\Models\FamilyRelationship::where('user_id', $user->id)
         ->where('status', 'accepted')
         ->with(['user.profile', 'relatedUser.profile', 'relationshipType'])
         ->get();
 
         // Construire la liste des membres à afficher
         $members = $relations->map(function($relation) use ($user) {
-            $isMain = $relation->user_id == $user->id;
-            $member = $isMain ? $relation->relatedUser : $relation->user;
+            $member = $relation->relatedUser;
             $profile = $member->profile;
             return [
                 'id' => $member->id,
                 'name' => $member->name,
                 'email' => $member->email,
-                'relation' => $relation->relationshipType->name,
+                'relation' => $relation->relationshipType->name_fr ?? $relation->relationshipType->name ?? 'Relation',
                 'status' => $relation->status,
                 'avatar' => $profile?->avatar ?? null,
                 'bio' => $profile?->bio ?? null,
@@ -45,7 +41,7 @@ class FamilyController extends Controller
                 'gender' => $profile?->gender ?? null,
                 'phone' => $profile?->phone ?? null,
             ];
-        })->unique('id')->values();
+        })->values();
 
         return Inertia::render('Family', [
             'family' => $family,

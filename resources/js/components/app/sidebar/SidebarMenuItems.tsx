@@ -11,7 +11,8 @@ import {
   MessageSquare,
   Bell,
   Sparkles,
-  LogOut
+  LogOut,
+  User
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificationsBadge } from "./NotificationsBadge";
@@ -27,7 +28,7 @@ interface SidebarMenuItemsProps {
 export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false, handleLogout }: SidebarMenuItemsProps) {
 
   return (
-    <SidebarMenu className="flex-grow space-y-3 px-1">
+    <SidebarMenu className="flex flex-col h-full space-y-3 px-1">
       {/* Yamsoo menu item */}
       <SidebarMenuItem>
         <SidebarMenuButton
@@ -59,6 +60,20 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
 
       <SidebarMenuItem>
         <SidebarMenuButton
+          tooltip="Mon Profil"
+          onClick={() => window.location.href = "/profil"}
+          className={cn(
+            "w-full justify-start transition-transform duration-200 hover:scale-110",
+            window.location.pathname === "/profil" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
+          )}
+        >
+          <User className="h-6 w-6" />
+          {!isCollapsed && <span className="ml-2">Mon Profil</span>}
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+
+      <SidebarMenuItem>
+        <SidebarMenuButton
           tooltip="Famille"
           onClick={() => window.location.href = "/famille"}
           className={cn(
@@ -74,10 +89,10 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
       <SidebarMenuItem>
         <SidebarMenuButton
           tooltip="Réseaux"
-          onClick={() => window.location.href = "/networks"}
+          onClick={() => window.location.href = "/reseaux"}
           className={cn(
             "w-full justify-start transition-transform duration-200 hover:scale-110",
-            window.location.pathname === "/networks" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
+            window.location.pathname === "/reseaux" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
           )}
         >
           <Network className="h-6 w-6" />

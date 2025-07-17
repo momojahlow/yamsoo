@@ -1,9 +1,9 @@
 
-   InvalidArgumentException 
+  [41;1m InvalidArgumentException [49;22m
 
-  Unexpected end of input
+[39;1m  Unexpected end of input[39;22m
 
-  at vendor\psy\psysh\src\Shell.php:891
+  at [32mvendor\psy\psysh\src\Shell.php[39m:[32m891[39m
     887▕ 
     888▕         if (!$this->hasValidCode()) {
     889▕             $this->popCodeStack();
@@ -14,9 +14,9 @@
     894▕ 
     895▕     /**
 
-  1   vendor\psy\psysh\src\Shell.php:1390
-      Psy\Shell::setCode("\App\Models\RelationshipType::whereNull('name')-")
+  [33m1   [39m[39;1mvendor\psy\psysh\src\Shell.php[39;22m:[39;1m1390[39;22m
+  [90m    Psy\Shell::setCode("App\Models\Profile::whereNotNull('address')-")[39m
 
-  2   vendor\laravel\tinker\src\Console\TinkerCommand.php:76
-      Psy\Shell::execute("\App\Models\RelationshipType::whereNull('name')-")
+  [33m2   [39m[39;1mvendor\laravel\tinker\src\Console\TinkerCommand.php[39;22m:[39;1m76[39;22m
+  [90m    Psy\Shell::execute("App\Models\Profile::whereNotNull('address')-")[39m
 

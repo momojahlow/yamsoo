@@ -1,7 +1,7 @@
 {
   "family": {
     "requestRelation": "Request Relation",
-    "relationLabel": "Request as",
+    "relationLabel": "Add as",
     "treeNavigation": "To navigate the tree, click and drag your mouse in the area below",
     "horizontalScroll": "Scroll horizontally to see the entire tree",
     "selectRelation": "Select a family relation",

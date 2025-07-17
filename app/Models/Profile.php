@@ -19,6 +19,43 @@ class Profile extends Model
         'bio',
     ];
 
+    /**
+     * Validation rules for profile creation
+     */
+    public static function validationRules(): array
+    {
+        return [
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'gender' => 'required|in:male,female,other',
+            'birth_date' => 'nullable|date|before:today',
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:500',
+            'bio' => 'nullable|string|max:1000',
+        ];
+    }
+
+    /**
+     * Accessor pour obtenir le genre en français
+     */
+    public function getGenderLabelAttribute(): string
+    {
+        return match($this->gender) {
+            'male' => 'Masculin',
+            'female' => 'Féminin',
+            'other' => 'Autre',
+            default => 'Non défini'
+        };
+    }
+
+    /**
+     * Vérifie si le profil a un genre clairement défini (masculin ou féminin)
+     */
+    public function hasDefinedGender(): bool
+    {
+        return in_array($this->gender, ['male', 'female']);
+    }
+
     protected $casts = [
         'birth_date' => 'date',
     ];

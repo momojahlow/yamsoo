@@ -64,12 +64,14 @@ export function AppSidebar() {
 
         <SidebarAvatar profile={notificationProfile} />
 
-        <SidebarMenuItems
-          profile={notificationProfile}
-          suggestionCount={suggestionCount}
-          isCollapsed={state === 'collapsed'}
-          handleLogout={handleLogout}
-        />
+        <div className="flex-1 flex flex-col">
+          <SidebarMenuItems
+            profile={notificationProfile}
+            suggestionCount={suggestionCount}
+            isCollapsed={state === 'collapsed'}
+            handleLogout={handleLogout}
+          />
+        </div>
       </div>
     </SidebarContent>
   );

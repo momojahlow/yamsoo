@@ -22,9 +22,9 @@ interface ProfileCardProps {
   relationTypes: FamilyRelationType[];
 }
 
-export const ProfileCard = ({ 
-  profile, 
-  onSendMessage, 
+export const ProfileCard = ({
+  profile,
+  onSendMessage,
   onAddRelation,
   relationTypes,
 }: ProfileCardProps) => {
@@ -36,21 +36,21 @@ export const ProfileCard = ({
     family: [
       // Relations parents/enfants
       "father", "mother", "son", "daughter", "child", "baby", "boy",
-      
+
       // Relations fratrie
-      "brother", "sister", "sibling", 
-      "half_brother", "half_brother_maternal", "half_brother_paternal", 
+      "brother", "sister", "sibling",
+      "half_brother", "half_brother_maternal", "half_brother_paternal",
       "half_sister_maternal", "half_sister_paternal",
-      
+
       // Relations grands-parents/petits-enfants
       "grandfather", "grandmother", "grandson", "granddaughter",
-      
+
       // Relations oncles/tantes et neveux/nièces
-      "uncle", "aunt", "uncle_paternal", "uncle_maternal", "aunt_paternal", "aunt_maternal", 
+      "uncle", "aunt", "uncle_paternal", "uncle_maternal", "aunt_paternal", "aunt_maternal",
       "nephew", "niece", "nephew_brother", "niece_brother", "nephew_sister", "niece_sister",
-      
+
       // Relations cousins
-      "cousin", "cousin_paternal_m", "cousin_maternal_m", 
+      "cousin", "cousin_paternal_m", "cousin_maternal_m",
       "cousin_paternal_f", "cousin_maternal_f",
     ],
     spouse: [
@@ -58,28 +58,28 @@ export const ProfileCard = ({
     ],
     inlaws: [
       "father_in_law", "mother_in_law", "son_in_law", "daughter_in_law",
-      "brother_in_law", "sister_in_law", 
+      "brother_in_law", "sister_in_law",
       "stepfather", "stepmother", "stepson", "stepdaughter", "stepbrother", "stepsister",
     ],
     other: [
       "friend_m", "friend_f", "colleague", "other"
     ]
   };
-  
+
   // Fonction pour filtrer les relations en fonction du genre
   const filterByGender = (types: string[]) => {
     if (!profile.gender) return types;
-    
+
     return types.filter(type => {
       // Relations spécifiques au genre masculin
       const maleSpecific = [
         "father", "son", "brother", "grandfather", "grandson", "uncle", "nephew",
-        "husband", "father_in_law", "son_in_law", "brother_in_law", "stepfather", 
+        "husband", "father_in_law", "son_in_law", "brother_in_law", "stepfather",
         "stepson", "stepbrother", "half_brother", "half_brother_maternal", "half_brother_paternal",
         "nephew_brother", "nephew_sister", "cousin_paternal_m", "cousin_maternal_m",
         "friend_m", "boy", "uncle_paternal", "uncle_maternal"
       ];
-      
+
       // Relations spécifiques au genre féminin
       const femaleSpecific = [
         "mother", "daughter", "sister", "grandmother", "granddaughter", "aunt", "niece",
@@ -88,18 +88,18 @@ export const ProfileCard = ({
         "niece_brother", "niece_sister", "cousin_paternal_f", "cousin_maternal_f",
         "friend_f", "aunt_paternal", "aunt_maternal"
       ];
-      
+
       // Filtrer selon le genre
       if (profile.gender === 'M') {
         return !femaleSpecific.includes(type);
       } else if (profile.gender === 'F') {
         return !maleSpecific.includes(type);
       }
-      
+
       return true;
     });
   };
-  
+
   const handleRelationTypeChange = (value: FamilyRelationType) => {
     console.log(`Changing relation type for profile ${profile.id} to ${value}`);
     setSelectedRelationType(value);
@@ -142,10 +142,10 @@ export const ProfileCard = ({
           )}
         </div>
       </div>
-      
+
       <div className="space-y-2">
         <div className="space-y-1">
-          <label className="text-sm font-medium">Demandez en tant que</label>
+          <label className="text-sm font-medium">Ajoutez en tant que</label>
           <Select
             value={selectedRelationType}
             onValueChange={(value: FamilyRelationType) => handleRelationTypeChange(value)}
@@ -163,7 +163,7 @@ export const ProfileCard = ({
                   {getRelationLabel(type as FamilyRelationType)}
                 </SelectItem>
               ))}
-              
+
               {/* Groupe: Époux/Épouse */}
               <div className="py-1.5 pl-2 text-xs font-semibold text-muted-foreground">Époux/Épouse</div>
               {filterByGender(relationCategories.spouse).map((type) => (
@@ -171,7 +171,7 @@ export const ProfileCard = ({
                   {getRelationLabel(type as FamilyRelationType)}
                 </SelectItem>
               ))}
-              
+
               {/* Groupe: Belle-famille */}
               <div className="py-1.5 pl-2 text-xs font-semibold text-muted-foreground">Belle-famille</div>
               {filterByGender(relationCategories.inlaws).map((type) => (
@@ -179,7 +179,7 @@ export const ProfileCard = ({
                   {getRelationLabel(type as FamilyRelationType)}
                 </SelectItem>
               ))}
-              
+
               {/* Groupe: Autre */}
               <div className="py-1.5 pl-2 text-xs font-semibold text-muted-foreground">Autre</div>
               {filterByGender(relationCategories.other).map((type) => (
@@ -191,9 +191,9 @@ export const ProfileCard = ({
           </Select>
         </div>
       </div>
-      
+
       <div className="flex gap-2">
-        <Button 
+        <Button
           variant="default"
           onClick={handleAddRelation}
           className="flex-1"
@@ -201,7 +201,7 @@ export const ProfileCard = ({
         >
           Demander une relation
         </Button>
-        <Button 
+        <Button
           variant="outline"
           onClick={() => onSendMessage(profile.id)}
           size="icon"

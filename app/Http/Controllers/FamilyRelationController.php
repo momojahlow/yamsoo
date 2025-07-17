@@ -5,11 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\FamilyRelationship;
 use App\Models\RelationshipRequest;
 use App\Models\RelationshipType;
+use App\Models\User;
 use App\Services\FamilyRelationService;
 use App\Services\EventService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class FamilyRelationController extends Controller
 {
@@ -34,45 +38,113 @@ class FamilyRelationController extends Controller
         ]);
     }
 
-    public function store(Request $request): \Illuminate\Http\RedirectResponse
+    public function store(Request $request)
     {
-        $validated = $request->validate([
-            'email' => 'required|email',
-            'relationship_type_id' => 'required|exists:relationship_types,id',
-            'message' => 'nullable|string|max:500',
-            'mother_name' => 'nullable|string|max:255',
+        Log::info('Début de la création de demande de relation', [
+            'user_id' => Auth::id(),
+            'request_data' => $request->all()
         ]);
 
-        $user = $request->user();
+        try {
+            $user = Auth::user();
 
-        // Chercher l'utilisateur par email
-        $targetUser = \App\Models\User::where('email', $validated['email'])->first();
+            $validated = $request->validate([
+                'email' => 'required|email|exists:users,email',
+                'relationship_type_id' => 'required|integer|exists:relationship_types,id',
+                'message' => 'nullable|string|max:500',
+                'mother_name' => 'nullable|string|max:100',
+            ]);
 
-        if (!$targetUser) {
-            return back()->withErrors(['email' => 'Aucun utilisateur trouvé avec cet email.']);
+            $targetUser = User::where('email', $validated['email'])->first();
+
+            if ($targetUser->id === $user->id) {
+                return back()->withErrors(['email' => 'Vous ne pouvez pas faire une demande de relation avec vous-même.']);
+            }
+
+            // Vérifier qu'une demande n'est pas déjà en cours entre ces deux utilisateurs
+            $existingRequest = RelationshipRequest::where(function ($query) use ($user, $targetUser) {
+                $query->where('requester_id', $user->id)
+                      ->where('target_user_id', $targetUser->id);
+            })->orWhere(function ($query) use ($user, $targetUser) {
+                $query->where('requester_id', $targetUser->id)
+                      ->where('target_user_id', $user->id);
+            })->where('status', 'pending')->first();
+
+            if ($existingRequest) {
+                return back()->withErrors(['email' => 'Une demande de relation est déjà en cours avec cet utilisateur.']);
+            }
+
+            // Vérifier qu'une relation n'existe pas déjà
+            $existingRelation = FamilyRelationship::where(function ($query) use ($user, $targetUser) {
+                $query->where('user_id', $user->id)
+                      ->where('related_user_id', $targetUser->id);
+            })->orWhere(function ($query) use ($user, $targetUser) {
+                $query->where('user_id', $targetUser->id)
+                      ->where('related_user_id', $user->id);
+            })->where('status', 'accepted')->first();
+
+            if ($existingRelation) {
+                return back()->withErrors(['email' => 'Vous avez déjà une relation familiale avec cet utilisateur.']);
+            }
+
+            // Créer directement sans service pour debug
+            Log::info('Création de la demande de relation', [
+                'requester_id' => $user->id,
+                'target_user_id' => $targetUser->id,
+                'relationship_type_id' => $validated['relationship_type_id']
+            ]);
+
+            $relationshipRequest = RelationshipRequest::create([
+                'requester_id' => $user->id,
+                'target_user_id' => $targetUser->id,
+                'relationship_type_id' => $validated['relationship_type_id'],
+                'message' => $validated['message'] ?? '',
+                'mother_name' => $validated['mother_name'] ?? null,
+                'status' => 'pending',
+            ]);
+
+            // Vérifier immédiatement si la création a réussi
+            if (!$relationshipRequest || !$relationshipRequest->exists) {
+                Log::error('Échec de la création de la demande de relation');
+                return back()->withErrors(['general' => 'Échec de la création de la demande.']);
+            }
+
+            // Recharger depuis la base pour vérifier la persistance
+            $verification = RelationshipRequest::find($relationshipRequest->id);
+            if (!$verification) {
+                Log::error('La demande n\'a pas été persistée en base de données');
+                return back()->withErrors(['general' => 'Erreur de persistance des données.']);
+            }
+
+            Log::info('Demande de relation créée avec succès', [
+                'request_id' => $relationshipRequest->id,
+                'verification_id' => $verification->id,
+                'status' => $verification->status
+            ]);
+
+            // Charger les relations pour l'événement
+            $relationshipRequest->load(['requester', 'targetUser', 'relationshipType']);
+
+            // Déclencher l'événement seulement si tout est OK
+            try {
+                $this->eventService->handleRelationshipRequest($relationshipRequest);
+            } catch (\Exception $e) {
+                Log::warning('Erreur lors de l\'envoi de l\'événement (mais demande créée)', [
+                    'error' => $e->getMessage()
+                ]);
+            }
+
+            return back()->with('success', 'Demande de relation envoyée avec succès.');
+
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la création de la demande de relation', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'user_id' => Auth::id()
+            ]);
+
+            return back()->withErrors(['general' => 'Une erreur est survenue : ' . $e->getMessage()]);
         }
-
-        // Vérifier que l'utilisateur ne fait pas une demande à lui-même
-        if ($user->id === $targetUser->id) {
-            return back()->withErrors(['email' => 'Vous ne pouvez pas créer une relation avec vous-même.']);
-        }
-
-        // Créer la demande de relation
-        $relationshipRequest = $this->familyRelationService->createRelationshipRequest(
-            $user,
-            $targetUser->id,
-            $validated['relationship_type_id'],
-            $validated['message'] ?? '',
-            $validated['mother_name'] ?? null
-        );
-
-        // Charger la relation relationshipType pour éviter un null
-        $relationshipRequest->load('relationshipType');
-
-        // Déclencher l'événement
-        $this->eventService->handleRelationshipRequest($relationshipRequest);
-
-        return back()->with('success', 'Demande de relation envoyée avec succès.');
     }
 
     public function accept(Request $request, int $requestId): \Illuminate\Http\RedirectResponse
@@ -187,3 +259,7 @@ class FamilyRelationController extends Controller
         ]);
     }
 }
+
+
+
+

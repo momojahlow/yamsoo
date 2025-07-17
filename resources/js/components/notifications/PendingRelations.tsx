@@ -43,13 +43,13 @@ export function PendingRelations({
         {pendingRelations.map(({ relation, requester }) => {
           // Obtenir la relation inverse
           let inverseRelationType = getInverseRelation(relation.relation_type as FamilyRelationType);
-          
+
           // Adapter en fonction du genre du demandeur
           inverseRelationType = adaptRelationToGender(inverseRelationType, requester.gender || '');
-          
+
           // Obtenir le libellé de la relation
           const relationLabel = getRelationLabel(inverseRelationType);
-          
+
           return (
             <Card key={relation.id} className="p-4">
               <div className="flex items-center justify-between">
@@ -58,7 +58,7 @@ export function PendingRelations({
                     {requester.first_name} {requester.last_name}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Souhaite être votre {relationLabel}
+                    Vous a ajouté en tant que {relationLabel}
                   </p>
                 </div>
                 <div className="flex gap-2">
