@@ -1,300 +1,343 @@
-
-import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
-import { ProfileForm } from "@/components/profile/ProfileForm";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { MobileNavBar } from "@/components/mobile/MobileNavBar";
+import React from 'react';
+import { Head, Link } from '@inertiajs/react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { router } from "@inertiajs/react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import AppLayout from '@/Layouts/app-layout';
 import {
   Users,
-  MessageSquare,
-  Bell,
   Heart,
-  TrendingUp,
-  Calendar,
   Plus,
-  ArrowRight
+  ArrowRight,
+  TreePine,
+  UserPlus,
+  Gift,
+  Activity,
+  Sparkles,
+  Clock,
+  Crown
 } from "lucide-react";
-import AppLayout from '@/layouts/app-layout';
 
 interface User {
   id: number;
   name: string;
   email: string;
-  family?: Record<string, unknown>;
+  profile?: {
+    first_name?: string;
+    last_name?: string;
+    bio?: string;
+    avatar?: string;
+    birth_date?: string;
+    gender?: 'male' | 'female';
+  };
 }
 
-interface Profile {
-  id?: number;
-  first_name?: string;
-  last_name?: string;
-  bio?: string;
-  avatar?: string;
-  email?: string;
-  mobile?: string;
-  birth_date?: string;
-  gender?: string;
-  avatar_url?: string | null;
+interface DashboardStats {
+  total_family_members: number;
+  new_members_this_month: number;
+  new_members_this_week: number;
+  pending_suggestions: number;
+  new_suggestions_this_week: number;
+  total_suggestions: number;
+  automatic_relations: number;
+  manual_relations: number;
+}
+
+interface Activity {
+  id: string;
+  type: string;
+  text: string;
+  time: string;
+  avatar: string;
+  icon: string;
+  color: string;
+}
+
+interface Suggestion {
+  id: number;
+  suggested_user: {
+    id: number;
+    name: string;
+    profile?: any;
+  };
+  relation_name: string;
+  type: string;
+}
+
+interface Birthday {
+  id: number;
+  name: string;
+  profile?: any;
+  relation_type: string;
+  days_until: number;
+  age_turning: number;
 }
 
 interface DashboardProps {
   user: User;
-  profile: Profile | null;
-  notifications: Array<Record<string, unknown>>;
-  messages: Array<Record<string, unknown>>;
-  unreadNotifications: number;
+  profile: any;
+  dashboardStats: DashboardStats;
+  recentActivities: Activity[];
+  prioritySuggestions: Suggestion[];
+  recentFamilyMembers: any[];
+  upcomingBirthdays: Birthday[];
+  familyStatistics: any;
 }
 
-const Dashboard = ({ user, profile, notifications, messages, unreadNotifications }: DashboardProps) => {
-  const isMobile = useIsMobile();
+const Dashboard: React.FC<DashboardProps> = ({
+  user,
+  profile,
+  dashboardStats,
+  recentActivities,
+  prioritySuggestions,
+  recentFamilyMembers,
+  upcomingBirthdays,
+  familyStatistics
+}) => {
+  const getGenderIcon = (gender?: string) => {
+    return gender === 'female' ? '👩' : '👨';
+  };
 
-  // Navigation functions for clickable cards
-  const handleCardClick = (cardType: string) => {
-    switch (cardType) {
-      case 'family':
-        router.visit('/famille');
-        break;
-      case 'messages':
-        router.visit('/messagerie');
-        break;
-      case 'notifications':
-        router.visit('/notifications');
-        break;
-      case 'relations':
-        router.visit('/reseaux');
-        break;
-      default:
-        break;
-    }
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
   const stats = [
     {
       title: "Membres de famille",
-      value: "12",
+      value: dashboardStats.total_family_members.toString(),
       icon: Users,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
-      change: "+2 ce mois",
-      onClick: () => handleCardClick('family')
+      change: `+${dashboardStats.new_members_this_month} ce mois`,
+      href: "/famille"
     },
     {
-      title: "Messages",
-      value: messages.length.toString(),
-      icon: MessageSquare,
-      color: "text-green-600",
-      bgColor: "bg-green-50",
-      change: "+5 aujourd'hui",
-      onClick: () => handleCardClick('messages')
+      title: "Suggestions",
+      value: dashboardStats.pending_suggestions.toString(),
+      icon: Heart,
+      color: "text-pink-600",
+      bgColor: "bg-pink-50",
+      change: `+${dashboardStats.new_suggestions_this_week} cette semaine`,
+      href: "/suggestions"
     },
     {
-      title: "Notifications",
-      value: notifications.length.toString(),
-      icon: Bell,
+      title: "Relations automatiques",
+      value: dashboardStats.automatic_relations.toString(),
+      icon: Sparkles,
       color: "text-purple-600",
       bgColor: "bg-purple-50",
-      change: unreadNotifications > 0 ? `${unreadNotifications} non lues` : "À jour",
-      onClick: () => handleCardClick('notifications')
+      change: "Déduites intelligemment",
+      href: "/famille/arbre"
     },
     {
-      title: "Relations",
-      value: "8",
-      icon: Heart,
-      color: "text-red-600",
-      bgColor: "bg-red-50",
-      change: "+1 cette semaine",
-      onClick: () => handleCardClick('relations')
+      title: "Anniversaires",
+      value: upcomingBirthdays.length.toString(),
+      icon: Gift,
+      color: "text-green-600",
+      bgColor: "bg-green-50",
+      change: "À venir ce mois",
+      href: "#birthdays"
     }
   ];
 
-  const recentActivities = [
-    { id: 1, type: "message", text: "Nouveau message de Marie", time: "Il y a 5 min", avatar: "M" },
-    { id: 2, type: "family", text: "Pierre a rejoint la famille", time: "Il y a 1h", avatar: "P" },
-    { id: 3, type: "notification", text: "Nouvelle suggestion de relation", time: "Il y a 2h", avatar: "S" },
-    { id: 4, type: "message", text: "Message de groupe mis à jour", time: "Il y a 3h", avatar: "G" }
-  ];
-
   return (
-    <AppLayout>
-      <div className="min-h-screen flex w-full bg-gray-50 dark:bg-gray-900">
-        <main className="flex-1 p-6 md:p-8 md:ml-16 pb-20 md:pb-8">
-          <div className="max-w-7xl mx-auto">
-            {/* Header */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                    Tableau de bord
-                  </h1>
-                  <p className="text-gray-600 dark:text-gray-400 mt-1">
-                    Bienvenue, {profile?.first_name || user?.name || "Utilisateur"}
-                  </p>
-                </div>
-                <Button className="hidden md:flex">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Nouvelle action
-                </Button>
+    <AppLayout
+      breadcrumbs={[
+        { title: 'Accueil', href: '/dashboard' }
+      ]}
+    >
+      <Head title="Tableau de bord" />
+
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+        <div className="max-w-7xl mx-auto p-6 space-y-8">
+          {/* Header avec salutation personnalisée */}
+          <div className="text-center py-8">
+            <div className="flex items-center justify-center mb-4">
+              <div className="text-6xl mr-4">
+                {getGenderIcon(profile?.gender)}
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                  Bonjour, {profile?.first_name || user.name} !
+                </h1>
+                <p className="text-xl text-gray-600">
+                  Bienvenue sur votre réseau familial
+                </p>
               </div>
             </div>
+            
+            <div className="flex items-center justify-center space-x-4 mt-6">
+              <Link href="/famille/arbre">
+                <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                  <TreePine className="w-5 h-5 mr-2" />
+                  Voir l'arbre familial
+                </Button>
+              </Link>
+              <Link href="/suggestions">
+                <Button variant="outline" size="lg">
+                  <UserPlus className="w-5 h-5 mr-2" />
+                  Découvrir des relations
+                </Button>
+              </Link>
+            </div>
+          </div>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              {stats.map((stat, index) => (
-                <Card
-                  key={index}
-                  className="border-0 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer hover:scale-105"
-                  onClick={stat.onClick}
-                >
+          {/* Statistiques principales */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {stats.map((stat, index) => (
+              <Link key={index} href={stat.href}>
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105 bg-white/80 backdrop-blur-sm">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                        <p className="text-sm font-medium text-gray-600 mb-1">
                           {stat.title}
                         </p>
-                        <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                        <p className="text-3xl font-bold text-gray-900 mb-1">
                           {stat.value}
                         </p>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-gray-500">
                           {stat.change}
                         </p>
                       </div>
-                      <div className={`p-3 rounded-lg ${stat.bgColor} transition-colors`}>
-                        <stat.icon className={`w-6 h-6 ${stat.color}`} />
+                      <div className={`p-4 rounded-xl ${stat.bgColor} transition-colors`}>
+                        <stat.icon className={`w-8 h-8 ${stat.color}`} />
                       </div>
                     </div>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
+              </Link>
+            ))}
+          </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Profile Summary */}
-              <div className="lg:col-span-2">
-                <Card className="border-0 shadow-sm">
-                  <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
-                          <Users className="w-4 h-4 text-blue-600" />
-                        </div>
-                        Mon Profil
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => router.visit('/profil')}
-                      >
-                        <ArrowRight className="w-4 h-4" />
-                      </Button>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-start space-x-4">
-                      <ProfileAvatar
-                        avatarUrl={profile?.avatar || null}
-                        firstName={profile?.first_name || ""}
-                        lastName={profile?.last_name || ""}
-                        uploading={false}
-                        onAvatarUpload={() => {}}
-                      />
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold">
-                          {profile?.first_name && profile?.last_name
-                            ? `${profile.first_name} ${profile.last_name}`
-                            : user?.name || "Utilisateur"}
-                        </h3>
-                        <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">
-                          {profile?.bio || "Aucune bio disponible"}
-                        </p>
-                        <div className="flex items-center space-x-2 mb-4">
-                          <Badge variant="secondary">Membre actif</Badge>
-                          <Badge variant="outline">Famille connectée</Badge>
-                        </div>
-                        <Button
-                          onClick={() => router.visit('/profil')}
-                          className="w-full md:w-auto"
-                        >
-                          Voir mon profil complet
-                        </Button>
-                      </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Activité récente */}
+            <div className="lg:col-span-2">
+              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <Activity className="w-6 h-6 text-blue-600 mr-3" />
+                      Activité récente
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Recent Activity */}
-              <div>
-                <Card className="border-0 shadow-sm">
-                  <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
-                          <TrendingUp className="w-4 h-4 text-green-600" />
-                        </div>
-                        Activité récente
-                      </div>
-                      <Button variant="ghost" size="sm">
-                        <ArrowRight className="w-4 h-4" />
-                      </Button>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {recentActivities.map((activity) => (
-                        <div key={activity.id} className="flex items-start space-x-3">
-                          <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
-                            <span className="text-sm font-medium text-gray-600">
+                    <Badge variant="secondary">{recentActivities.length}</Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {recentActivities.length > 0 ? (
+                      recentActivities.map((activity) => (
+                        <div key={activity.id} className="flex items-start space-x-4 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                          <Avatar className="w-10 h-10">
+                            <AvatarFallback className={`bg-${activity.color}-100 text-${activity.color}-600`}>
                               {activity.avatar}
-                            </span>
-                          </div>
+                            </AvatarFallback>
+                          </Avatar>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm text-gray-900 dark:text-white">
+                            <p className="text-sm font-medium text-gray-900">
                               {activity.text}
                             </p>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-gray-500 flex items-center mt-1">
+                              <Clock className="w-3 h-3 mr-1" />
                               {activity.time}
                             </p>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Quick Actions */}
-                <Card className="border-0 shadow-sm mt-6">
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
-                        <Calendar className="w-4 h-4 text-purple-600" />
+                      ))
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <Activity className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                        <p>Aucune activité récente</p>
                       </div>
-                      Actions rapides
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <Button variant="outline" className="w-full justify-start">
-                        <MessageSquare className="w-4 h-4 mr-2" />
-                        Nouveau message
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Sidebar avec suggestions et anniversaires */}
+            <div className="space-y-6">
+              {/* Suggestions prioritaires */}
+              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <Heart className="w-6 h-6 text-pink-600 mr-3" />
+                      Suggestions
+                    </div>
+                    <Link href="/suggestions">
+                      <Button variant="ghost" size="sm">
+                        <ArrowRight className="w-4 h-4" />
                       </Button>
+                    </Link>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {prioritySuggestions.length > 0 ? (
+                      prioritySuggestions.map((suggestion) => (
+                        <div key={suggestion.id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                          <Avatar className="w-8 h-8">
+                            <AvatarFallback>
+                              {getInitials(suggestion.suggested_user.name)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {suggestion.suggested_user.name}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {suggestion.relation_name}
+                            </p>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-4 text-gray-500">
+                        <Heart className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">Aucune suggestion</p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Actions rapides */}
+              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Plus className="w-6 h-6 text-green-600 mr-3" />
+                    Actions rapides
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <Link href="/family-relations">
                       <Button variant="outline" className="w-full justify-start">
-                        <Users className="w-4 h-4 mr-2" />
-                        Inviter un membre
-                      </Button>
-                      <Button variant="outline" className="w-full justify-start">
-                        <Heart className="w-4 h-4 mr-2" />
+                        <UserPlus className="w-4 h-4 mr-2" />
                         Ajouter une relation
                       </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+                    </Link>
+                    <Link href="/famille/arbre">
+                      <Button variant="outline" className="w-full justify-start">
+                        <TreePine className="w-4 h-4 mr-2" />
+                        Explorer l'arbre
+                      </Button>
+                    </Link>
+                    <Link href="/profile">
+                      <Button variant="outline" className="w-full justify-start">
+                        <Crown className="w-4 h-4 mr-2" />
+                        Modifier mon profil
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
-        </main>
-        {isMobile && <MobileNavBar />}
+        </div>
       </div>
     </AppLayout>
   );
