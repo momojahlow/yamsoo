@@ -4,13 +4,13 @@ namespace App\Services;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Mail\Message;
+use Illuminate\Mail\Message as MailMessage;
 
 class EmailService
 {
     public function sendWelcomeEmail(User $user): void
     {
-        Mail::send('emails.welcome', ['user' => $user], function (Message $message) use ($user) {
+        Mail::send('emails.welcome', ['user' => $user], function (MailMessage $message) use ($user) {
             $message->to($user->email)
                     ->subject('Bienvenue sur Yamsoo - Connectez votre famille');
         });
@@ -22,7 +22,7 @@ class EmailService
             'requester' => $requester,
             'target' => $target,
             'relationshipType' => $relationshipType,
-        ], function (Message $message) use ($target) {
+        ], function (MailMessage $message) use ($target) {
             $message->to($target->email)
                     ->subject('Nouvelle demande de relation familiale sur Yamsoo');
         });
@@ -34,8 +34,8 @@ class EmailService
             'accepter' => $accepter,
             'requester' => $requester,
             'relationshipType' => $relationshipType,
-            'message' => null, // Pas de message personnalisé pour l'acceptation
-        ], function (Message $message) use ($requester) {
+            // Ne pas passer 'message' du tout pour éviter les conflits
+        ], function (MailMessage $message) use ($requester) {
             $message->to($requester->email)
                     ->subject('Votre demande de relation familiale a été acceptée');
         });
@@ -46,7 +46,7 @@ class EmailService
         Mail::send('emails.new-message', [
             'sender' => $sender,
             'recipient' => $recipient,
-        ], function (Message $message) use ($recipient) {
+        ], function (MailMessage $message) use ($recipient) {
             $message->to($recipient->email)
                     ->subject('Nouveau message familial sur Yamsoo');
         });
@@ -57,7 +57,7 @@ class EmailService
         Mail::send('emails.password-reset', [
             'user' => $user,
             'resetLink' => $resetLink,
-        ], function (Message $message) use ($user) {
+        ], function (MailMessage $message) use ($user) {
             $message->to($user->email)
                     ->subject('Réinitialisation de votre mot de passe Yamsoo');
         });
@@ -68,7 +68,7 @@ class EmailService
         Mail::send('emails.verify-email', [
             'user' => $user,
             'verificationLink' => $verificationLink,
-        ], function (Message $message) use ($user) {
+        ], function (MailMessage $message) use ($user) {
             $message->to($user->email)
                     ->subject('Vérifiez votre adresse email Yamsoo');
         });
@@ -79,7 +79,7 @@ class EmailService
         Mail::send('emails.family-invitation', [
             'inviter' => $inviter,
             'familyName' => $familyName,
-        ], function (Message $message) use ($inviteeEmail) {
+        ], function (MailMessage $message) use ($inviteeEmail) {
             $message->to($inviteeEmail)
                     ->subject('Invitation à rejoindre une famille sur Yamsoo');
         });
@@ -90,7 +90,7 @@ class EmailService
         Mail::send("emails.notifications.{$notificationType}", [
             'user' => $user,
             'data' => $data,
-        ], function (Message $message) use ($user, $notificationType) {
+        ], function (MailMessage $message) use ($user, $notificationType) {
             $message->to($user->email)
                     ->subject("Nouvelle notification Yamsoo - {$notificationType}");
         });

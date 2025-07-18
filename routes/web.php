@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\FamilyController;
+use App\Http\Controllers\FamilyTreeController;
 use App\Http\Controllers\FamilyRelationController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SuggestionController;
@@ -50,7 +51,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Routes pour les familles
     Route::get('famille', [FamilyController::class, 'index'])->name('family');
-    Route::get('famille/arbre', [FamilyController::class, 'tree'])->name('family.tree');
+    Route::get('famille/arbre', [FamilyTreeController::class, 'index'])->name('family.tree');
     Route::post('families/{family}/members', [FamilyController::class, 'addMember'])->name('families.add-member');
 
     // Routes pour les messages
@@ -66,6 +67,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('suggestions', [SuggestionController::class, 'index'])->name('suggestions');
     Route::post('suggestions', [SuggestionController::class, 'store'])->name('suggestions.store');
     Route::patch('suggestions/{suggestion}', [SuggestionController::class, 'update'])->name('suggestions.update');
+    Route::patch('suggestions/{suggestion}/accept-with-correction', [SuggestionController::class, 'acceptWithCorrection'])->name('suggestions.accept-with-correction');
     Route::delete('suggestions/{suggestion}', [SuggestionController::class, 'destroy'])->name('suggestions.destroy');
 
     // Routes pour les réseaux
@@ -95,7 +97,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('messages', MessageController::class);
     Route::resource('families', FamilyController::class);
     Route::resource('notifications', NotificationController::class);
-    Route::resource('suggestions', SuggestionController::class);
+    // Route::resource('suggestions', SuggestionController::class); // Supprimé - routes définies individuellement ci-dessus
 
     Route::resource('networks', NetworkController::class)->except(['index']);
 });

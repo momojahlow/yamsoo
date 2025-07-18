@@ -4,6 +4,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app/Sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MobileNavBar } from "@/components/mobile/MobileNavBar";
+import { FloatingLogoutButton } from "@/components/FloatingLogoutButton";
 
 export default function Index() {
   const [loading, setLoading] = useState(true);
@@ -53,6 +54,7 @@ export default function Index() {
           </div>
         </main>
         {isMobile && <MobileNavBar />}
+        <FloatingLogoutButton showOnMobile={true} showOnDesktop={false} />
       </div>
     </SidebarProvider>
   );

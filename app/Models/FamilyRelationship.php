@@ -15,6 +15,7 @@ class FamilyRelationship extends Model
         'mother_name',
         'message',
         'accepted_at',
+        'created_automatically',
     ];
 
     protected $casts = [

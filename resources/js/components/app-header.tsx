@@ -11,7 +11,8 @@ import { useInitials } from '@/hooks/use-initials';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem, type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, Menu, Search } from 'lucide-react';
+import { BookOpen, Folder, LayoutGrid, Menu, Search, Users, TreePine } from 'lucide-react';
+import { QuickLogoutButton } from '@/components/QuickLogoutButton';
 import AppLogo from './app-logo';
 import AppLogoIcon from './app-logo-icon';
 
@@ -20,6 +21,16 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         href: '/dashboard',
         icon: LayoutGrid,
+    },
+    {
+        title: 'Famille',
+        href: '/famille',
+        icon: Users,
+    },
+    {
+        title: 'Arbre Familial',
+        href: '/famille/arbre',
+        icon: TreePine,
     },
 ];
 
@@ -152,6 +163,12 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                 ))}
                             </div>
                         </div>
+
+                        {/* Bouton de déconnexion rapide */}
+                        <div className="hidden md:block">
+                            <QuickLogoutButton />
+                        </div>
+
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" className="size-10 rounded-full p-1">

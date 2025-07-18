@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { EmptySuggestions } from '@/components/suggestions/EmptySuggestions';
 import { SuggestionActions } from '@/components/suggestions/SuggestionActions';
 import { RelationSelector } from '@/components/suggestions/RelationSelector';
+import { FloatingLogoutButton } from '@/components/FloatingLogoutButton';
 import AppLayout from '@/layouts/app-layout';
 
 interface Suggestion {
@@ -15,6 +16,8 @@ interface Suggestion {
   message?: string;
   status: 'pending' | 'accepted' | 'rejected';
   created_at: string;
+  suggested_relation_code?: string;
+  suggested_relation_name?: string;
   suggested_user: {
     id: number;
     name: string;
@@ -31,6 +34,41 @@ interface Props {
 
 export default function Suggestions({ suggestions }: Props) {
   const [selectedSuggestion, setSelectedSuggestion] = useState<Suggestion | null>(null);
+
+  const handleAcceptWithCorrection = (suggestionId: number, relationCode: string) => {
+    // Créer un formulaire pour envoyer la requête avec la relation corrigée
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/suggestions/${suggestionId}/accept-with-correction`;
+
+    // Ajouter le token CSRF
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    if (csrfToken) {
+      const csrfInput = document.createElement('input');
+      csrfInput.type = 'hidden';
+      csrfInput.name = '_token';
+      csrfInput.value = csrfToken;
+      form.appendChild(csrfInput);
+    }
+
+    // Ajouter la méthode PATCH
+    const methodInput = document.createElement('input');
+    methodInput.type = 'hidden';
+    methodInput.name = '_method';
+    methodInput.value = 'PATCH';
+    form.appendChild(methodInput);
+
+    // Ajouter le code de relation
+    const relationInput = document.createElement('input');
+    relationInput.type = 'hidden';
+    relationInput.name = 'relation_code';
+    relationInput.value = relationCode;
+    form.appendChild(relationInput);
+
+    // Soumettre le formulaire
+    document.body.appendChild(form);
+    form.submit();
+  };
 
   const pendingSuggestions = suggestions.filter(s => s.status === 'pending');
   const acceptedSuggestions = suggestions.filter(s => s.status === 'accepted');
@@ -96,6 +134,11 @@ export default function Suggestions({ suggestions }: Props) {
                         <p className="text-sm text-gray-600 dark:text-gray-400">
                           {suggestion.type}
                         </p>
+                        {suggestion.suggested_relation_name && (
+                          <p className="text-sm font-medium text-blue-600 mt-1">
+                            Relation suggérée : {suggestion.suggested_relation_name}
+                          </p>
+                        )}
                         {suggestion.message && (
                           <p className="text-sm text-gray-500 mt-1">
                             "{suggestion.message}"
@@ -103,7 +146,10 @@ export default function Suggestions({ suggestions }: Props) {
                         )}
                       </div>
                     </div>
-                    <SuggestionActions suggestion={suggestion} />
+                    <SuggestionActions
+                      suggestion={suggestion}
+                      onAcceptWithRelation={handleAcceptWithCorrection}
+                    />
                   </div>
                 ))}
               </div>
@@ -209,6 +255,7 @@ export default function Suggestions({ suggestions }: Props) {
           </Card>
         )}
       </div>
+      <FloatingLogoutButton showOnMobile={true} showOnDesktop={false} />
     </AppLayout>
   );
 }

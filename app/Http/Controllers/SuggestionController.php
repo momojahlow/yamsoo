@@ -59,16 +59,37 @@ class SuggestionController extends Controller
     {
         $validated = $request->validate([
             'status' => 'required|in:accepted,rejected',
+            'corrected_relation_code' => 'nullable|string|in:father,mother,son,daughter,brother,sister,husband,wife',
         ]);
 
         if ($validated['status'] === 'accepted') {
-            $this->suggestionService->acceptSuggestion($suggestion);
+            $this->suggestionService->acceptSuggestion(
+                $suggestion,
+                $validated['corrected_relation_code'] ?? null
+            );
         } else {
             $this->suggestionService->rejectSuggestion($suggestion);
         }
 
         $statusMessage = $validated['status'] === 'accepted' ? 'acceptée' : 'rejetée';
         return back()->with('success', "Suggestion {$statusMessage} avec succès.");
+    }
+
+    /**
+     * Accepter une suggestion avec une relation corrigée
+     */
+    public function acceptWithCorrection(Request $request, Suggestion $suggestion): \Illuminate\Http\RedirectResponse
+    {
+        $validated = $request->validate([
+            'relation_code' => 'required|string|in:father,mother,son,daughter,brother,sister,husband,wife',
+        ]);
+
+        $this->suggestionService->acceptSuggestion(
+            $suggestion,
+            $validated['relation_code']
+        );
+
+        return back()->with('success', 'Suggestion acceptée avec la relation corrigée.');
     }
 
     public function destroy(Suggestion $suggestion): \Illuminate\Http\RedirectResponse

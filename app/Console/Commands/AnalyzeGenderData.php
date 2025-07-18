@@ -159,14 +159,14 @@ class AnalyzeGenderData extends Command
                 break;
 
             case 'husband':
-                if ($relatedUserGender !== 'male') {
-                    return 'Relation "mari" avec une personne non-masculine';
+                if ($userGender !== 'male') {
+                    return 'Utilisateur marqué comme "mari" mais n\'est pas masculin';
                 }
                 break;
 
             case 'wife':
-                if ($relatedUserGender !== 'female') {
-                    return 'Relation "épouse" avec une personne non-féminine';
+                if ($userGender !== 'female') {
+                    return 'Utilisateur marqué comme "épouse" mais n\'est pas féminin';
                 }
                 break;
         }

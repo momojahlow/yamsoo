@@ -149,16 +149,20 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
         </SidebarMenuButton>
       </SidebarMenuItem>
 
-      <SidebarMenuItem className="mt-auto">
+      {/* Bouton de déconnexion juste après Suggestions */}
+      <SidebarMenuItem className="mt-3">
         <SidebarMenuButton
           tooltip="Déconnexion"
           onClick={handleLogout}
-          className="w-full justify-start transition-transform duration-200 hover:scale-110 text-red-500 hover:bg-red-50"
+          className="w-full justify-start transition-all duration-200 hover:scale-105 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 font-medium border border-red-200 dark:border-red-800 hover:border-red-300 dark:hover:border-red-700 rounded-lg"
         >
           <LogOut className="h-6 w-6" />
           {!isCollapsed && <span className="ml-2">Déconnexion</span>}
         </SidebarMenuButton>
       </SidebarMenuItem>
+
+      {/* Spacer pour pousser le reste vers le bas si nécessaire */}
+      <div className="mt-auto"></div>
     </SidebarMenu>
   );
 }
