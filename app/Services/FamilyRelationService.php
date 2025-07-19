@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\FamilyRelationship;
 use App\Models\RelationshipRequest;
 use App\Models\RelationshipType;
+use App\Models\Conversation;
 use App\Services\IntelligentRelationshipService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -335,6 +336,152 @@ class FamilyRelationService
             ->delete();
 
         $relationship->delete();
+    }
+
+    /**
+     * Obtenir les membres de la famille pour la messagerie
+     */
+    public function getFamilyMembersForMessaging(User $user): Collection
+    {
+        $relationships = $this->getUserRelationships($user);
+
+        return $relationships->map(function ($relationship) use ($user) {
+            $relatedUser = $relationship->user_id === $user->id
+                ? $relationship->relatedUser
+                : $relationship->user;
+
+            $relationshipType = $relationship->relationshipType;
+
+            return [
+                'id' => $relatedUser->id,
+                'name' => $relatedUser->name,
+                'email' => $relatedUser->email,
+                'avatar' => $relatedUser->profile?->avatar,
+                'relationship' => $relationshipType->name_fr,
+                'relationship_code' => $relationshipType->code,
+                'is_online' => $relatedUser->isOnline(),
+                'last_seen_at' => $relatedUser->last_seen_at
+            ];
+        })->sortBy('name');
+    }
+
+    /**
+     * Créer automatiquement une conversation lors de l'acceptation d'une relation
+     */
+    public function createConversationForNewRelation(User $user1, User $user2): ?Conversation
+    {
+        // Vérifier si une conversation existe déjà
+        $existingConversation = Conversation::where('type', 'private')
+            ->whereHas('participants', function ($query) use ($user1) {
+                $query->where('user_id', $user1->id);
+            })
+            ->whereHas('participants', function ($query) use ($user2) {
+                $query->where('user_id', $user2->id);
+            })
+            ->first();
+
+        if ($existingConversation) {
+            return $existingConversation;
+        }
+
+        // Créer une nouvelle conversation
+        try {
+            DB::beginTransaction();
+
+            $conversation = Conversation::create([
+                'type' => 'private',
+                'created_by' => $user1->id,
+                'last_message_at' => now()
+            ]);
+
+            // Ajouter les participants
+            $conversation->addParticipant($user1, true);
+            $conversation->addParticipant($user2);
+
+            DB::commit();
+            return $conversation;
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('Erreur lors de la création de conversation automatique', [
+                'user1_id' => $user1->id,
+                'user2_id' => $user2->id,
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Obtenir les suggestions de conversations basées sur les relations familiales
+     */
+    public function getConversationSuggestions(User $user): Collection
+    {
+        $familyMembers = $this->getFamilyMembersForMessaging($user);
+
+        // Récupérer les conversations existantes de l'utilisateur
+        $existingConversationUserIds = $user->conversations()
+            ->where('type', 'private')
+            ->with('participants')
+            ->get()
+            ->flatMap(function ($conversation) use ($user) {
+                return $conversation->participants
+                    ->where('id', '!=', $user->id)
+                    ->pluck('id');
+            });
+
+        // Filtrer les membres de famille sans conversation
+        return $familyMembers->filter(function ($member) use ($existingConversationUserIds) {
+            return !$existingConversationUserIds->contains($member['id']);
+        })->take(5);
+    }
+
+    /**
+     * Créer un groupe familial automatiquement
+     */
+    public function createFamilyGroupConversation(User $creator, string $groupName = null): ?Conversation
+    {
+        $familyMembers = $this->getFamilyMembersForMessaging($creator);
+
+        if ($familyMembers->count() < 2) {
+            return null; // Pas assez de membres pour un groupe
+        }
+
+        $groupName = $groupName ?: "Famille {$creator->name}";
+
+        try {
+            DB::beginTransaction();
+
+            $conversation = Conversation::create([
+                'name' => $groupName,
+                'type' => 'group',
+                'created_by' => $creator->id,
+                'last_message_at' => now()
+            ]);
+
+            // Ajouter le créateur
+            $conversation->addParticipant($creator, true);
+
+            // Ajouter les membres de la famille
+            foreach ($familyMembers as $member) {
+                $familyMember = User::find($member['id']);
+                if ($familyMember) {
+                    $conversation->addParticipant($familyMember);
+                }
+            }
+
+            DB::commit();
+            return $conversation;
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('Erreur lors de la création du groupe familial', [
+                'creator_id' => $creator->id,
+                'group_name' => $groupName,
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
     }
 
 }

@@ -25,8 +25,13 @@ interface FamilyProps {
 
 export default function Family({ members }: FamilyProps) {
   console.log('members', members);
+  console.log('members type:', typeof members);
+  console.log('members is array:', Array.isArray(members));
 
-  if (!members || members.length === 0) {
+  // Sécurité : s'assurer que members est un tableau
+  const safeMembers = Array.isArray(members) ? members : [];
+
+  if (!safeMembers || safeMembers.length === 0) {
     return (
       <AppLayout>
         <div className="max-w-6xl mx-auto py-8 px-4">
@@ -69,7 +74,7 @@ export default function Family({ members }: FamilyProps) {
           <div>
             <h2 className="text-3xl font-bold text-gray-900">Ma famille</h2>
             <p className="text-gray-600 mt-1">
-              {members.length} membre{members.length > 1 ? 's' : ''} dans votre famille
+              {safeMembers.length} membre{safeMembers.length > 1 ? 's' : ''} dans votre famille
             </p>
           </div>
           <div className="flex gap-3">
@@ -94,7 +99,7 @@ export default function Family({ members }: FamilyProps) {
 
                 {/* Family Members Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-          {members.map((member) => (
+          {safeMembers.map((member) => (
             <div key={member.id} className="flex flex-col items-center">
               <FamilyMemberCard
                 id={member.id.toString()}

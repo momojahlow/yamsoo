@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -26,6 +27,7 @@ class User extends Authenticatable
         'mobile',
         'password',
         'family_id',
+        'last_seen_at',
     ];
 
     /**
@@ -48,6 +50,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'last_seen_at' => 'datetime',
         ];
     }
 
@@ -59,6 +62,35 @@ class User extends Authenticatable
     public function messages(): HasMany
     {
         return $this->hasMany(Message::class);
+    }
+
+    /**
+     * Conversations de l'utilisateur
+     */
+    public function conversations(): BelongsToMany
+    {
+        return $this->belongsToMany(Conversation::class, 'conversation_participants')
+            ->withPivot(['joined_at', 'left_at', 'last_read_at', 'is_admin'])
+            ->withTimestamps()
+            ->whereNull('conversation_participants.left_at');
+    }
+
+    /**
+     * Relations familiales de l'utilisateur
+     */
+    public function familyRelationships(): HasMany
+    {
+        return $this->hasMany(FamilyRelationship::class);
+    }
+
+    /**
+     * Vérifier si l'utilisateur est en ligne
+     */
+    public function isOnline(): bool
+    {
+        // Logique pour déterminer si l'utilisateur est en ligne
+        // Peut être basée sur last_seen_at ou une session active
+        return $this->last_seen_at && $this->last_seen_at->diffInMinutes(now()) < 5;
     }
 
     public function notifications(): HasMany

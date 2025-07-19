@@ -271,7 +271,53 @@ class IntelligentSuggestionService
             return null; // Relation incohérente avec le genre
         }
 
+        // Vérifier la cohérence générationnelle
+        if ($suggestedRelation && !$this->isGenerationConsistent($user, $relatedUser, $potentialSuggestion, $suggestedRelation['relation_code'])) {
+            return null; // Relation incohérente avec la génération
+        }
+
         return $suggestedRelation;
+    }
+
+    /**
+     * Vérifier la cohérence générationnelle des relations
+     */
+    private function isGenerationConsistent(User $user, User $relatedUser, User $potentialSuggestion, string $relationCode): bool
+    {
+        // Relations grand-parent/petit-enfant nécessitent une vérification spéciale
+        $grandparentRelations = ['grandfather_paternal', 'grandmother_paternal', 'grandfather_maternal', 'grandmother_maternal'];
+
+        if (in_array($relationCode, $grandparentRelations)) {
+            // Vérifier si l'utilisateur et la suggestion potentielle ont des parents communs
+            // Si oui, ils sont de la même génération et ne peuvent pas être grand-parent/petit-enfant
+            $commonParents = $this->findCommonParents($user, $potentialSuggestion);
+
+            if ($commonParents->isNotEmpty()) {
+                return false; // Même génération, pas grand-parent/petit-enfant
+            }
+        }
+
+        return true; // Relation cohérente
+    }
+
+    /**
+     * Trouver les parents communs entre deux utilisateurs
+     */
+    private function findCommonParents(User $user1, User $user2): \Illuminate\Support\Collection
+    {
+        $user1Parents = FamilyRelationship::where('user_id', $user1->id)
+            ->whereHas('relationshipType', function($query) {
+                $query->whereIn('code', ['father', 'mother']);
+            })
+            ->pluck('related_user_id');
+
+        $user2Parents = FamilyRelationship::where('user_id', $user2->id)
+            ->whereHas('relationshipType', function($query) {
+                $query->whereIn('code', ['father', 'mother']);
+            })
+            ->pluck('related_user_id');
+
+        return $user1Parents->intersect($user2Parents);
     }
 
     /**

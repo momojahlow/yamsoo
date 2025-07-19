@@ -128,5 +128,27 @@ Route::get('/debug/relations', function () {
     ]);
 })->middleware('auth');
 
+// Routes de messagerie
+Route::middleware('auth')->group(function () {
+    // Interface de messagerie
+    Route::get('/messages', [App\Http\Controllers\MessagingController::class, 'index'])->name('messages.index');
 
+    // API Routes pour la messagerie
+    Route::prefix('api')->group(function () {
+        // Conversations
+        Route::get('/conversations/{conversation}/messages', [App\Http\Controllers\MessagingController::class, 'getMessages']);
+        Route::post('/conversations/{conversation}/messages', [App\Http\Controllers\MessagingController::class, 'sendMessage']);
+        Route::post('/conversations', [App\Http\Controllers\MessagingController::class, 'createConversation']);
 
+        // Recherche
+        Route::get('/users/search', [App\Http\Controllers\MessagingController::class, 'searchUsers']);
+        Route::get('/messages/search', [App\Http\Controllers\MessagingController::class, 'searchMessages']);
+
+        // Statistiques
+        Route::get('/messages/stats', [App\Http\Controllers\MessagingController::class, 'getStats']);
+
+        // Fonctionnalités familiales
+        Route::post('/conversations/family-group', [App\Http\Controllers\MessagingController::class, 'createFamilyGroup']);
+        Route::get('/conversations/family-suggestions', [App\Http\Controllers\MessagingController::class, 'getFamilySuggestions']);
+    });
+});

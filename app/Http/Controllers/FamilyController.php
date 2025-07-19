@@ -45,7 +45,7 @@ class FamilyController extends Controller
 
         return Inertia::render('Family', [
             'family' => $family,
-            'members' => $members,
+            'members' => $members->toArray(), // S'assurer que c'est un tableau
         ]);
     }
 

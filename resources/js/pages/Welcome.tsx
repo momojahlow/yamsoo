@@ -27,28 +27,30 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
     <>
       <Head title="Yamsoo - Connexions Familiales" />
 
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50">
         {/* Header */}
         <header className="container mx-auto px-4 py-6">
           <nav className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-xl">Y</span>
+              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform duration-200">
+                <span className="text-white font-bold text-2xl">Y</span>
               </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Yamsoo
+              <span className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
+                Yamsoo!
               </span>
             </div>
 
             <div className="flex items-center space-x-4">
               {canLogin && (
                 <Link href={route('login')}>
-                  <Button variant="ghost" className="font-medium">Se connecter</Button>
+                  <Button variant="ghost" className="font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 transition-colors duration-200">
+                    Se connecter
+                  </Button>
                 </Link>
               )}
               {canRegister && (
                 <Link href={route('register')}>
-                  <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg">
+                  <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg transform hover:scale-105 transition-all duration-200">
                     S'inscrire
                   </Button>
                 </Link>
@@ -61,65 +63,68 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
         <main className="container mx-auto px-4 py-16">
           <div className="text-center mb-20">
             <div className="mb-8">
-              <div className="inline-flex items-center px-4 py-2 bg-blue-100 dark:bg-blue-900/30 rounded-full text-blue-700 dark:text-blue-300 text-sm font-medium mb-6">
-                <Star className="w-4 h-4 mr-2" />
-                La plateforme familiale la plus avancée
+              <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-orange-100 to-red-100 rounded-full text-orange-700 text-sm font-medium mb-8 shadow-md">
+                <Heart className="w-5 h-5 mr-2 text-red-500" />
+                La plateforme familiale qui rapproche les cœurs
               </div>
             </div>
 
-            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
-              Connectez votre
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"> famille</span>
+            <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-8 leading-tight">
+              Votre famille,
+              <br />
+              <span className="bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
+                plus proche que jamais
+              </span>
             </h1>
 
-            <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
-              Yamsoo vous aide à créer et maintenir des liens familiaux forts.
-              Découvrez votre arbre généalogique, partagez des moments précieux
-              et restez connecté avec vos proches en temps réel.
+            <p className="text-xl text-gray-600 mb-12 max-w-4xl mx-auto leading-relaxed">
+              Yamsoo révolutionne les liens familiaux. Créez votre arbre généalogique interactif,
+              partagez vos souvenirs précieux et restez connecté avec tous vos proches,
+              où qu'ils soient dans le monde.
             </p>
 
-            <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4 mb-12">
+            <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6 mb-16">
               <Link href={route('register')}>
-                <Button size="lg" className="px-8 py-4 text-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-xl">
-                  Commencer gratuitement
+                <Button size="lg" className="px-10 py-4 text-lg font-semibold bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl">
+                  Créer ma famille
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </Link>
               <Link href={route('login')}>
-                <Button variant="outline" size="lg" className="px-8 py-4 text-lg border-2">
+                <Button variant="outline" size="lg" className="px-10 py-4 text-lg font-semibold border-2 border-orange-300 text-orange-600 hover:bg-orange-50 hover:border-orange-400 transition-all duration-200 rounded-xl">
                   Se connecter
                 </Button>
               </Link>
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-2xl mx-auto">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-blue-600 mb-2">10K+</div>
-                <div className="text-gray-600 dark:text-gray-400">Familles connectées</div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-3xl mx-auto">
+              <div className="text-center p-6 bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-orange-100">
+                <div className="text-4xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent mb-2">15K+</div>
+                <div className="text-gray-600 font-medium">Familles connectées</div>
               </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-purple-600 mb-2">50K+</div>
-                <div className="text-gray-600 dark:text-gray-400">Relations créées</div>
+              <div className="text-center p-6 bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-red-100">
+                <div className="text-4xl font-bold bg-gradient-to-r from-red-500 to-pink-500 bg-clip-text text-transparent mb-2">75K+</div>
+                <div className="text-gray-600 font-medium">Relations créées</div>
               </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-green-600 mb-2">99%</div>
-                <div className="text-gray-600 dark:text-gray-400">Satisfaction client</div>
+              <div className="text-center p-6 bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-orange-100">
+                <div className="text-4xl font-bold bg-gradient-to-r from-orange-500 to-yellow-500 bg-clip-text text-transparent mb-2">99%</div>
+                <div className="text-gray-600 font-medium">Satisfaction client</div>
               </div>
             </div>
           </div>
 
           {/* Features */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
-            <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
+            <Card className="text-center border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 bg-white/80 backdrop-blur-sm">
               <CardHeader className="pb-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg transform hover:scale-110 transition-transform duration-200">
                   <TreePine className="w-8 h-8 text-white" />
                 </div>
-                <CardTitle className="text-xl">Arbre Généalogique</CardTitle>
+                <CardTitle className="text-xl text-gray-800">Arbre Généalogique</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                <p className="text-gray-600 leading-relaxed">
                   Créez et visualisez votre arbre généalogique interactif.
                   Découvrez vos racines et partagez votre histoire familiale
                   avec des outils de visualisation avancés.
@@ -127,15 +132,15 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
               </CardContent>
             </Card>
 
-            <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
+            <Card className="text-center border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 bg-white/80 backdrop-blur-sm">
               <CardHeader className="pb-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg transform hover:scale-110 transition-transform duration-200">
                   <MessageSquare className="w-8 h-8 text-white" />
                 </div>
-                <CardTitle className="text-xl">Messagerie Familiale</CardTitle>
+                <CardTitle className="text-xl text-gray-800">Messagerie Familiale</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                <p className="text-gray-600 leading-relaxed">
                   Communiquez en privé avec vos proches. Partagez des photos,
                   des messages et restez connecté en temps réel avec une
                   messagerie sécurisée et intuitive.
@@ -143,15 +148,15 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
               </CardContent>
             </Card>
 
-            <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
+            <Card className="text-center border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 bg-white/80 backdrop-blur-sm">
               <CardHeader className="pb-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-red-400 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg transform hover:scale-110 transition-transform duration-200">
                   <Users className="w-8 h-8 text-white" />
                 </div>
-                <CardTitle className="text-xl">Suggestions Intelligentes</CardTitle>
+                <CardTitle className="text-xl text-gray-800">Suggestions Intelligentes</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                <p className="text-gray-600 leading-relaxed">
                   Recevez des suggestions de connexions familiales basées sur
                   vos relations existantes et votre réseau. Notre IA vous aide
                   à découvrir de nouveaux liens familiaux.
@@ -162,53 +167,55 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
 
           {/* Benefits Section */}
           <div className="mb-20">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-                Pourquoi choisir Yamsoo ?
+            <div className="text-center mb-16">
+              <h2 className="text-4xl font-bold text-gray-900 mb-6">
+                Pourquoi choisir
+                <span className="bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent"> Yamsoo</span> ?
               </h2>
-              <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-                Une plateforme conçue spécifiquement pour les familles modernes
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                Une plateforme révolutionnaire conçue spécifiquement pour renforcer
+                les liens familiaux à l'ère numérique
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="text-center p-6">
-                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <Shield className="w-6 h-6 text-blue-600" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              <div className="text-center p-8 bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-orange-100">
+                <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                  <Shield className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="font-semibold mb-2">Sécurisé</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Vos données familiales sont protégées par un chiffrement de niveau bancaire
+                <h3 className="font-bold text-lg mb-3 text-gray-800">Ultra Sécurisé</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Vos données familiales sont protégées par un chiffrement de niveau bancaire et des protocoles de sécurité avancés
                 </p>
               </div>
 
-              <div className="text-center p-6">
-                <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <Zap className="w-6 h-6 text-green-600" />
+              <div className="text-center p-8 bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-red-100">
+                <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                  <Zap className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="font-semibold mb-2">Rapide</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Interface ultra-rapide et responsive pour tous vos appareils
+                <h3 className="font-bold text-lg mb-3 text-gray-800">Ultra Rapide</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Interface ultra-rapide et responsive optimisée pour tous vos appareils, mobile et desktop
                 </p>
               </div>
 
-              <div className="text-center p-6">
-                <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <Globe className="w-6 h-6 text-purple-600" />
+              <div className="text-center p-8 bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-orange-100">
+                <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-red-400 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                  <Globe className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="font-semibold mb-2">Accessible</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Disponible partout dans le monde, 24h/24 et 7j/7
+                <h3 className="font-bold text-lg mb-3 text-gray-800">Toujours Accessible</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Disponible partout dans le monde, 24h/24 et 7j/7 avec une disponibilité de 99.9%
                 </p>
               </div>
 
-              <div className="text-center p-6">
-                <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <Heart className="w-6 h-6 text-orange-600" />
+              <div className="text-center p-8 bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-red-100">
+                <div className="w-16 h-16 bg-gradient-to-br from-red-400 to-pink-400 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                  <Heart className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="font-semibold mb-2">Familial</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Conçu avec amour pour renforcer les liens familiaux
+                <h3 className="font-bold text-lg mb-3 text-gray-800">Fait avec ❤️</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Conçu avec passion pour renforcer les liens familiaux et créer des souvenirs durables
                 </p>
               </div>
             </div>
@@ -216,27 +223,36 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
 
           {/* CTA Section */}
           <div className="text-center">
-            <Card className="max-w-4xl mx-auto border-0 shadow-2xl bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-              <CardContent className="py-16 px-8">
-                <h2 className="text-3xl font-bold mb-4">
-                  Prêt à connecter votre famille ?
-                </h2>
-                <p className="text-blue-100 mb-8 text-lg max-w-2xl mx-auto">
-                  Rejoignez des milliers de familles qui utilisent Yamsoo pour
-                  maintenir des liens forts et créer des souvenirs durables.
-                </p>
-                <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-                  <Link href={route('register')}>
-                    <Button size="lg" className="px-8 py-4 text-lg bg-white text-blue-600 hover:bg-gray-100 shadow-xl">
-                      Créer mon compte gratuitement
-                      <ArrowRight className="w-5 h-5 ml-2" />
-                    </Button>
-                  </Link>
-                  <Link href={route('login')}>
-                    <Button variant="outline" size="lg" className="px-8 py-4 text-lg border-white text-white hover:bg-white hover:text-blue-600">
-                      Découvrir la démo
-                    </Button>
-                  </Link>
+            <Card className="max-w-5xl mx-auto border-0 shadow-2xl bg-gradient-to-r from-orange-500 to-red-500 text-white overflow-hidden">
+              <CardContent className="py-20 px-8 relative">
+                {/* Decorative elements */}
+                <div className="absolute top-0 left-0 w-full h-full opacity-10">
+                  <div className="absolute top-10 left-10 w-20 h-20 bg-white rounded-full"></div>
+                  <div className="absolute bottom-10 right-10 w-16 h-16 bg-white rounded-full"></div>
+                  <div className="absolute top-1/2 right-20 w-12 h-12 bg-white rounded-full"></div>
+                </div>
+
+                <div className="relative z-10">
+                  <h2 className="text-4xl md:text-5xl font-bold mb-6">
+                    Prêt à réunir votre famille ?
+                  </h2>
+                  <p className="text-orange-100 mb-10 text-xl max-w-3xl mx-auto leading-relaxed">
+                    Rejoignez plus de 15 000 familles qui utilisent Yamsoo pour
+                    maintenir des liens forts et créer des souvenirs inoubliables.
+                  </p>
+                  <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6">
+                    <Link href={route('register')}>
+                      <Button size="lg" className="px-10 py-4 text-lg font-semibold bg-white text-orange-600 hover:bg-gray-100 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl">
+                        Créer ma famille maintenant
+                        <ArrowRight className="w-5 h-5 ml-2" />
+                      </Button>
+                    </Link>
+                    <Link href={route('login')}>
+                      <Button variant="outline" size="lg" className="px-10 py-4 text-lg font-semibold border-2 border-white text-white hover:bg-white hover:text-orange-600 transition-all duration-200 rounded-xl">
+                        Découvrir Yamsoo
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -244,21 +260,24 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
         </main>
 
         {/* Footer */}
-        <footer className="container mx-auto px-4 py-12 border-t border-gray-200 dark:border-gray-700 mt-20">
+        <footer className="container mx-auto px-4 py-16 border-t border-orange-200 mt-20 bg-gradient-to-r from-orange-50 to-red-50">
           <div className="text-center">
-            <div className="flex items-center justify-center space-x-2 mb-4">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">Y</span>
+            <div className="flex items-center justify-center space-x-3 mb-6">
+              <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
+                <span className="text-white font-bold text-lg">Y</span>
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Yamsoo
+              <span className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
+                Yamsoo!
               </span>
             </div>
-            <p className="text-gray-600 dark:text-gray-400 mb-2">
+            <p className="text-gray-600 mb-4 text-lg">
+              Connecter les familles, créer des souvenirs
+            </p>
+            <p className="text-gray-500 mb-2">
               &copy; 2024 Yamsoo. Tous droits réservés.
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-500">
-              Laravel {laravelVersion} | PHP {phpVersion}
+            <p className="text-sm text-gray-400">
+              Propulsé par Laravel {laravelVersion} & PHP {phpVersion}
             </p>
           </div>
         </footer>

@@ -103,10 +103,10 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
       <SidebarMenuItem>
         <SidebarMenuButton
           tooltip="Messages"
-          onClick={() => window.location.href = "/messagerie"}
+          onClick={() => window.location.href = "/messages"}
           className={cn(
             "w-full justify-start transition-transform duration-200 hover:scale-110",
-            window.location.pathname === "/messagerie" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
+            window.location.pathname === "/messages" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
           )}
         >
           <MessageSquare className="h-6 w-6" />
