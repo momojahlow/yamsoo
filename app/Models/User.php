@@ -161,4 +161,65 @@ class User extends Authenticatable
             $query->where('user_id', $otherUser->id)->where('related_user_id', $this->id);
         })->where('status', 'accepted')->exists();
     }
+
+    /**
+     * Albums photo de l'utilisateur
+     */
+    public function photoAlbums(): HasMany
+    {
+        return $this->hasMany(PhotoAlbum::class)->orderBy('is_default', 'desc')->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Photos de l'utilisateur
+     */
+    public function photos(): HasMany
+    {
+        return $this->hasMany(Photo::class)->latest();
+    }
+
+    /**
+     * Album par défaut de l'utilisateur
+     */
+    public function defaultPhotoAlbum(): HasOne
+    {
+        return $this->hasOne(PhotoAlbum::class)->where('is_default', true);
+    }
+
+    /**
+     * Obtenir ou créer l'album par défaut
+     */
+    public function getOrCreateDefaultAlbum(): PhotoAlbum
+    {
+        $defaultAlbum = $this->defaultPhotoAlbum;
+
+        if (!$defaultAlbum) {
+            $defaultAlbum = $this->photoAlbums()->create([
+                'title' => 'Photos de ' . $this->name,
+                'description' => 'Album photo principal',
+                'privacy' => 'family',
+                'is_default' => true,
+            ]);
+        }
+
+        return $defaultAlbum;
+    }
+
+    /**
+     * Photos récentes de l'utilisateur
+     */
+    public function recentPhotos(int $limit = 12)
+    {
+        return $this->photos()->limit($limit);
+    }
+
+    /**
+     * Albums visibles par un utilisateur donné
+     */
+    public function visibleAlbumsFor(User $viewer)
+    {
+        return $this->photoAlbums()->get()->filter(function ($album) use ($viewer) {
+            return $album->canBeViewedBy($viewer);
+        });
+    }
 }

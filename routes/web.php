@@ -11,6 +11,8 @@ use App\Http\Controllers\NetworkController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PhotoAlbumController;
+use App\Http\Controllers\PhotoController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -87,10 +89,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Routes pour les relations familiales
     Route::get('family-relations', [FamilyRelationController::class, 'index'])->name('family-relations.index');
+    Route::get('family-relations/suggestions', function () {
+        return inertia('Relations/Suggestions');
+    })->name('family-relations.suggestions');
     Route::post('family-relations', [FamilyRelationController::class, 'store'])->name('family-relations.store');
     Route::post('family-relations/{requestId}/accept', [FamilyRelationController::class, 'accept'])->name('family-relations.accept');
     Route::post('family-relations/{requestId}/reject', [FamilyRelationController::class, 'reject'])->name('family-relations.reject');
     Route::get('users/search', [FamilyRelationController::class, 'searchUserByEmail'])->name('users.search-by-email');
+
+    // Routes pour les albums photo
+    Route::resource('photo-albums', PhotoAlbumController::class);
+    Route::get('users/{user}/photo-albums', [PhotoAlbumController::class, 'index'])->name('users.photo-albums');
+
+    // Routes pour les photos
+    Route::get('photo-albums/{album}/photos', [PhotoController::class, 'index'])->name('albums.photos.index');
+    Route::get('photo-albums/{album}/photos/create', [PhotoController::class, 'create'])->name('albums.photos.create');
+    Route::post('photo-albums/{album}/photos', [PhotoController::class, 'store'])->name('albums.photos.store');
+    Route::resource('photos', PhotoController::class)->except(['index', 'create', 'store']);
 
     // Routes CRUD pour les entités
     Route::resource('profiles', ProfileController::class);

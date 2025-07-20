@@ -56,6 +56,7 @@ export function SuggestionActions({ suggestion, onAcceptWithRelation }: Props) {
   };
 
   const relationOptions = [
+    // Relations directes
     { value: 'father', label: 'Père' },
     { value: 'mother', label: 'Mère' },
     { value: 'son', label: 'Fils' },
@@ -64,6 +65,13 @@ export function SuggestionActions({ suggestion, onAcceptWithRelation }: Props) {
     { value: 'sister', label: 'Sœur' },
     { value: 'husband', label: 'Mari' },
     { value: 'wife', label: 'Épouse' },
+    // Relations par alliance
+    { value: 'father_in_law', label: 'Beau-père' },
+    { value: 'mother_in_law', label: 'Belle-mère' },
+    { value: 'brother_in_law', label: 'Beau-frère' },
+    { value: 'sister_in_law', label: 'Belle-sœur' },
+    { value: 'stepson', label: 'Beau-fils' },
+    { value: 'stepdaughter', label: 'Belle-fille' },
   ];
 
   const handleDelete = () => {

@@ -162,6 +162,74 @@ class FamilyRelationService
     }
 
     /**
+     * Créer directement une relation familiale sans passer par une demande
+     */
+    public function createDirectRelationship(
+        User $requester,
+        User $target,
+        RelationshipType $relationshipType,
+        string $message = ''
+    ): FamilyRelationship {
+        $createdRelationship = null;
+
+        DB::transaction(function () use ($requester, $target, $relationshipType, $message, &$createdRelationship) {
+            // Créer la relation familiale principale
+            $createdRelationship = FamilyRelationship::create([
+                'user_id' => $requester->id,
+                'related_user_id' => $target->id,
+                'relationship_type_id' => $relationshipType->id,
+                'status' => 'accepted',
+                'accepted_at' => now(),
+                'created_automatically' => true,
+            ]);
+
+            // Créer la relation inverse si nécessaire
+            $inverseType = $this->getInverseRelationshipType($relationshipType->id, $requester, $target);
+            if ($inverseType) {
+                FamilyRelationship::create([
+                    'user_id' => $target->id,
+                    'related_user_id' => $requester->id,
+                    'relationship_type_id' => $inverseType->id,
+                    'status' => 'accepted',
+                    'accepted_at' => now(),
+                    'created_automatically' => true,
+                ]);
+            }
+        });
+
+        // Déduire les relations automatiques
+        if ($createdRelationship) {
+            // Déduire les relations pour le demandeur
+            $deducedForRequester = $this->intelligentRelationshipService->deduceRelationships(
+                $requester,
+                $target,
+                $relationshipType->code
+            );
+            $this->intelligentRelationshipService->createDeducedRelationships($deducedForRequester);
+
+            // Déduire les relations pour la cible (relation inverse)
+            $inverseType = $this->getInverseRelationshipType($relationshipType->id, $requester, $target);
+            if ($inverseType) {
+                $deducedForTarget = $this->intelligentRelationshipService->deduceRelationships(
+                    $target,
+                    $requester,
+                    $inverseType->code
+                );
+                $this->intelligentRelationshipService->createDeducedRelationships($deducedForTarget);
+            }
+        }
+
+        Log::info("Relation familiale créée directement", [
+            'requester' => $requester->name,
+            'target' => $target->name,
+            'relation' => $relationshipType->name_fr,
+            'message' => $message
+        ]);
+
+        return $createdRelationship;
+    }
+
+    /**
      * Obtenir les statistiques familiales d'un utilisateur
      */
     public function getFamilyStatistics(User $user): array
@@ -260,7 +328,7 @@ class FamilyRelationService
             ->get();
     }
 
-    private function getInverseRelationshipType(int $relationshipTypeId, User $requester = null, User $target = null): ?RelationshipType
+    private function getInverseRelationshipType(int $relationshipTypeId, ?User $requester = null, ?User $target = null): ?RelationshipType
     {
         // Récupérer le type de relation actuel
         $currentType = RelationshipType::find($relationshipTypeId);
@@ -439,7 +507,7 @@ class FamilyRelationService
     /**
      * Créer un groupe familial automatiquement
      */
-    public function createFamilyGroupConversation(User $creator, string $groupName = null): ?Conversation
+    public function createFamilyGroupConversation(User $creator, ?string $groupName = null): ?Conversation
     {
         $familyMembers = $this->getFamilyMembersForMessaging($creator);
 

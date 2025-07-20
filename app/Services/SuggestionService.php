@@ -80,9 +80,9 @@ class SuggestionService
             $suggestion->update(['status' => 'accepted']);
         }
 
-        // Créer automatiquement la demande de relation familiale
+        // Créer DIRECTEMENT la relation familiale (pas une demande)
         if ($relationCode) {
-            $this->createRelationshipRequestFromSuggestion($suggestion, $relationCode);
+            $this->createFamilyRelationshipFromSuggestion($suggestion, $relationCode);
         }
     }
 
@@ -176,7 +176,62 @@ class SuggestionService
     }
 
     /**
-     * Crée une demande de relation familiale à partir d'une suggestion acceptée
+     * Crée DIRECTEMENT une relation familiale à partir d'une suggestion acceptée
+     */
+    private function createFamilyRelationshipFromSuggestion(Suggestion $suggestion, string $relationCode): void
+    {
+        // Récupérer les utilisateurs
+        $requester = User::find($suggestion->user_id);
+        $targetUser = User::find($suggestion->suggested_user_id);
+
+        if (!$requester || !$targetUser) {
+            \Log::error("Utilisateurs non trouvés pour la suggestion", [
+                'suggestion_id' => $suggestion->id,
+                'requester_id' => $suggestion->user_id,
+                'target_user_id' => $suggestion->suggested_user_id
+            ]);
+            return;
+        }
+
+        // Récupérer le type de relation
+        $relationshipType = RelationshipType::where('code', $relationCode)->first();
+
+        if (!$relationshipType) {
+            \Log::error("Type de relation non trouvé", [
+                'relation_code' => $relationCode,
+                'suggestion_id' => $suggestion->id
+            ]);
+            return;
+        }
+
+        try {
+            // Créer DIRECTEMENT la relation familiale via le service
+            $createdRelationship = $this->familyRelationService->createDirectRelationship(
+                $requester,
+                $targetUser,
+                $relationshipType,
+                "Relation créée automatiquement à partir d'une suggestion acceptée"
+            );
+
+            \Log::info("Relation familiale créée directement à partir d'une suggestion", [
+                'suggestion_id' => $suggestion->id,
+                'relationship_id' => $createdRelationship->id,
+                'requester' => $requester->name,
+                'target' => $targetUser->name,
+                'relation' => $relationshipType->name_fr
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error("Erreur lors de la création de la relation familiale", [
+                'suggestion_id' => $suggestion->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
+    }
+
+    /**
+     * Crée une demande de relation familiale à partir d'une suggestion acceptée (ANCIENNE MÉTHODE)
      */
     private function createRelationshipRequestFromSuggestion(Suggestion $suggestion, string $relationCode): void
     {

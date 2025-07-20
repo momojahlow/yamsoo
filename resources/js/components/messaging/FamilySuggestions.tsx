@@ -137,7 +137,7 @@ export default function FamilySuggestions({ isOpen, onClose, onConversationCreat
                                     <p className="text-sm text-gray-600 mb-3">
                                         Rassemblez toute votre famille dans une conversation de groupe.
                                     </p>
-                                    
+
                                     <div className="flex items-center space-x-3">
                                         <input
                                             type="text"
@@ -163,14 +163,30 @@ export default function FamilySuggestions({ isOpen, onClose, onConversationCreat
 
                             {/* Liste des suggestions */}
                             {suggestions.length === 0 ? (
-                                <div className="text-center py-8">
-                                    <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                                <div className="text-center py-12">
+                                    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                                        <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                        </svg>
+                                    </div>
+                                    <h3 className="text-xl font-semibold text-gray-900 mb-3">
                                         Aucune suggestion
                                     </h3>
-                                    <p className="text-sm text-gray-500">
-                                        Vous avez déjà des conversations avec tous vos membres de famille disponibles.
+                                    <p className="text-gray-500 mb-6 leading-relaxed max-w-sm mx-auto">
+                                        Vous n'avez pas encore reçu de suggestions de relations familiales.
+                                        Explorez les réseaux pour découvrir de nouveaux utilisateurs.
                                     </p>
+                                    <button
+                                        onClick={() => {
+                                            onClose();
+                                            // Rediriger vers la page des suggestions
+                                            window.location.href = '/family-relations/suggestions';
+                                        }}
+                                        className="inline-flex items-center px-6 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-all duration-200 transform hover:scale-105 font-medium"
+                                    >
+                                        <Plus className="w-5 h-5 mr-2" />
+                                        Explorer les Réseaux
+                                    </button>
                                 </div>
                             ) : (
                                 <div>
@@ -197,7 +213,7 @@ export default function FamilySuggestions({ isOpen, onClose, onConversationCreat
                                                                 {getInitials(member.name)}
                                                             </div>
                                                         )}
-                                                        
+
                                                         {/* Indicateur en ligne */}
                                                         {member.is_online && (
                                                             <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>

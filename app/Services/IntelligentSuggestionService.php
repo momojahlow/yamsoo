@@ -32,6 +32,12 @@ class IntelligentSuggestionService
             $suggestionsCreated += $newSuggestions;
         }
 
+        // Générer des suggestions basées sur les relations par alliance (belle-famille)
+        $suggestionsCreated += $this->generateInLawRelationSuggestions($user);
+
+        // Générer des suggestions basées sur les frères/sœurs
+        $suggestionsCreated += $this->generateSiblingRelationSuggestions($user);
+
         return $suggestionsCreated;
     }
 
@@ -158,59 +164,150 @@ class IntelligentSuggestionService
     {
         $suggestionsCreated = 0;
 
-        // Trouver le conjoint de l'utilisateur
-        $spouseRelation = FamilyRelationship::where('user_id', $user->id)
-            ->whereHas('relationshipType', function($query) {
-                $query->whereIn('code', ['husband', 'wife']);
-            })
-            ->with(['relatedUser', 'relationshipType'])
-            ->first();
+        // Trouver le conjoint de l'utilisateur (dans les deux sens)
+        $spouseRelation = FamilyRelationship::where(function($query) use ($user) {
+            $query->where('user_id', $user->id)
+                  ->orWhere('related_user_id', $user->id);
+        })
+        ->whereHas('relationshipType', function($query) {
+            $query->whereIn('code', ['husband', 'wife']);
+        })
+        ->with(['relatedUser', 'relationshipType', 'user'])
+        ->first();
 
         if (!$spouseRelation) {
             return 0; // Pas de conjoint
         }
 
-        $spouse = $spouseRelation->relatedUser;
+        // Déterminer qui est le conjoint
+        $spouse = $spouseRelation->user_id === $user->id
+            ? $spouseRelation->relatedUser
+            : $spouseRelation->user;
 
-        // Trouver les enfants du conjoint (beaux-enfants potentiels)
-        $spouseChildren = FamilyRelationship::where('user_id', $spouse->id)
-            ->whereHas('relationshipType', function($query) {
-                $query->whereIn('code', ['son', 'daughter']);
-            })
-            ->with(['relatedUser', 'relationshipType'])
-            ->get();
+        // Obtenir TOUTE la famille du conjoint pour suggérer les relations par alliance
+        $spouseFamilyRelations = FamilyRelationship::where(function($query) use ($spouse) {
+            $query->where('user_id', $spouse->id)
+                  ->orWhere('related_user_id', $spouse->id);
+        })
+        ->with(['relatedUser', 'relationshipType', 'user'])
+        ->get();
 
-        foreach ($spouseChildren as $childRelation) {
-            $child = $childRelation->relatedUser;
+        foreach ($spouseFamilyRelations as $familyRelation) {
+            $familyMember = $familyRelation->user_id === $spouse->id
+                ? $familyRelation->relatedUser
+                : $familyRelation->user;
+
+            // Ne pas suggérer le conjoint lui-même ou l'utilisateur
+            if ($familyMember->id === $spouse->id || $familyMember->id === $user->id) {
+                continue;
+            }
 
             // Vérifier si une relation existe déjà
-            if ($this->relationExists($user, $child)) {
+            if ($this->relationExists($user, $familyMember)) {
                 continue;
             }
 
-            // Vérifier si une suggestion existe déjà
-            if ($this->suggestionExists($user, $child)) {
+            // Déterminer la relation du conjoint avec ce membre de famille
+            // IMPORTANT: Nous voulons la relation du point de vue du conjoint vers le membre de famille
+            // Pour déterminer la relation par alliance correcte
+            $spouseRelationCode = null;
+
+            if ($familyRelation->user_id === $spouse->id) {
+                // Le conjoint est l'utilisateur de la relation: spouse -> familyMember
+                $spouseRelationCode = $familyRelation->relationshipType->code;
+            } else {
+                // Le membre de famille est l'utilisateur de la relation: familyMember -> spouse
+                // Nous devons inverser pour avoir spouse -> familyMember
+                $spouseRelationCode = $this->getInverseRelationCode(
+                    $familyRelation->relationshipType->code,
+                    $familyMember,
+                    $spouse
+                );
+            }
+
+            // Vérifier si une suggestion existe déjà pour cette relation spécifique
+            $existingSuggestion = $this->getSuggestion($user, $familyMember);
+            if ($existingSuggestion) {
+                // Si la nouvelle relation est plus appropriée (relation par alliance vs relation directe)
+                // on met à jour la suggestion
+                $inLawRelation = $this->determineInLawRelation($spouseRelationCode, $familyMember);
+                if ($inLawRelation && $this->isInLawRelationBetter($existingSuggestion->suggested_relation_code, $inLawRelation['relation_code'])) {
+                    $existingSuggestion->update([
+                        'suggested_relation_code' => $inLawRelation['relation_code'],
+                        'message' => "Famille de votre conjoint : {$spouse->name}"
+                    ]);
+                }
                 continue;
             }
 
-            // Déterminer le type de relation (beau-fils/belle-fille)
-            $childGender = $child->profile?->gender;
-            $relationCode = $childGender === 'female' ? 'stepdaughter' : 'stepson';
-            $relationName = $childGender === 'female' ? 'Belle-fille' : 'Beau-fils';
+            // Déterminer la relation par alliance
+            $inLawRelation = $this->determineInLawRelation($spouseRelationCode, $familyMember);
 
-            $suggestedRelation = [
-                'relation_code' => $relationCode,
-                'relation_name' => $relationName
-            ];
-
-            // Vérifier la cohérence genre/relation
-            if ($this->isGenderConsistent($child, $relationCode)) {
-                $this->createSuggestion($user, $child, $suggestedRelation, "Enfant du conjoint : {$spouse->name}");
+            if ($inLawRelation) {
+                $this->createSuggestion(
+                    $user,
+                    $familyMember,
+                    $inLawRelation,
+                    "Famille de votre conjoint : {$spouse->name}"
+                );
                 $suggestionsCreated++;
             }
         }
 
         return $suggestionsCreated;
+    }
+
+    /**
+     * Déterminer la relation par alliance basée sur la relation du conjoint
+     */
+    private function determineInLawRelation(string $spouseRelationCode, User $familyMember): ?array
+    {
+
+        $inLawMappings = [
+            'father' => ['relation_code' => 'father_in_law', 'relation_name' => 'Beau-père'],
+            'mother' => ['relation_code' => 'mother_in_law', 'relation_name' => 'Belle-mère'],
+            'brother' => ['relation_code' => 'brother_in_law', 'relation_name' => 'Beau-frère'],
+            'sister' => ['relation_code' => 'sister_in_law', 'relation_name' => 'Belle-sœur'],
+            // Les enfants du conjoint sont les enfants de l'utilisateur dans un mariage
+            'son' => [
+                'relation_code' => 'son',
+                'relation_name' => 'Fils'
+            ],
+            'daughter' => [
+                'relation_code' => 'daughter',
+                'relation_name' => 'Fille'
+            ]
+        ];
+
+        return $inLawMappings[$spouseRelationCode] ?? null;
+    }
+
+    /**
+     * Obtenir le code de relation inverse
+     */
+    private function getInverseRelationCode(string $relationCode, User $fromUser, User $toUser): string
+    {
+        $fromGender = $fromUser->profile?->gender;
+        $toGender = $toUser->profile?->gender;
+
+        $inverseMappings = [
+            'father' => $fromGender === 'female' ? 'daughter' : 'son',
+            'mother' => $fromGender === 'female' ? 'daughter' : 'son',
+            'son' => $toGender === 'female' ? 'mother' : 'father',
+            'daughter' => $toGender === 'female' ? 'mother' : 'father',
+            'brother' => $fromGender === 'female' ? 'sister' : 'brother',
+            'sister' => $fromGender === 'female' ? 'sister' : 'brother',
+            'husband' => 'wife',
+            'wife' => 'husband',
+            'uncle_paternal' => $fromGender === 'female' ? 'niece' : 'nephew',
+            'aunt_paternal' => $fromGender === 'female' ? 'niece' : 'nephew',
+            'uncle_maternal' => $fromGender === 'female' ? 'niece' : 'nephew',
+            'aunt_maternal' => $fromGender === 'female' ? 'niece' : 'nephew',
+            'nephew' => $toGender === 'female' ? 'aunt_paternal' : 'uncle_paternal',
+            'niece' => $toGender === 'female' ? 'aunt_paternal' : 'uncle_paternal',
+        ];
+
+        return $inverseMappings[$relationCode] ?? $relationCode;
     }
 
     /**
@@ -376,17 +473,45 @@ class IntelligentSuggestionService
     }
 
     /**
+     * Obtenir une suggestion existante
+     */
+    private function getSuggestion(User $user, User $suggestedUser): ?Suggestion
+    {
+        return Suggestion::where('user_id', $user->id)
+            ->where('suggested_user_id', $suggestedUser->id)
+            ->first();
+    }
+
+    /**
+     * Déterminer si une relation par alliance est meilleure qu'une relation directe
+     */
+    private function isInLawRelationBetter(string $currentRelationCode, string $newRelationCode): bool
+    {
+        // Les relations par alliance sont généralement plus appropriées que les relations directes incorrectes
+        $inLawRelations = ['father_in_law', 'mother_in_law', 'brother_in_law', 'sister_in_law', 'stepson', 'stepdaughter'];
+        $directRelations = ['father', 'mother', 'brother', 'sister', 'son', 'daughter'];
+
+        // Si la nouvelle relation est par alliance et l'ancienne est directe, préférer la nouvelle
+        if (in_array($newRelationCode, $inLawRelations) && in_array($currentRelationCode, $directRelations)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Créer une nouvelle suggestion
      */
-    private function createSuggestion(User $user, User $suggestedUser, array $relationData): void
+    private function createSuggestion(User $user, User $suggestedUser, array $relationData, ?string $message = null): void
     {
         Suggestion::create([
             'user_id' => $user->id,
             'suggested_user_id' => $suggestedUser->id,
             'type' => 'intelligent', // Type de suggestion
             'suggested_relation_code' => $relationData['relation_code'],
+            'suggested_relation_name' => $relationData['relation_name'],
             'status' => 'pending',
-            'message' => 'Suggestion intelligente basée sur les relations familiales existantes',
+            'message' => $message ?? 'Suggestion intelligente basée sur les relations familiales existantes',
         ]);
     }
 

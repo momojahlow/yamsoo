@@ -16,16 +16,16 @@ class FamilyTreeController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
-        
+
         // Obtenir toutes les relations de l'utilisateur
         $relationships = $this->familyRelationService->getUserRelationships($user);
-        
+
         // Construire les données de l'arbre familial
         $treeData = $this->buildFamilyTreeData($user, $relationships);
-        
+
         // Obtenir les statistiques familiales
         $statistics = $this->familyRelationService->getFamilyStatistics($user);
-        
+
         return Inertia::render('FamilyTree/Index', [
             'user' => $user->load('profile'),
             'treeData' => $treeData,
@@ -136,6 +136,22 @@ class FamilyTreeController extends Controller
                 case 'cousin_maternal_m':
                 case 'cousin_maternal_f':
                     $treeData['cousins'][] = $relatedUser;
+                    break;
+
+                // Relations par alliance (belle-famille)
+                case 'father_in_law':
+                case 'mother_in_law':
+                    $treeData['parents'][] = $relatedUser;
+                    break;
+
+                case 'brother_in_law':
+                case 'sister_in_law':
+                    $treeData['siblings'][] = $relatedUser;
+                    break;
+
+                case 'stepson':
+                case 'stepdaughter':
+                    $treeData['children'][] = $relatedUser;
                     break;
             }
         }

@@ -15,14 +15,24 @@ import {
   Zap
 } from 'lucide-react';
 
+interface User {
+  id: number;
+  name: string;
+  email: string;
+}
+
 interface Props {
   canLogin: boolean;
   canRegister: boolean;
   laravelVersion: string;
   phpVersion: string;
+  auth: {
+    user: User | null;
+  };
 }
 
-export default function Welcome({ canLogin, canRegister, laravelVersion, phpVersion }: Props) {
+export default function Welcome({ canLogin, canRegister, laravelVersion, phpVersion, auth }: Props) {
+  const { user } = auth;
   return (
     <>
       <Head title="Yamsoo - Connexions Familiales" />
@@ -41,19 +51,36 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
             </div>
 
             <div className="flex items-center space-x-4">
-              {canLogin && (
-                <Link href={route('login')}>
-                  <Button variant="ghost" className="font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 transition-colors duration-200">
-                    Se connecter
-                  </Button>
-                </Link>
-              )}
-              {canRegister && (
-                <Link href={route('register')}>
-                  <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg transform hover:scale-105 transition-all duration-200">
-                    S'inscrire
-                  </Button>
-                </Link>
+              {user ? (
+                // Utilisateur connecté
+                <>
+                  <span className="text-gray-600 font-medium">
+                    Bonjour, {user.name}
+                  </span>
+                  <Link href={route('dashboard')}>
+                    <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg transform hover:scale-105 transition-all duration-200">
+                      Mon compte
+                    </Button>
+                  </Link>
+                </>
+              ) : (
+                // Utilisateur non connecté
+                <>
+                  {canLogin && (
+                    <Link href={route('login')}>
+                      <Button variant="ghost" className="font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 transition-colors duration-200">
+                        Se connecter
+                      </Button>
+                    </Link>
+                  )}
+                  {canRegister && (
+                    <Link href={route('register')}>
+                      <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg transform hover:scale-105 transition-all duration-200">
+                        S'inscrire
+                      </Button>
+                    </Link>
+                  )}
+                </>
               )}
             </div>
           </nav>
@@ -84,17 +111,37 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
             </p>
 
             <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6 mb-16">
-              <Link href={route('register')}>
-                <Button size="lg" className="px-10 py-4 text-lg font-semibold bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl">
-                  Créer ma famille
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </Button>
-              </Link>
-              <Link href={route('login')}>
-                <Button variant="outline" size="lg" className="px-10 py-4 text-lg font-semibold border-2 border-orange-300 text-orange-600 hover:bg-orange-50 hover:border-orange-400 transition-all duration-200 rounded-xl">
-                  Se connecter
-                </Button>
-              </Link>
+              {user ? (
+                // Utilisateur connecté - Boutons vers les fonctionnalités
+                <>
+                  <Link href={route('dashboard')}>
+                    <Button size="lg" className="px-10 py-4 text-lg font-semibold bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl">
+                      Accéder à mon tableau de bord
+                      <ArrowRight className="w-5 h-5 ml-2" />
+                    </Button>
+                  </Link>
+                  <Link href={route('family')}>
+                    <Button variant="outline" size="lg" className="px-10 py-4 text-lg font-semibold border-2 border-orange-300 text-orange-600 hover:bg-orange-50 hover:border-orange-400 transition-all duration-200 rounded-xl">
+                      Ma famille
+                    </Button>
+                  </Link>
+                </>
+              ) : (
+                // Utilisateur non connecté - Boutons d'inscription/connexion
+                <>
+                  <Link href={route('register')}>
+                    <Button size="lg" className="px-10 py-4 text-lg font-semibold bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl">
+                      Créer ma famille
+                      <ArrowRight className="w-5 h-5 ml-2" />
+                    </Button>
+                  </Link>
+                  <Link href={route('login')}>
+                    <Button variant="outline" size="lg" className="px-10 py-4 text-lg font-semibold border-2 border-orange-300 text-orange-600 hover:bg-orange-50 hover:border-orange-400 transition-all duration-200 rounded-xl">
+                      Se connecter
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
 
             {/* Stats */}
@@ -241,17 +288,37 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
                     maintenir des liens forts et créer des souvenirs inoubliables.
                   </p>
                   <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6">
-                    <Link href={route('register')}>
-                      <Button size="lg" className="px-10 py-4 text-lg font-semibold bg-white text-orange-600 hover:bg-gray-100 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl">
-                        Créer ma famille maintenant
-                        <ArrowRight className="w-5 h-5 ml-2" />
-                      </Button>
-                    </Link>
-                    <Link href={route('login')}>
-                      <Button variant="outline" size="lg" className="px-10 py-4 text-lg font-semibold border-2 border-white text-white hover:bg-white hover:text-orange-600 transition-all duration-200 rounded-xl">
-                        Découvrir Yamsoo
-                      </Button>
-                    </Link>
+                    {user ? (
+                      // Utilisateur connecté
+                      <>
+                        <Link href={route('messages.index')}>
+                          <Button size="lg" className="px-10 py-4 text-lg font-semibold bg-white text-orange-600 hover:bg-gray-100 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl">
+                            Mes messages
+                            <ArrowRight className="w-5 h-5 ml-2" />
+                          </Button>
+                        </Link>
+                        <Link href={route('family.tree')}>
+                          <Button variant="outline" size="lg" className="px-10 py-4 text-lg font-semibold border-2 border-white text-white hover:bg-white hover:text-orange-600 transition-all duration-200 rounded-xl">
+                            Mon arbre familial
+                          </Button>
+                        </Link>
+                      </>
+                    ) : (
+                      // Utilisateur non connecté
+                      <>
+                        <Link href={route('register')}>
+                          <Button size="lg" className="px-10 py-4 text-lg font-semibold bg-white text-orange-600 hover:bg-gray-100 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl">
+                            Créer ma famille maintenant
+                            <ArrowRight className="w-5 h-5 ml-2" />
+                          </Button>
+                        </Link>
+                        <Link href={route('login')}>
+                          <Button variant="outline" size="lg" className="px-10 py-4 text-lg font-semibold border-2 border-white text-white hover:bg-white hover:text-orange-600 transition-all duration-200 rounded-xl">
+                            Découvrir Yamsoo
+                          </Button>
+                        </Link>
+                      </>
+                    )}
                   </div>
                 </div>
               </CardContent>

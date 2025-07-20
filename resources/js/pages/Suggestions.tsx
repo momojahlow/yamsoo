@@ -8,7 +8,7 @@ import { EmptySuggestions } from '@/components/suggestions/EmptySuggestions';
 import { SuggestionActions } from '@/components/suggestions/SuggestionActions';
 import { RelationSelector } from '@/components/suggestions/RelationSelector';
 import { FloatingLogoutButton } from '@/components/FloatingLogoutButton';
-import AppLayout from '@/layouts/app-layout';
+import AppSidebarLayout from '@/Layouts/app/app-sidebar-layout';
 
 interface Suggestion {
   id: number;
@@ -76,15 +76,15 @@ export default function Suggestions({ suggestions }: Props) {
 
   if (suggestions.length === 0) {
     return (
-      <>
+      <AppSidebarLayout>
         <Head title="Suggestions" />
         <EmptySuggestions />
-      </>
+      </AppSidebarLayout>
     );
   }
 
   return (
-    <AppLayout>
+    <AppSidebarLayout>
       <Head title="Suggestions" />
 
       <div className="container mx-auto px-4 py-8">
@@ -256,6 +256,6 @@ export default function Suggestions({ suggestions }: Props) {
         )}
       </div>
       <FloatingLogoutButton showOnMobile={true} showOnDesktop={false} />
-    </AppLayout>
+    </AppSidebarLayout>
   );
 }

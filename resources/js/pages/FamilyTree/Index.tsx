@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
-import AppLayout from '@/Layouts/app-layout';
+import AppSidebarLayout from '@/Layouts/app/app-sidebar-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -342,12 +342,7 @@ const FamilyTreeIndex: React.FC<Props> = ({ user, treeData, relationships, stati
     );
 
     return (
-        <AppLayout
-            breadcrumbs={[
-                { title: 'Famille', href: '/famille' },
-                { title: 'Arbre Familial', href: '/famille/arbre' }
-            ]}
-        >
+        <AppSidebarLayout>
             <Head title="Arbre Familial" />
 
             <div className="py-12">
@@ -393,7 +388,7 @@ const FamilyTreeIndex: React.FC<Props> = ({ user, treeData, relationships, stati
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold">
-                                    {relationships.filter(r => r.created_automatically).length}
+                                    {Array.isArray(relationships) ? relationships.filter(r => r.created_automatically).length : 0}
                                 </div>
                                 <p className="text-xs text-muted-foreground">
                                     déduites intelligemment
@@ -423,7 +418,7 @@ const FamilyTreeIndex: React.FC<Props> = ({ user, treeData, relationships, stati
                     )}
                 </div>
             </div>
-        </AppLayout>
+        </AppSidebarLayout>
     );
 };
 

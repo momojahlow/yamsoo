@@ -22,13 +22,13 @@ interface TreeNodeProps {
     onClick?: () => void;
 }
 
-const TreeNode: React.FC<TreeNodeProps> = ({ 
-    person, 
-    relationshipType, 
+const TreeNode: React.FC<TreeNodeProps> = ({
+    person,
+    relationshipType,
     relationshipCode,
     isCenter = false,
     level = 0,
-    onClick 
+    onClick
 }) => {
     const getGenderIcon = (gender?: string) => {
         return gender === 'female' ? '👩' : '👨';
@@ -48,6 +48,13 @@ const TreeNode: React.FC<TreeNodeProps> = ({
             'grandmother_paternal': 'bg-indigo-100 text-indigo-800 border-indigo-200',
             'grandfather_maternal': 'bg-teal-100 text-teal-800 border-teal-200',
             'grandmother_maternal': 'bg-teal-100 text-teal-800 border-teal-200',
+            // Relations par alliance (belle-famille)
+            'father_in_law': 'bg-blue-50 text-blue-700 border-blue-300 border-dashed',
+            'mother_in_law': 'bg-pink-50 text-pink-700 border-pink-300 border-dashed',
+            'brother_in_law': 'bg-orange-50 text-orange-700 border-orange-300 border-dashed',
+            'sister_in_law': 'bg-yellow-50 text-yellow-700 border-yellow-300 border-dashed',
+            'stepson': 'bg-green-50 text-green-700 border-green-300 border-dashed',
+            'stepdaughter': 'bg-purple-50 text-purple-700 border-purple-300 border-dashed',
         };
         return colors[relationCode || ''] || 'bg-gray-100 text-gray-800 border-gray-200';
     };
@@ -64,7 +71,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
     };
 
     return (
-        <Card 
+        <Card
             className={`
                 relative transition-all duration-200 hover:shadow-md cursor-pointer
                 ${isCenter ? 'border-2 border-primary shadow-lg bg-primary/5' : `border-2 ${getLevelColor(level)}`}
@@ -77,29 +84,37 @@ const TreeNode: React.FC<TreeNodeProps> = ({
                 <div className="text-2xl mb-2">
                     {getGenderIcon(person.profile?.gender)}
                 </div>
-                
+
                 {/* Nom */}
                 <h3 className={`font-semibold text-sm leading-tight mb-2 ${isCenter ? 'text-primary' : 'text-foreground'}`}>
                     {person.name}
                 </h3>
-                
+
                 {/* Badge de relation */}
                 {relationshipType && !isCenter && (
-                    <Badge 
-                        className={`text-xs px-2 py-1 ${getRelationshipColor(relationshipCode)}`}
-                        variant="outline"
-                    >
-                        {relationshipType}
-                    </Badge>
+                    <div className="space-y-1">
+                        <Badge
+                            className={`text-xs px-2 py-1 ${getRelationshipColor(relationshipCode)}`}
+                            variant="outline"
+                        >
+                            {relationshipType}
+                        </Badge>
+                        {/* Indicateur pour relations par alliance */}
+                        {relationshipCode?.includes('_in_law') || relationshipCode?.startsWith('step') && (
+                            <div className="text-xs text-muted-foreground">
+                                💍 Belle-famille
+                            </div>
+                        )}
+                    </div>
                 )}
-                
+
                 {/* Badge "Vous" pour le centre */}
                 {isCenter && (
                     <Badge className="bg-primary text-primary-foreground text-xs px-2 py-1">
                         Vous
                     </Badge>
                 )}
-                
+
                 {/* Date de naissance */}
                 {person.profile?.birth_date && (
                     <p className="text-xs text-muted-foreground mt-1">

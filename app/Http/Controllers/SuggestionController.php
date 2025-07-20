@@ -59,7 +59,7 @@ class SuggestionController extends Controller
     {
         $validated = $request->validate([
             'status' => 'required|in:accepted,rejected',
-            'corrected_relation_code' => 'nullable|string|in:father,mother,son,daughter,brother,sister,husband,wife',
+            'corrected_relation_code' => 'nullable|string|in:father,mother,son,daughter,brother,sister,husband,wife,father_in_law,mother_in_law,brother_in_law,sister_in_law,stepson,stepdaughter',
         ]);
 
         if ($validated['status'] === 'accepted') {
@@ -81,7 +81,7 @@ class SuggestionController extends Controller
     public function acceptWithCorrection(Request $request, Suggestion $suggestion): \Illuminate\Http\RedirectResponse
     {
         $validated = $request->validate([
-            'relation_code' => 'required|string|in:father,mother,son,daughter,brother,sister,husband,wife',
+            'relation_code' => 'required|string|in:father,mother,son,daughter,brother,sister,husband,wife,father_in_law,mother_in_law,brother_in_law,sister_in_law,stepson,stepdaughter',
         ]);
 
         $this->suggestionService->acceptSuggestion(

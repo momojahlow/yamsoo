@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Head } from '@inertiajs/react';
-import { Search, Phone, Video, MoreVertical, Paperclip, Smile, Send, ArrowLeft, Settings, BarChart3, Users } from 'lucide-react';
-import AuthenticatedLayout from '@/layouts/app-layout';
+import { Search, Phone, Video, MoreVertical, Paperclip, Smile, Send, ArrowLeft, Settings, BarChart3, Users, Plus } from 'lucide-react';
+import AppSidebarLayout from '@/Layouts/app/app-sidebar-layout';
 import ConversationList from '@/components/messaging/ConversationList';
 import ChatArea from '@/components/messaging/ChatArea';
 import UserSearch from '@/components/messaging/UserSearch';
@@ -69,14 +69,14 @@ export default function Messaging({ conversations, user }: MessagingProps) {
     };
 
     return (
-        <AuthenticatedLayout>
+        <AppSidebarLayout>
             <Head title="Messagerie - Yamsoo" />
 
             <div className="h-screen bg-gray-50 flex">
                 {/* Sidebar - Liste des conversations */}
                 <div className={`
                     ${isMobile ? (showMobileChat ? 'hidden' : 'w-full') : 'w-80'}
-                    bg-white border-r border-gray-200 flex flex-col
+                    bg-white border-r border-gray-200 flex flex-col min-h-full
                 `}>
                     {/* Header de la sidebar */}
                     <div className="p-4 border-b border-gray-200">
@@ -178,22 +178,25 @@ export default function Messaging({ conversations, user }: MessagingProps) {
                         />
                     ) : (
                         <div className="flex-1 flex items-center justify-center bg-gray-50">
-                            <div className="text-center">
-                                <div className="w-24 h-24 bg-gradient-to-br from-orange-100 to-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <Search className="w-12 h-12 text-orange-500" />
+                            <div className="text-center max-w-md mx-auto px-6">
+                                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                                    <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                    </svg>
                                 </div>
-                                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                                    Sélectionnez une conversation
+                                <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                                    Aucune suggestion
                                 </h3>
-                                <p className="text-gray-500 max-w-sm">
-                                    Choisissez une conversation dans la liste ou créez-en une nouvelle
-                                    pour commencer à échanger avec votre famille.
+                                <p className="text-gray-500 mb-6 leading-relaxed">
+                                    Vous n'avez pas encore reçu de suggestions de relations familiales.
+                                    Explorez les réseaux pour découvrir de nouveaux utilisateurs.
                                 </p>
                                 <button
-                                    onClick={() => setShowUserSearch(true)}
-                                    className="mt-4 px-6 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-200 transform hover:scale-105"
+                                    onClick={() => window.location.href = '/family-relations/suggestions'}
+                                    className="inline-flex items-center px-6 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-all duration-200 transform hover:scale-105 font-medium"
                                 >
-                                    Nouvelle conversation
+                                    <Plus className="w-5 h-5 mr-2" />
+                                    Explorer les Réseaux
                                 </button>
                             </div>
                         </div>
@@ -256,6 +259,6 @@ export default function Messaging({ conversations, user }: MessagingProps) {
                     />
                 )}
             </div>
-        </AuthenticatedLayout>
+        </AppSidebarLayout>
     );
 }

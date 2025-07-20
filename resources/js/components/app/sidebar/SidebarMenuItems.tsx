@@ -12,11 +12,13 @@ import {
   Bell,
   Sparkles,
   LogOut,
-  User
+  User,
+  Camera
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificationsBadge } from "./NotificationsBadge";
 import { Profile } from "@/types/notifications";
+import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 
 interface SidebarMenuItemsProps {
   profile: Profile | null;
@@ -26,6 +28,7 @@ interface SidebarMenuItemsProps {
 }
 
 export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false, handleLogout }: SidebarMenuItemsProps) {
+  const { unreadCount } = useUnreadMessages();
 
   return (
     <SidebarMenu className="flex flex-col h-full space-y-3 px-1">
@@ -88,6 +91,20 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
 
       <SidebarMenuItem>
         <SidebarMenuButton
+          tooltip="Albums Photo"
+          onClick={() => window.location.href = "/photo-albums"}
+          className={cn(
+            "w-full justify-start transition-transform duration-200 hover:scale-110",
+            window.location.pathname.startsWith("/photo-albums") ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
+          )}
+        >
+          <Camera className="h-6 w-6" />
+          {!isCollapsed && <span className="ml-2">Albums Photo</span>}
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+
+      <SidebarMenuItem>
+        <SidebarMenuButton
           tooltip="Réseaux"
           onClick={() => window.location.href = "/reseaux"}
           className={cn(
@@ -101,17 +118,30 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
       </SidebarMenuItem>
 
       <SidebarMenuItem>
-        <SidebarMenuButton
-          tooltip="Messages"
-          onClick={() => window.location.href = "/messages"}
-          className={cn(
-            "w-full justify-start transition-transform duration-200 hover:scale-110",
-            window.location.pathname === "/messages" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
+        <div className="relative">
+          <SidebarMenuButton
+            tooltip="Messages"
+            onClick={() => window.location.href = "/messages"}
+            className={cn(
+              "w-full justify-start transition-transform duration-200 hover:scale-110",
+              window.location.pathname === "/messages" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
+            )}
+          >
+            <MessageSquare className="h-6 w-6" />
+            {!isCollapsed && <span className="ml-2">Messages</span>}
+          </SidebarMenuButton>
+          {/* Badge pour messages non lus */}
+          {unreadCount > 0 && (
+            <span className={cn(
+              "absolute bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium shadow-lg border-2 border-white z-10",
+              isCollapsed
+                ? "-top-1 -right-1 min-w-[18px] h-[18px] text-[10px]"
+                : "-top-2 -right-2 min-w-[20px] h-5 px-1"
+            )}>
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
           )}
-        >
-          <MessageSquare className="h-6 w-6" />
-          {!isCollapsed && <span className="ml-2">Messages</span>}
-        </SidebarMenuButton>
+        </div>
       </SidebarMenuItem>
 
       <SidebarMenuItem>

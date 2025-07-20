@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import AppLayout from '@/Layouts/app-layout';
+import AppSidebarLayout from '@/Layouts/app/app-sidebar-layout';
 import {
   Users,
   Heart,
@@ -143,11 +143,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   ];
 
   return (
-    <AppLayout
-      breadcrumbs={[
-        { title: 'Accueil', href: '/dashboard' }
-      ]}
-    >
+    <AppSidebarLayout>
       <Head title="Tableau de bord" />
 
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -339,7 +335,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>
         </div>
       </div>
-    </AppLayout>
+    </AppSidebarLayout>
   );
 };
 

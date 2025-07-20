@@ -482,6 +482,20 @@ class MessagingController extends Controller
         // Conversations de l'utilisateur
         $userConversations = $user->conversations()->pluck('conversations.id');
 
+        // Messages non lus
+        $unreadMessages = Message::whereIn('conversation_id', $userConversations)
+            ->where('user_id', '!=', $user->id)
+            ->whereNull('read_at')
+            ->count();
+
+        // Conversations avec messages non lus
+        $unreadConversations = Conversation::whereIn('id', $userConversations)
+            ->whereHas('messages', function ($query) use ($user) {
+                $query->where('user_id', '!=', $user->id)
+                      ->whereNull('read_at');
+            })
+            ->count();
+
         // Statistiques générales
         $totalMessages = Message::whereIn('conversation_id', $userConversations)->count();
         $totalConversations = $userConversations->count();
@@ -538,6 +552,8 @@ class MessagingController extends Controller
         return response()->json([
             'totalMessages' => $totalMessages,
             'totalConversations' => $totalConversations,
+            'unread_messages' => $unreadMessages,
+            'unread_conversations' => $unreadConversations,
             'activeUsers' => $activeUsers,
             'averageResponseTime' => $averageResponseTime,
             'messagesThisWeek' => $messagesThisWeek,

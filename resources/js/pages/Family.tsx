@@ -3,7 +3,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, Plus, TreePine, MessageSquare, UserPlus } from "lucide-react";
-import AppLayout from '@/layouts/app-layout';
+import AppSidebarLayout from '@/Layouts/app/app-sidebar-layout';
 import { FamilyMemberCard } from "@/components/family/FamilyMemberCard";
 
 interface Member {
@@ -33,7 +33,7 @@ export default function Family({ members }: FamilyProps) {
 
   if (!safeMembers || safeMembers.length === 0) {
     return (
-      <AppLayout>
+      <AppSidebarLayout>
         <div className="max-w-6xl mx-auto py-8 px-4">
           <div className="text-center">
             <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -62,12 +62,12 @@ export default function Family({ members }: FamilyProps) {
             </div>
           </div>
         </div>
-      </AppLayout>
+      </AppSidebarLayout>
     );
   }
 
   return (
-    <AppLayout>
+    <AppSidebarLayout>
       <div className="max-w-6xl mx-auto py-8 px-4">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
@@ -155,6 +155,6 @@ export default function Family({ members }: FamilyProps) {
           </CardContent>
         </Card>
       </div>
-    </AppLayout>
+    </AppSidebarLayout>
   );
 }
