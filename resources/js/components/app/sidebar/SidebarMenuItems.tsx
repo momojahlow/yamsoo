@@ -117,31 +117,37 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
         </SidebarMenuButton>
       </SidebarMenuItem>
 
-      <SidebarMenuItem>
-        <div className="relative">
-          <SidebarMenuButton
-            tooltip="Messages"
-            onClick={() => window.location.href = "/messages"}
-            className={cn(
-              "w-full justify-start transition-transform duration-200 hover:scale-110",
-              window.location.pathname === "/messages" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
-            )}
-          >
-            <MessageSquare className="h-6 w-6" />
-            {!isCollapsed && <span className="ml-2">Messages</span>}
-          </SidebarMenuButton>
-          {/* Badge pour messages non lus */}
-          {unreadCount > 0 && (
-            <span className={cn(
-              "absolute bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium shadow-lg border-2 border-white z-10",
-              isCollapsed
-                ? "-top-1 -right-1 min-w-[18px] h-[18px] text-[10px]"
-                : "-top-2 -right-2 min-w-[20px] h-5 px-1"
-            )}>
-              {unreadCount > 99 ? '99+' : unreadCount}
-            </span>
+      <SidebarMenuItem className="relative">
+        <SidebarMenuButton
+          tooltip="Messages"
+          onClick={() => window.location.href = "/messages"}
+          className={cn(
+            "w-full justify-start transition-transform duration-200 hover:scale-110",
+            window.location.pathname === "/messages" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
           )}
-        </div>
+        >
+          <MessageSquare className="h-6 w-6" />
+          {!isCollapsed && <span className="ml-2">Messages</span>}
+        </SidebarMenuButton>
+        {/* Badge pour messages non lus - Version ultra-simple */}
+        {unreadCount > 0 && (
+          <span
+            className={cn(
+              "absolute bg-red-500 text-white rounded-full font-bold shadow-lg border-2 border-white flex items-center justify-center",
+              isCollapsed
+                ? "top-0 right-0 w-4 h-4 text-[10px] -translate-y-1 translate-x-1"
+                : "top-0 right-0 min-w-[18px] h-[18px] text-[10px] -translate-y-2 translate-x-2"
+            )}
+            style={{
+              zIndex: 9999,
+              pointerEvents: 'none',
+              fontSize: '10px',
+              lineHeight: '1'
+            }}
+          >
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </span>
+        )}
       </SidebarMenuItem>
 
       <SidebarMenuItem>
