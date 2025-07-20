@@ -28,6 +28,12 @@ class User extends Authenticatable
         'password',
         'family_id',
         'last_seen_at',
+        'role',
+        'role_assigned_at',
+        'role_assigned_by',
+        'is_active',
+        'last_login_at',
+        'last_login_ip',
     ];
 
     /**
@@ -51,6 +57,9 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'last_seen_at' => 'datetime',
+            'role_assigned_at' => 'datetime',
+            'last_login_at' => 'datetime',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -221,5 +230,127 @@ class User extends Authenticatable
         return $this->photoAlbums()->get()->filter(function ($album) use ($viewer) {
             return $album->canBeViewedBy($viewer);
         });
+    }
+
+    // ==========================================
+    // MÉTHODES DE GESTION DES RÔLES
+    // ==========================================
+
+    /**
+     * Vérifier si l'utilisateur a un rôle spécifique
+     */
+    public function hasRole(string $role): bool
+    {
+        return $this->role === $role;
+    }
+
+    /**
+     * Vérifier si l'utilisateur a l'un des rôles spécifiés
+     */
+    public function hasAnyRole(array $roles): bool
+    {
+        return in_array($this->role, $roles);
+    }
+
+    /**
+     * Vérifier si l'utilisateur est administrateur
+     */
+    public function isAdmin(): bool
+    {
+        return $this->hasAnyRole(['admin', 'super_admin']);
+    }
+
+    /**
+     * Vérifier si l'utilisateur est super administrateur
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole('super_admin');
+    }
+
+    /**
+     * Vérifier si l'utilisateur est modérateur ou plus
+     */
+    public function isModerator(): bool
+    {
+        return $this->hasAnyRole(['moderator', 'admin', 'super_admin']);
+    }
+
+    /**
+     * Assigner un rôle à l'utilisateur
+     */
+    public function assignRole(string $role, ?User $assignedBy = null): void
+    {
+        $this->update([
+            'role' => $role,
+            'role_assigned_at' => now(),
+            'role_assigned_by' => $assignedBy?->id,
+        ]);
+    }
+
+    /**
+     * Activer/désactiver l'utilisateur
+     */
+    public function setActive(bool $active): void
+    {
+        $this->update(['is_active' => $active]);
+    }
+
+    /**
+     * Enregistrer la dernière connexion
+     */
+    public function recordLogin(string $ip): void
+    {
+        $this->update([
+            'last_login_at' => now(),
+            'last_login_ip' => $ip,
+            'last_seen_at' => now(),
+        ]);
+    }
+
+    /**
+     * Obtenir le nom du rôle en français
+     */
+    public function getRoleNameAttribute(): string
+    {
+        return match($this->role) {
+            'user' => 'Utilisateur',
+            'moderator' => 'Modérateur',
+            'admin' => 'Administrateur',
+            'super_admin' => 'Super Administrateur',
+            default => 'Inconnu',
+        };
+    }
+
+    /**
+     * Scope pour filtrer par rôle
+     */
+    public function scopeWithRole($query, string $role)
+    {
+        return $query->where('role', $role);
+    }
+
+    /**
+     * Scope pour les administrateurs
+     */
+    public function scopeAdmins($query)
+    {
+        return $query->whereIn('role', ['admin', 'super_admin']);
+    }
+
+    /**
+     * Scope pour les utilisateurs actifs
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    /**
+     * Relation avec l'utilisateur qui a assigné le rôle
+     */
+    public function roleAssignedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'role_assigned_by');
     }
 }

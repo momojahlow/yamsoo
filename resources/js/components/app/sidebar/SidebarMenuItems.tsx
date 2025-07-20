@@ -13,7 +13,8 @@ import {
   Sparkles,
   LogOut,
   User,
-  Camera
+  Camera,
+  Shield
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificationsBadge } from "./NotificationsBadge";
@@ -184,6 +185,20 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
           )}
         </SidebarMenuButton>
       </SidebarMenuItem>
+
+      {/* Lien Administration pour les admins */}
+      {profile?.user?.role && ['admin', 'super_admin'].includes(profile.user.role) && (
+        <SidebarMenuItem className="mt-3">
+          <SidebarMenuButton
+            tooltip="Administration"
+            onClick={() => window.location.href = "/admin"}
+            className="w-full justify-start transition-all duration-200 hover:scale-105 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 font-medium border border-purple-200 dark:border-purple-800 hover:border-purple-300 dark:hover:border-purple-700 rounded-lg"
+          >
+            <Shield className="h-6 w-6" />
+            {!isCollapsed && <span className="ml-2">Administration</span>}
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      )}
 
       {/* Bouton de déconnexion juste après Suggestions */}
       <SidebarMenuItem className="mt-3">
