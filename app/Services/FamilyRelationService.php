@@ -552,4 +552,194 @@ class FamilyRelationService
         }
     }
 
+    /**
+     * Analyser la relation entre l'utilisateur connecté et un autre utilisateur (Fonction Yamsoo)
+     */
+    public function analyzeRelationshipBetweenUsers(User $currentUser, User $targetUser): array
+    {
+        // Vérifier s'il s'agit du même utilisateur
+        if ($currentUser->id === $targetUser->id) {
+            return [
+                'has_relation' => false,
+                'relation_type' => 'self',
+                'relation_name' => 'C\'est vous !',
+                'relation_description' => 'Vous consultez votre propre profil.',
+                'relation_path' => [],
+                'confidence' => 100,
+                'yamsoo_message' => '🤳 C\'est votre profil !',
+            ];
+        }
+
+        // Chercher une relation directe
+        $directRelation = $this->findDirectRelation($currentUser, $targetUser);
+        if ($directRelation) {
+            return [
+                'has_relation' => true,
+                'relation_type' => 'direct',
+                'relation_name' => $directRelation['name'],
+                'relation_description' => $directRelation['description'],
+                'relation_path' => [$directRelation['name']],
+                'confidence' => 100,
+                'yamsoo_message' => "🎯 {$targetUser->name} est votre {$directRelation['name']} !",
+                'relationship_data' => $directRelation['relationship'],
+            ];
+        }
+
+        // Chercher une relation indirecte (à travers d'autres personnes)
+        $indirectRelation = $this->findIndirectRelation($currentUser, $targetUser);
+        if ($indirectRelation) {
+            return [
+                'has_relation' => true,
+                'relation_type' => 'indirect',
+                'relation_name' => $indirectRelation['name'],
+                'relation_description' => $indirectRelation['description'],
+                'relation_path' => $indirectRelation['path'],
+                'confidence' => $indirectRelation['confidence'],
+                'yamsoo_message' => "🔗 {$targetUser->name} est {$indirectRelation['name']} (via {$indirectRelation['via']}) !",
+                'intermediate_users' => $indirectRelation['intermediate_users'],
+            ];
+        }
+
+        // Aucune relation trouvée
+        return [
+            'has_relation' => false,
+            'relation_type' => 'none',
+            'relation_name' => 'Aucune relation',
+            'relation_description' => 'Aucune relation familiale détectée entre vous et cet utilisateur.',
+            'relation_path' => [],
+            'confidence' => 0,
+            'yamsoo_message' => "❌ Aucune relation familiale trouvée avec {$targetUser->name}.",
+            'suggestion' => 'Vous pouvez envoyer une demande de relation si vous pensez être de la même famille.',
+        ];
+    }
+
+    /**
+     * Trouver une relation directe entre deux utilisateurs
+     */
+    private function findDirectRelation(User $currentUser, User $targetUser): ?array
+    {
+        // Chercher dans les relations où currentUser est user_id
+        $relation = FamilyRelationship::where('user_id', $currentUser->id)
+            ->where('related_user_id', $targetUser->id)
+            ->where('status', 'accepted')
+            ->with('relationshipType')
+            ->first();
+
+        if ($relation) {
+            return [
+                'name' => $relation->relationshipType->name_fr,
+                'description' => "Relation directe : {$relation->relationshipType->name_fr}",
+                'relationship' => $relation,
+            ];
+        }
+
+        // Chercher dans les relations où currentUser est related_user_id
+        $relation = FamilyRelationship::where('related_user_id', $currentUser->id)
+            ->where('user_id', $targetUser->id)
+            ->where('status', 'accepted')
+            ->with('relationshipType')
+            ->first();
+
+        if ($relation) {
+            // Trouver la relation inverse
+            $inverseRelation = $this->getInverseRelationshipType($relation->relationship_type_id, $targetUser, $currentUser);
+            $relationName = $inverseRelation ? $inverseRelation->name_fr : $relation->relationshipType->name_fr;
+
+            return [
+                'name' => $relationName,
+                'description' => "Relation directe : {$relationName}",
+                'relationship' => $relation,
+            ];
+        }
+
+        return null;
+    }
+
+    /**
+     * Trouver une relation indirecte entre deux utilisateurs (maximum 2 degrés de séparation)
+     */
+    private function findIndirectRelation(User $currentUser, User $targetUser): ?array
+    {
+        // Obtenir tous les proches du currentUser
+        $currentUserRelations = $this->getUserRelationships($currentUser);
+
+        // Obtenir tous les proches du targetUser
+        $targetUserRelations = $this->getUserRelationships($targetUser);
+
+        // Chercher des connexions communes
+        foreach ($currentUserRelations as $currentRelation) {
+            $intermediateUserId = $currentRelation->user_id === $currentUser->id
+                ? $currentRelation->related_user_id
+                : $currentRelation->user_id;
+
+            foreach ($targetUserRelations as $targetRelation) {
+                $targetIntermediateUserId = $targetRelation->user_id === $targetUser->id
+                    ? $targetRelation->related_user_id
+                    : $targetRelation->user_id;
+
+                // Si les deux ont une relation avec la même personne
+                if ($intermediateUserId === $targetIntermediateUserId) {
+                    $intermediateUser = User::find($intermediateUserId);
+
+                    // Déterminer les relations
+                    $currentToIntermediate = $this->getRelationName($currentRelation, $currentUser);
+                    $targetToIntermediate = $this->getRelationName($targetRelation, $targetUser);
+
+                    // Calculer la relation indirecte
+                    $indirectRelationName = $this->calculateIndirectRelation($currentToIntermediate, $targetToIntermediate);
+
+                    return [
+                        'name' => $indirectRelationName,
+                        'description' => "Relation via {$intermediateUser->name} : vous êtes {$currentToIntermediate} de {$intermediateUser->name}, et {$targetUser->name} est {$targetToIntermediate} de {$intermediateUser->name}",
+                        'path' => [$currentToIntermediate, $intermediateUser->name, $targetToIntermediate],
+                        'confidence' => 85,
+                        'via' => $intermediateUser->name,
+                        'intermediate_users' => [$intermediateUser],
+                    ];
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Obtenir le nom de la relation depuis un objet FamilyRelationship
+     */
+    private function getRelationName(FamilyRelationship $relationship, User $user): string
+    {
+        if ($relationship->user_id === $user->id) {
+            return $relationship->relationshipType->name_fr;
+        } else {
+            // Relation inverse
+            $inverseType = $this->getInverseRelationshipType($relationship->relationship_type_id,
+                User::find($relationship->user_id), $user);
+            return $inverseType ? $inverseType->name_fr : $relationship->relationshipType->name_fr;
+        }
+    }
+
+    /**
+     * Calculer la relation indirecte basée sur deux relations directes
+     */
+    private function calculateIndirectRelation(string $relation1, string $relation2): string
+    {
+        // Logique simplifiée pour calculer les relations indirectes
+        $relationMap = [
+            'frère-frère' => 'beau-frère ou cousin',
+            'frère-sœur' => 'belle-sœur ou cousine',
+            'sœur-sœur' => 'belle-sœur ou cousine',
+            'père-fils' => 'frère',
+            'père-fille' => 'sœur',
+            'mère-fils' => 'frère',
+            'mère-fille' => 'sœur',
+            'fils-père' => 'grand-père',
+            'fille-père' => 'grand-père',
+            'fils-mère' => 'grand-mère',
+            'fille-mère' => 'grand-mère',
+        ];
+
+        $key = strtolower($relation1 . '-' . $relation2);
+        return $relationMap[$key] ?? "parent éloigné (via {$relation1}/{$relation2})";
+    }
+
 }

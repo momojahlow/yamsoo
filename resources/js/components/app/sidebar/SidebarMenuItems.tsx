@@ -33,7 +33,8 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
 
   return (
     <SidebarMenu className="flex flex-col h-full space-y-3 px-1">
-      {/* Yamsoo menu item */}
+      {/* Yamsoo menu item - Commenté car la fonctionnalité est accessible via le menu Réseaux */}
+      {/*
       <SidebarMenuItem>
         <SidebarMenuButton
           tooltip="Yamsoo"
@@ -47,6 +48,7 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
           {!isCollapsed && <span className="ml-2">Yamsoo</span>}
         </SidebarMenuButton>
       </SidebarMenuItem>
+      */}
 
       <SidebarMenuItem>
         <SidebarMenuButton

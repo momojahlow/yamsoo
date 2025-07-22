@@ -14,6 +14,7 @@ import { getRelationLabel } from "@/utils/relationUtils";
 import { MessageSquare } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { VALID_DB_RELATION_TYPES } from "@/hooks/family-relations/relationTypeUtils";
+import YamsooButton from "@/components/YamsooButton";
 
 interface ProfileCardProps {
   profile: any;
@@ -201,6 +202,12 @@ export const ProfileCard = ({
         >
           Demander une relation
         </Button>
+        <YamsooButton
+          targetUserId={profile.user_id || profile.id}
+          targetUserName={`${profile.first_name} ${profile.last_name}`}
+          variant="outline"
+          size="sm"
+        />
         <Button
           variant="outline"
           onClick={() => onSendMessage(profile.id)}

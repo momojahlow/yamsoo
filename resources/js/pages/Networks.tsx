@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { EmptyProfilesState } from '@/components/networks/EmptyProfilesState';
 import { AddFamilyRelation } from '@/components/networks/AddFamilyRelation';
+import YamsooButton from '@/components/YamsooButton';
 import {
   Search,
   Users,
@@ -556,6 +557,12 @@ export default function Networks({
                                 ? "Invitation reçue"
                                 : "Demander une relation"}
                         </Button>
+                        <YamsooButton
+                          targetUserId={user.id}
+                          targetUserName={user.name}
+                          variant="outline"
+                          size="sm"
+                        />
                         <Button
                           variant="outline"
                           size="icon"

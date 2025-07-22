@@ -97,6 +97,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('family-relations/{requestId}/reject', [FamilyRelationController::class, 'reject'])->name('family-relations.reject');
     Route::get('users/search', [FamilyRelationController::class, 'searchUserByEmail'])->name('users.search-by-email');
 
+    // Routes pour l'analyse Yamsoo
+    Route::prefix('yamsoo')->name('yamsoo.')->group(function () {
+        Route::post('/analyze-relation', [App\Http\Controllers\YamsooAnalysisController::class, 'analyzeRelation'])->name('analyze-relation');
+        Route::get('/relations-summary', [App\Http\Controllers\YamsooAnalysisController::class, 'getRelationsSummary'])->name('relations-summary');
+        Route::post('/analyze-multiple', [App\Http\Controllers\YamsooAnalysisController::class, 'analyzeMultipleRelations'])->name('analyze-multiple');
+        Route::get('/suggestions', [App\Http\Controllers\YamsooAnalysisController::class, 'getRelationSuggestions'])->name('suggestions');
+    });
+
     // Routes pour les albums photo
     Route::resource('photo-albums', PhotoAlbumController::class);
     Route::get('users/{user}/photo-albums', [PhotoAlbumController::class, 'index'])->name('users.photo-albums');
