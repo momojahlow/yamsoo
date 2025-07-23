@@ -21,18 +21,25 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
 
             {/* User info in header */}
             <div className="flex items-center gap-3">
-                <div className="hidden md:block text-right">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {auth.user.name}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {auth.user.email}
-                    </p>
-                </div>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <div className="hidden md:block text-right cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md px-2 py-1 transition-colors">
+                            <p className="text-sm font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                                {auth.user.name}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                {auth.user.email}
+                            </p>
+                        </div>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56" align="end">
+                        <UserMenuContent user={auth.user} />
+                    </DropdownMenuContent>
+                </DropdownMenu>
 
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="size-10 rounded-full p-1">
+                        <Button variant="ghost" className="size-10 rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800">
                             <Avatar className="size-8 overflow-hidden rounded-full">
                                 <AvatarImage src={auth.user.avatar} alt={auth.user.name} />
                                 <AvatarFallback className="rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white">

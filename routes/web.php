@@ -105,6 +105,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/suggestions', [App\Http\Controllers\YamsooAnalysisController::class, 'getRelationSuggestions'])->name('suggestions');
     });
 
+    // Route de test pour le dropdown utilisateur
+    Route::get('/test-dropdown', function () {
+        return inertia('TestDropdown');
+    })->name('test.dropdown');
+
     // Routes pour les albums photo
     Route::resource('photo-albums', PhotoAlbumController::class);
     Route::get('users/{user}/photo-albums', [PhotoAlbumController::class, 'index'])->name('users.photo-albums');
