@@ -52,6 +52,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('profil', [ProfileController::class, 'update'])->name('profile.update');
     Route::get('profil/edit', [ProfileController::class, 'edit'])->name('profile.edit');
 
+    // Route pour les notifications
+    Route::get('notifications', function () {
+        return inertia('Notifications');
+    })->name('notifications');
+
     // Routes pour les familles
     Route::get('famille', [FamilyController::class, 'index'])->name('family');
     Route::get('famille/arbre', [FamilyTreeController::class, 'index'])->name('family.tree');
