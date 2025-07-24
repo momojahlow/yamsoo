@@ -23,7 +23,7 @@ export function EnhancedHeader() {
                         <Button variant="ghost" size="icon" className="md:hidden">
                             <Menu className="h-5 w-5" />
                         </Button>
-                        
+
                         <div className="flex items-center gap-2">
                             <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
                                 <span className="text-white font-bold text-sm">Y</span>
@@ -57,8 +57,8 @@ export function EnhancedHeader() {
                         <div className="relative">
                             <Button variant="ghost" size="icon" className="relative">
                                 <Bell className="h-5 w-5" />
-                                <Badge 
-                                    variant="destructive" 
+                                <Badge
+                                    variant="destructive"
                                     className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
                                 >
                                     3
@@ -72,9 +72,9 @@ export function EnhancedHeader() {
                         </Button>
 
                         {/* Dropdown utilisateur avec nom cliquable */}
-                        <UserHeaderDropdown 
-                            user={auth.user} 
-                            variant="header" 
+                        <UserHeaderDropdown
+                            user={auth.user}
+                            variant="header"
                             showEmail={true}
                             align="end"
                         />
@@ -108,10 +108,10 @@ export function CompactHeader() {
                         <Button variant="ghost" size="icon" className="h-8 w-8">
                             <Bell className="h-4 w-4" />
                         </Button>
-                        
-                        <UserHeaderDropdown 
-                            user={auth.user} 
-                            variant="compact" 
+
+                        <UserHeaderDropdown
+                            user={auth.user}
+                            variant="compact"
                             showEmail={false}
                             align="end"
                         />
@@ -137,26 +137,14 @@ export function SidebarHeader() {
                             Dashboard
                         </h1>
                     </div>
-
                     <div className="flex items-center gap-4">
-                        <div className="hidden md:flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                            <span>Bienvenue,</span>
-                            <UserHeaderDropdown 
-                                user={auth.user} 
-                                variant="header" 
-                                showEmail={false}
-                                align="end"
-                            />
-                        </div>
-
-                        <div className="md:hidden">
-                            <UserHeaderDropdown 
-                                user={auth.user} 
-                                variant="compact" 
-                                showEmail={false}
-                                align="end"
-                            />
-                        </div>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Bienvenue,</span>
+                        <UserHeaderDropdown
+                            user={auth.user}
+                            variant="header"
+                            showEmail={false}
+                            align="end"
+                        />
                     </div>
                 </div>
             </div>

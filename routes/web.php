@@ -50,6 +50,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Route pour le profil
     Route::get('profil', [ProfileController::class, 'index'])->name('profile.index');
     Route::patch('profil', [ProfileController::class, 'update'])->name('profile.update');
+    Route::get('profil/edit', [ProfileController::class, 'edit'])->name('profile.edit');
 
     // Routes pour les familles
     Route::get('famille', [FamilyController::class, 'index'])->name('family');
