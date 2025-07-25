@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Head, useForm } from "@inertiajs/react";
 import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
+import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -164,12 +165,10 @@ const ProfilePage = ({ user, profile }: ProfilePageProps) => {
                 <CardContent>
                   {/* Avatar Section */}
                   <div className="flex items-start space-x-4 mb-6">
-                    <ProfileAvatar
+                    <AvatarUpload
                       avatarUrl={profile?.avatar_url || profile?.avatar || null}
                       firstName={data.first_name}
                       lastName={data.last_name}
-                      uploading={avatarUploading}
-                      onAvatarUpload={handleAvatarUpload}
                     />
                     <div className="flex-1">
                       <h3 className="text-lg font-semibold">
@@ -277,12 +276,21 @@ const ProfilePage = ({ user, profile }: ProfilePageProps) => {
                         </div>
                         <div className="flex items-center space-x-3">
                           <Calendar className="w-4 h-4 text-gray-400" />
-                          <span className="text-sm">{data.birth_date || "Non renseigné"}</span>
+                          <span className="text-sm">
+                            {data.birth_date
+                              ? new Date(data.birth_date).toLocaleDateString('fr-FR', {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric'
+                                })
+                              : "Non renseigné"
+                            }
+                          </span>
                         </div>
                         <div className="flex items-center space-x-3">
                           <User className="w-4 h-4 text-gray-400" />
                           <span className="text-sm">
-                            {data.gender === 'M' ? 'Homme' : data.gender === 'F' ? 'Femme' : 'Non renseigné'}
+                            {data.gender === 'male' ? 'Homme' : data.gender === 'female' ? 'Femme' : 'Non renseigné'}
                           </span>
                         </div>
                       </div>

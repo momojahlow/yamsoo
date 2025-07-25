@@ -1,9 +1,9 @@
 
-import { SidebarTrigger, SidebarContent, useSidebar } from "@/components/ui/sidebar";
+import { SidebarTrigger, SidebarContent, useSidebar, Sidebar } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 import { useProfile } from "@/hooks/useProfileSimple";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { SidebarAvatar } from "./sidebar/SidebarAvatar";
+
 import { SidebarMenuItems } from "./sidebar/SidebarMenuItems";
 import { Profile as NotificationProfile } from "@/types/notifications";
 import { useSuggestionCount } from "@/hooks/useSuggestionCount";
@@ -56,23 +56,23 @@ export function AppSidebar() {
   };
 
   return (
-    <SidebarContent className={`transition-all duration-300 ${state === 'collapsed' ? 'w-16 min-w-16 max-w-16' : 'w-64 min-w-64 max-w-64'}`}>
-      <div className="flex h-full flex-col">
-        <div className="p-2 flex items-center">
-          <SidebarTrigger className="ml-0.5" />
-        </div>
+    <Sidebar collapsible="icon" variant="inset">
+      <SidebarContent className={`transition-all duration-300 ${state === 'collapsed' ? 'w-16 min-w-16 max-w-16' : 'w-64 min-w-64 max-w-64'}`}>
+        <div className="flex h-full flex-col">
+          <div className="p-2 flex items-center">
+            <SidebarTrigger className="ml-0.5" />
+          </div>
 
-        <SidebarAvatar profile={notificationProfile} />
-
-        <div className="flex-1 flex flex-col">
-          <SidebarMenuItems
-            profile={notificationProfile}
-            suggestionCount={suggestionCount}
-            isCollapsed={state === 'collapsed'}
-            handleLogout={handleLogout}
-          />
+          <div className="flex-1 flex flex-col">
+            <SidebarMenuItems
+              profile={notificationProfile}
+              suggestionCount={suggestionCount}
+              isCollapsed={state === 'collapsed'}
+              handleLogout={handleLogout}
+            />
+          </div>
         </div>
-      </div>
-    </SidebarContent>
+      </SidebarContent>
+    </Sidebar>
   );
 }

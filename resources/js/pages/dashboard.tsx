@@ -12,7 +12,7 @@ import {
   ArrowRight,
   TreePine,
   UserPlus,
-  Gift,
+  Bell,
   Activity,
   Sparkles,
   Clock,
@@ -83,6 +83,8 @@ interface DashboardProps {
   recentFamilyMembers: any[];
   upcomingBirthdays: Birthday[];
   familyStatistics: any;
+  notifications: any[];
+  unreadNotifications: number;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({
@@ -93,7 +95,9 @@ const Dashboard: React.FC<DashboardProps> = ({
   prioritySuggestions,
   recentFamilyMembers,
   upcomingBirthdays,
-  familyStatistics
+  familyStatistics,
+  notifications,
+  unreadNotifications
 }) => {
   const getGenderIcon = (gender?: string) => {
     return gender === 'female' ? '👩' : '👨';
@@ -110,7 +114,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       icon: Users,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
-      change: `+${dashboardStats.new_members_this_month} ce mois`,
+      change: "",
       href: "/famille"
     },
     {
@@ -119,26 +123,17 @@ const Dashboard: React.FC<DashboardProps> = ({
       icon: Heart,
       color: "text-pink-600",
       bgColor: "bg-pink-50",
-      change: `+${dashboardStats.new_suggestions_this_week} cette semaine`,
+      change: "",
       href: "/suggestions"
     },
     {
-      title: "Relations automatiques",
-      value: dashboardStats.automatic_relations.toString(),
-      icon: Sparkles,
-      color: "text-purple-600",
-      bgColor: "bg-purple-50",
-      change: "Déduites intelligemment",
-      href: "/famille/arbre"
-    },
-    {
-      title: "Anniversaires",
-      value: upcomingBirthdays.length.toString(),
-      icon: Gift,
-      color: "text-green-600",
-      bgColor: "bg-green-50",
-      change: "À venir ce mois",
-      href: "#birthdays"
+      title: "Notifications",
+      value: unreadNotifications.toString(),
+      icon: Bell,
+      color: "text-orange-600",
+      bgColor: "bg-orange-50",
+      change: "",
+      href: "/notifications"
     }
   ];
 
@@ -181,7 +176,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>
 
           {/* Statistiques principales */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {stats.map((stat, index) => (
               <Link key={index} href={stat.href}>
                 <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105 bg-white/80 backdrop-blur-sm">
@@ -194,9 +189,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                         <p className="text-3xl font-bold text-gray-900 mb-1">
                           {stat.value}
                         </p>
-                        <p className="text-xs text-gray-500">
-                          {stat.change}
-                        </p>
+                        {stat.change && (
+                          <p className="text-xs text-gray-500">
+                            {stat.change}
+                          </p>
+                        )}
                       </div>
                       <div className={`p-4 rounded-xl ${stat.bgColor} transition-colors`}>
                         <stat.icon className={`w-8 h-8 ${stat.color}`} />

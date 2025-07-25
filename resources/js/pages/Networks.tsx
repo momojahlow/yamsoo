@@ -185,6 +185,11 @@ export default function Networks({
     });
   };
 
+  const handleStartConversation = (userId: number) => {
+    // Redirect to messages page with the user ID to start a conversation
+    router.visit(`/messages?user=${userId}`);
+  };
+
   if (safeUsers.length === 0) {
     return (
       <AppLayout>
@@ -496,7 +501,7 @@ export default function Networks({
               </div>
 
               {/* Liste des utilisateurs moderne */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="connections-section">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="connections-section">
                 {filteredUsers.map((user) => {
                   const selectedRelation = selectedRelations[user.id] || "";
                   const submitting = isSubmitting[user.id] || false;
@@ -510,8 +515,27 @@ export default function Networks({
                   const disableButton = isAlreadyFamily || isExistingRelation || isPending || hasSentRequest;
 
                   return (
-                    <Card key={user.id} className="rounded-2xl shadow-md border border-gray-100 p-6 flex flex-col items-center">
-                      <div className="flex flex-col items-center w-full">
+                    <Card key={user.id} className="rounded-2xl shadow-md border border-gray-100 p-6 flex flex-col items-center relative">
+                      {/* Top buttons - Yamsoo on left, Message on right */}
+                      <div className="absolute top-4 left-4 right-4 flex justify-between z-10">
+                        <YamsooButton
+                          targetUserId={user.id}
+                          targetUserName={user.name}
+                          variant="outline"
+                          size="sm"
+                        />
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="flex items-center justify-center h-8 w-8"
+                          onClick={() => handleStartConversation(user.id)}
+                          title="Démarrer une conversation"
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      <div className="flex flex-col items-center w-full mt-8">
                         <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-2 overflow-hidden">
                           {user.profile?.avatar_url ? (
                             <img
@@ -543,9 +567,9 @@ export default function Networks({
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="flex w-full gap-2 mt-4">
+                      <div className="w-full mt-4">
                         <Button
-                          className="flex-1 bg-orange-200 hover:bg-orange-300 text-brown-800 font-semibold"
+                          className="w-full bg-orange-200 hover:bg-orange-300 text-brown-800 font-semibold"
                           disabled={!selectedRelation || disableButton || submitting}
                           onClick={() => handleSendRelation(user.id)}
                         >
@@ -556,19 +580,6 @@ export default function Networks({
                               : isPending
                                 ? "Invitation reçue"
                                 : "Demander une relation"}
-                        </Button>
-                        <YamsooButton
-                          targetUserId={user.id}
-                          targetUserName={user.name}
-                          variant="outline"
-                          size="sm"
-                        />
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="flex items-center justify-center"
-                        >
-                          <MessageSquare className="h-5 w-5" />
                         </Button>
                       </div>
                     </Card>

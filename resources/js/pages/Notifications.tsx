@@ -1,10 +1,12 @@
 
+import { Head, router } from "@inertiajs/react";
 import AppLayout from '@/layouts/app-layout';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MobileNavBar } from "@/components/mobile/MobileNavBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 
 interface Notification {
   id: number;
@@ -22,33 +24,42 @@ interface NotificationsProps {
 
 export default function Notifications({ notifications, unreadCount }: NotificationsProps) {
   const isMobile = useIsMobile();
+  const { toast } = useToast();
 
-  const handleMarkAsRead = async (notificationId: number) => {
-    try {
-      await fetch(`/notifications/${notificationId}/read`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      window.location.reload();
-    } catch (error) {
-      console.error('Erreur lors du marquage comme lu:', error);
-    }
+  const handleMarkAsRead = (notificationId: number) => {
+    router.patch(`/notifications/${notificationId}/read`, {}, {
+      onSuccess: () => {
+        toast({
+          title: "Notification marquée comme lue",
+          description: "La notification a été marquée comme lue.",
+        });
+      },
+      onError: () => {
+        toast({
+          title: "Erreur",
+          description: "Impossible de marquer la notification comme lue.",
+          variant: "destructive",
+        });
+      }
+    });
   };
 
-  const handleMarkAllAsRead = async () => {
-    try {
-      await fetch('/notifications/read-all', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      window.location.reload();
-    } catch (error) {
-      console.error('Erreur lors du marquage de tous comme lus:', error);
-    }
+  const handleMarkAllAsRead = () => {
+    router.patch('/notifications/read-all', {}, {
+      onSuccess: () => {
+        toast({
+          title: "Toutes les notifications marquées comme lues",
+          description: "Toutes vos notifications ont été marquées comme lues.",
+        });
+      },
+      onError: () => {
+        toast({
+          title: "Erreur",
+          description: "Impossible de marquer toutes les notifications comme lues.",
+          variant: "destructive",
+        });
+      }
+    });
   };
 
   return (
@@ -75,36 +86,79 @@ export default function Notifications({ notifications, unreadCount }: Notificati
                 </p>
               </div>
             ) : (
-              <div className="space-y-4">
-                {notifications.map((notification) => (
-                  <Card key={notification.id} className={notification.read_at ? 'opacity-75' : ''}>
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span>{notification.type}</span>
-                          {!notification.read_at && (
-                            <Badge variant="secondary">Nouveau</Badge>
-                          )}
+              <div className="space-y-3">
+                {notifications.map((notification) => {
+                  const getNotificationTypeLabel = (type: string) => {
+                    switch (type) {
+                      case 'relationship_request':
+                        return 'Demande de relation';
+                      case 'message':
+                        return 'Nouveau message';
+                      case 'suggestion':
+                        return 'Nouvelle suggestion';
+                      case 'birthday':
+                        return 'Anniversaire';
+                      default:
+                        return type;
+                    }
+                  };
+
+                  const cleanNotificationMessage = (message: string) => {
+                    // Remove prefixes like "Nouvelle demande de relation :" and "Anniversaire de famille :"
+                    return message
+                      .replace(/^Nouvelle demande de relation\s*:\s*/i, '')
+                      .replace(/^Anniversaire de famille\s*:\s*/i, '')
+                      .replace(/^Demande de relation\s*:\s*/i, '')
+                      .replace(/birthday/gi, 'anniversaire');
+                  };
+
+                  return (
+                    <div
+                      key={notification.id}
+                      className={`flex items-center justify-between p-4 border rounded-lg ${
+                        notification.read_at ? 'opacity-75 bg-gray-50' : 'bg-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-4 flex-1">
+                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                          <span className="text-blue-600 text-sm font-semibold">
+                            {getNotificationTypeLabel(notification.type).charAt(0)}
+                          </span>
                         </div>
-                        <span className="text-sm text-gray-500">
-                          {new Date(notification.created_at).toLocaleDateString()}
-                        </span>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-gray-700 mb-4">{notification.message}</p>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-gray-900">
+                            {getNotificationTypeLabel(notification.type)}
+                          </h3>
+                          <p className="text-sm text-gray-600 mt-1">
+                            {cleanNotificationMessage(notification.message)}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {new Date(notification.created_at).toLocaleDateString('fr-FR', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </div>
+                        {!notification.read_at && (
+                          <Badge variant="destructive" className="ml-2">Nouveau</Badge>
+                        )}
+                      </div>
                       {!notification.read_at && (
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleMarkAsRead(notification.id)}
+                          className="ml-4"
                         >
                           Marquer comme lu
                         </Button>
                       )}
-                    </CardContent>
-                  </Card>
-                ))}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

@@ -47,7 +47,7 @@ class EventService
         $this->notificationService->createNotification(
             $request->targetUser,
             'relationship_request',
-            "Nouvelle demande de relation de {$request->requester->name}",
+            "{$request->requester->name} souhaite être votre {$request->relationshipType->name}",
             [
                 'request_id' => $request->id,
                 'requester_id' => $request->requester->id,

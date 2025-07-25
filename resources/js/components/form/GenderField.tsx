@@ -34,30 +34,30 @@ export const GenderField = ({ value, onChange, error }: GenderFieldProps) => {
       
       <div className="flex flex-row gap-6 items-center">
         <div className="flex items-center space-x-2">
-          <Checkbox 
-            id="gender-male" 
-            checked={selectedGender === "M"}
-            onCheckedChange={() => handleGenderChange("M")}
+          <Checkbox
+            id="gender-male"
+            checked={selectedGender === "male"}
+            onCheckedChange={() => handleGenderChange("male")}
           />
-          <Label 
-            htmlFor="gender-male" 
+          <Label
+            htmlFor="gender-male"
             className="text-sm font-normal cursor-pointer"
           >
-            {t("gender.male")}
+            Homme
           </Label>
         </div>
-        
+
         <div className="flex items-center space-x-2">
-          <Checkbox 
-            id="gender-female" 
-            checked={selectedGender === "F"}
-            onCheckedChange={() => handleGenderChange("F")}
+          <Checkbox
+            id="gender-female"
+            checked={selectedGender === "female"}
+            onCheckedChange={() => handleGenderChange("female")}
           />
-          <Label 
-            htmlFor="gender-female" 
+          <Label
+            htmlFor="gender-female"
             className="text-sm font-normal cursor-pointer"
           >
-            {t("gender.female")}
+            Femme
           </Label>
         </div>
       </div>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\FamilyRelationService;
 use App\Services\SuggestionService;
+use App\Services\NotificationService;
 use App\Models\FamilyRelationship;
 use App\Models\Suggestion;
 use App\Models\User;
@@ -16,7 +17,8 @@ class DashboardController extends Controller
 {
     public function __construct(
         private FamilyRelationService $familyRelationService,
-        private SuggestionService $suggestionService
+        private SuggestionService $suggestionService,
+        private NotificationService $notificationService
     ) {}
 
     public function index(Request $request): Response
@@ -43,6 +45,10 @@ class DashboardController extends Controller
         // Obtenir les anniversaires à venir
         $upcomingBirthdays = $this->getUpcomingBirthdays($user);
 
+        // Obtenir les données de notifications
+        $notifications = $this->notificationService->getUserNotifications($user);
+        $unreadNotifications = $this->notificationService->getUnreadCount($user);
+
         return Inertia::render('dashboard', [
             'user' => $user->load('profile'),
             'profile' => $user->profile,
@@ -52,6 +58,8 @@ class DashboardController extends Controller
             'recentFamilyMembers' => $recentFamilyMembers,
             'upcomingBirthdays' => $upcomingBirthdays,
             'familyStatistics' => $statistics,
+            'notifications' => $notifications->take(5),
+            'unreadNotifications' => $unreadNotifications,
         ]);
     }
 

@@ -19,7 +19,7 @@ class NotificationsSeeder extends Seeder
             // Notifications pour Ahmed Benali
             [
                 'user_email' => 'ahmed.benali@example.com',
-                'message' => 'Nouvelle demande de relation : Adil Benslimane souhaite être votre frère',
+                'message' => 'Adil Benslimane souhaite être votre frère',
                 'type' => 'relationship_request',
                 'data' => json_encode(['requester_id' => $users->where('email', 'adil.benslimane@example.com')->first()->id]),
                 'read_at' => null,
@@ -27,7 +27,7 @@ class NotificationsSeeder extends Seeder
             ],
             [
                 'user_email' => 'ahmed.benali@example.com',
-                'message' => 'Anniversaire de famille : C\'est l\'anniversaire de votre fille Amina aujourd\'hui !',
+                'message' => 'C\'est l\'anniversaire de votre fille Amina aujourd\'hui !',
                 'type' => 'birthday',
                 'data' => json_encode(['family_member_id' => $users->where('email', 'amina.tazi@example.com')->first()->id]),
                 'read_at' => now()->subHours(1),

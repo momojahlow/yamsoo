@@ -51,6 +51,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('profil', [ProfileController::class, 'index'])->name('profile.index');
     Route::patch('profil', [ProfileController::class, 'update'])->name('profile.update');
     Route::get('profil/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::post('profil/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
 
     // Routes pour les familles
     Route::get('famille', [FamilyController::class, 'index'])->name('family');
@@ -125,7 +126,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('profiles', ProfileController::class);
     Route::resource('messages', MessageController::class);
     Route::resource('families', FamilyController::class);
-    Route::resource('notifications', NotificationController::class);
+    // Route::resource('notifications', NotificationController::class); // Supprimé - routes définies individuellement ci-dessus
     // Route::resource('suggestions', SuggestionController::class); // Supprimé - routes définies individuellement ci-dessus
 
     Route::resource('networks', NetworkController::class)->except(['index']);
@@ -181,3 +182,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/conversations/family-suggestions', [App\Http\Controllers\MessagingController::class, 'getFamilySuggestions']);
     });
 });
+
+
+
