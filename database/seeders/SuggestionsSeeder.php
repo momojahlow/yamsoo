@@ -16,36 +16,36 @@ class SuggestionsSeeder extends Seeder
     {
         $users = User::all();
 
-        // Récupérer les types de relations
-        $cousinType = RelationshipType::where('code', 'cousin')->first();
-        $uncleType = RelationshipType::where('code', 'uncle')->first();
-        $auntType = RelationshipType::where('code', 'aunt')->first();
-        $nephewType = RelationshipType::where('code', 'nephew')->first();
-        $nieceType = RelationshipType::where('code', 'niece')->first();
-        $sisterType = RelationshipType::where('code', 'sister')->first();
+        // Vérifier que les types de relations existent
+        $relationshipTypes = RelationshipType::whereIn('name', ['cousin', 'sister', 'brother', 'uncle', 'aunt'])->get()->keyBy('name');
 
         $suggestions = [
             // Suggestions pour Ahmed Benali
             [
                 'user_email' => 'ahmed.benali@example.com',
                 'suggested_user_email' => 'youssef.bennani@example.com',
-                'type' => 'cousin',
+                'type' => 'family_link',
+                'suggested_relation_code' => 'cousin',
                 'reason' => 'Score 85 - Même nom de famille et même région d\'origine',
                 'status' => 'pending',
+                'confidence_score' => 85,
             ],
             [
                 'user_email' => 'ahmed.benali@example.com',
                 'suggested_user_email' => 'karim.elfassi@example.com',
-                'type' => 'cousin',
+                'type' => 'family_link',
+                'suggested_relation_code' => 'cousin',
                 'reason' => 'Score 72 - Liens familiaux détectés dans les documents historiques',
                 'status' => 'pending',
+                'confidence_score' => 72,
             ],
 
             // Suggestions pour Fatima Zahra
             [
                 'user_email' => 'fatima.zahra@example.com',
                 'suggested_user_email' => 'nadia.berrada@example.com',
-                'type' => 'sister',
+                'type' => 'family_link',
+                'suggested_relation_code' => 'sister',
                 'confidence_score' => 90,
                 'reason' => 'Même nom de famille et même date de naissance proche',
                 'status' => 'pending',
@@ -55,7 +55,8 @@ class SuggestionsSeeder extends Seeder
             [
                 'user_email' => 'mohammed.alami@example.com',
                 'suggested_user_email' => 'hassan.idrissi@example.com',
-                'type' => 'cousin',
+                'type' => 'family_link',
+                'suggested_relation_code' => 'cousin',
                 'confidence_score' => 78,
                 'reason' => 'Ancêtres communs identifiés dans l\'arbre généalogique',
                 'status' => 'pending',
@@ -65,7 +66,8 @@ class SuggestionsSeeder extends Seeder
             [
                 'user_email' => 'amina.tazi@example.com',
                 'suggested_user_email' => 'sara.benjelloun@example.com',
-                'type' => 'cousin',
+                'type' => 'family_link',
+                'suggested_relation_code' => 'cousin',
                 'confidence_score' => 65,
                 'reason' => 'Même âge et même ville d\'origine',
                 'status' => 'pending',
@@ -75,7 +77,8 @@ class SuggestionsSeeder extends Seeder
             [
                 'user_email' => 'youssef.bennani@example.com',
                 'suggested_user_email' => 'omar.cherkaoui@example.com',
-                'type' => 'cousin',
+                'type' => 'family_link',
+                'suggested_relation_code' => 'cousin',
                 'confidence_score' => 82,
                 'reason' => 'Liens familiaux détectés par analyse ADN',
                 'status' => 'pending',
@@ -85,7 +88,8 @@ class SuggestionsSeeder extends Seeder
             [
                 'user_email' => 'leila.mansouri@example.com',
                 'suggested_user_email' => 'zineb.elkhayat@example.com',
-                'type' => 'cousin',
+                'type' => 'family_link',
+                'suggested_relation_code' => 'cousin',
                 'confidence_score' => 70,
                 'reason' => 'Même profession et même région',
                 'status' => 'pending',
@@ -95,7 +99,8 @@ class SuggestionsSeeder extends Seeder
             [
                 'user_email' => 'karim.elfassi@example.com',
                 'suggested_user_email' => 'adil.benslimane@example.com',
-                'type' => 'cousin',
+                'type' => 'family_link',
+                'suggested_relation_code' => 'cousin',
                 'confidence_score' => 88,
                 'reason' => 'Documents familiaux anciens mentionnent cette relation',
                 'status' => 'pending',
@@ -105,7 +110,8 @@ class SuggestionsSeeder extends Seeder
             [
                 'user_email' => 'nadia.berrada@example.com',
                 'suggested_user_email' => 'hanae.mernissi@example.com',
-                'type' => 'cousin',
+                'type' => 'family_link',
+                'suggested_relation_code' => 'cousin',
                 'confidence_score' => 75,
                 'reason' => 'Même spécialité médicale et même formation',
                 'status' => 'pending',
@@ -115,7 +121,8 @@ class SuggestionsSeeder extends Seeder
             [
                 'user_email' => 'hassan.idrissi@example.com',
                 'suggested_user_email' => 'rachid.alaoui@example.com',
-                'type' => 'cousin',
+                'type' => 'family_link',
+                'suggested_relation_code' => 'cousin',
                 'confidence_score' => 80,
                 'reason' => 'Même tradition culinaire et même région',
                 'status' => 'pending',
@@ -125,7 +132,8 @@ class SuggestionsSeeder extends Seeder
             [
                 'user_email' => 'sara.benjelloun@example.com',
                 'suggested_user_email' => 'amina.tazi@example.com',
-                'type' => 'cousin',
+                'type' => 'family_link',
+                'suggested_relation_code' => 'cousin',
                 'confidence_score' => 68,
                 'reason' => 'Même passion pour l\'art et même âge',
                 'status' => 'pending',
@@ -135,7 +143,8 @@ class SuggestionsSeeder extends Seeder
             [
                 'user_email' => 'omar.cherkaoui@example.com',
                 'suggested_user_email' => 'youssef.bennani@example.com',
-                'type' => 'cousin',
+                'type' => 'family_link',
+                'suggested_relation_code' => 'cousin',
                 'confidence_score' => 85,
                 'reason' => 'Même domaine professionnel et même formation',
                 'status' => 'pending',
@@ -145,7 +154,8 @@ class SuggestionsSeeder extends Seeder
             [
                 'user_email' => 'zineb.elkhayat@example.com',
                 'suggested_user_email' => 'leila.mansouri@example.com',
-                'type' => 'cousin',
+                'type' => 'family_link',
+                'suggested_relation_code' => 'cousin',
                 'confidence_score' => 72,
                 'reason' => 'Même passion pour l\'écriture et même région',
                 'status' => 'pending',
@@ -155,7 +165,8 @@ class SuggestionsSeeder extends Seeder
             [
                 'user_email' => 'adil.benslimane@example.com',
                 'suggested_user_email' => 'karim.elfassi@example.com',
-                'type' => 'cousin',
+                'type' => 'family_link',
+                'suggested_relation_code' => 'cousin',
                 'confidence_score' => 90,
                 'reason' => 'Documents historiques confirment cette relation',
                 'status' => 'pending',
@@ -165,7 +176,8 @@ class SuggestionsSeeder extends Seeder
             [
                 'user_email' => 'hanae.mernissi@example.com',
                 'suggested_user_email' => 'nadia.berrada@example.com',
-                'type' => 'cousin',
+                'type' => 'family_link',
+                'suggested_relation_code' => 'cousin',
                 'confidence_score' => 78,
                 'reason' => 'Même spécialité médicale et même approche thérapeutique',
                 'status' => 'pending',
@@ -175,7 +187,8 @@ class SuggestionsSeeder extends Seeder
             [
                 'user_email' => 'rachid.alaoui@example.com',
                 'suggested_user_email' => 'hassan.idrissi@example.com',
-                'type' => 'cousin',
+                'type' => 'family_link',
+                'suggested_relation_code' => 'cousin',
                 'confidence_score' => 82,
                 'reason' => 'Même tradition religieuse et même région',
                 'status' => 'pending',
@@ -186,13 +199,21 @@ class SuggestionsSeeder extends Seeder
             $user = $users->where('email', $suggestionData['user_email'])->first();
             $suggestedUser = $users->where('email', $suggestionData['suggested_user_email'])->first();
 
-            if ($user && $suggestedUser && $suggestionData['type']) {
+            if ($user && $suggestedUser) {
+                // Vérifier que le type de relation suggéré existe
+                $relationCode = $suggestionData['suggested_relation_code'] ?? 'cousin';
+                if (!$relationshipTypes->has($relationCode)) {
+                    $relationCode = 'cousin'; // Fallback vers cousin si le type n'existe pas
+                }
+
                 Suggestion::create([
                     'user_id' => $user->id,
                     'suggested_user_id' => $suggestedUser->id,
-                    'type' => $suggestionData['type'],
-                    'reason' => $suggestionData['reason'],
-                    'status' => $suggestionData['status'],
+                    'type' => $suggestionData['type'] ?? 'family_link',
+                    'suggested_relation_code' => $relationCode,
+                    'message' => $suggestionData['reason'],
+                    'status' => $suggestionData['status'] ?? 'pending',
+                    'confidence_score' => $suggestionData['confidence_score'] ?? 75,
                     'created_at' => now()->subDays(rand(1, 7)),
                 ]);
             }

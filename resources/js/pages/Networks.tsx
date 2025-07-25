@@ -448,7 +448,6 @@ export default function Networks({
                                 </div>
                                 <div>
                                   <p className="font-semibold text-gray-900 dark:text-white">{request.target_user_email}</p>
-                                  <p className="text-sm text-gray-600 dark:text-gray-400">En attente de réponse</p>
                                 </div>
                               </div>
                               <div className="ml-16">

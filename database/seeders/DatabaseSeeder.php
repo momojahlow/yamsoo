@@ -15,7 +15,7 @@ class DatabaseSeeder extends Seeder
     {
         // Seed les types de relations en premier
         $this->call([
-            RelationshipTypesSeeder::class,
+            ComprehensiveRelationshipTypesSeeder::class,
         ]);
 
         // Seed les utilisateurs avec leurs profils

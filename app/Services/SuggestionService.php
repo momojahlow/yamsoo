@@ -436,7 +436,7 @@ class SuggestionService
                     $suggestion = $this->createSuggestion(
                         $user,
                         $suggestedUser->id,
-                        'family_connection',
+                        'family_link',
                         "Via {$relatedUser->name} - {$inferredRelation['description']}",
                         $inferredRelation['code']
                     );

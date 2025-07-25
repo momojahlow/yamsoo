@@ -49,6 +49,9 @@ class DashboardController extends Controller
         $notifications = $this->notificationService->getUserNotifications($user);
         $unreadNotifications = $this->notificationService->getUnreadCount($user);
 
+        // Obtenir les demandes de relation reçues
+        $pendingRequests = $this->familyRelationService->getPendingRequests($user);
+
         return Inertia::render('dashboard', [
             'user' => $user->load('profile'),
             'profile' => $user->profile,
@@ -60,6 +63,7 @@ class DashboardController extends Controller
             'familyStatistics' => $statistics,
             'notifications' => $notifications->take(5),
             'unreadNotifications' => $unreadNotifications,
+            'pendingRequests' => $pendingRequests->take(3), // Limiter à 3 demandes pour le dashboard
         ]);
     }
 

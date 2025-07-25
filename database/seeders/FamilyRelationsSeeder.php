@@ -38,9 +38,9 @@ class FamilyRelationsSeeder extends Seeder
         $this->command->info('Types de relations disponibles :');
 
         // Afficher les types de relations disponibles
-        $relationshipTypes = RelationshipType::all();
+        $relationshipTypes = RelationshipType::ordered()->get();
         foreach ($relationshipTypes as $type) {
-            $this->command->info("- {$type->display_name} (code: {$type->code})");
+            $this->command->info("- {$type->display_name_fr} (nom: {$type->name}, catégorie: {$type->category})");
         }
     }
 }

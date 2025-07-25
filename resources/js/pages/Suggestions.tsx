@@ -151,9 +151,7 @@ export default function Suggestions({ suggestions }: Props) {
                         <h3 className="font-semibold text-gray-900 dark:text-white">
                           {suggestion.suggested_user.name}
                         </h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {suggestion.type}
-                        </p>
+
                         {suggestion.suggested_relation_name && (
                           <p className="text-sm font-medium text-blue-600 mt-1">
                             Relation suggérée : {suggestion.suggested_relation_name}

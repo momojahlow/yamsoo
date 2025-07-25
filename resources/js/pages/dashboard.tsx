@@ -85,6 +85,7 @@ interface DashboardProps {
   familyStatistics: any;
   notifications: any[];
   unreadNotifications: number;
+  pendingRequests: any[];
 }
 
 const Dashboard: React.FC<DashboardProps> = ({
@@ -97,7 +98,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   upcomingBirthdays,
   familyStatistics,
   notifications,
-  unreadNotifications
+  unreadNotifications,
+  pendingRequests
 }) => {
   const getGenderIcon = (gender?: string) => {
     return gender === 'female' ? '👩' : '👨';
@@ -134,6 +136,15 @@ const Dashboard: React.FC<DashboardProps> = ({
       bgColor: "bg-orange-50",
       change: "",
       href: "/notifications"
+    },
+    {
+      title: "Demandes reçues",
+      value: pendingRequests.length.toString(),
+      icon: UserPlus,
+      color: "text-purple-600",
+      bgColor: "bg-purple-50",
+      change: "",
+      href: "/reseaux"
     }
   ];
 
@@ -176,7 +187,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>
 
           {/* Statistiques principales */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {stats.map((stat, index) => (
               <Link key={index} href={stat.href}>
                 <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105 bg-white/80 backdrop-blur-sm">
@@ -250,8 +261,60 @@ const Dashboard: React.FC<DashboardProps> = ({
               </Card>
             </div>
 
-            {/* Sidebar avec suggestions et anniversaires */}
+            {/* Sidebar avec demandes, suggestions et anniversaires */}
             <div className="space-y-6">
+              {/* Demandes reçues */}
+              {pendingRequests.length > 0 && (
+                <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <UserPlus className="w-6 h-6 text-purple-600 mr-3" />
+                        Demandes reçues
+                      </div>
+                      <Link href="/reseaux">
+                        <Button variant="ghost" size="sm">
+                          <ArrowRight className="w-4 h-4" />
+                        </Button>
+                      </Link>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {pendingRequests.map((request) => (
+                        <div key={request.id} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                          <Avatar className="w-10 h-10">
+                            <AvatarFallback className="bg-purple-100 text-purple-600">
+                              {getInitials(request.requester?.name || request.requester_name || 'U')}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {request.requester?.name || request.requester_name}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              Souhaite être votre {request.relationship_type?.display_name_fr || request.relationship_name}
+                            </p>
+                          </div>
+                          <Badge variant="outline" className="text-xs">
+                            Nouveau
+                          </Badge>
+                        </div>
+                      ))}
+                      {pendingRequests.length > 3 && (
+                        <div className="text-center pt-2">
+                          <Link href="/reseaux">
+                            <Button variant="ghost" size="sm" className="text-purple-600">
+                              Voir toutes les demandes
+                            </Button>
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Suggestions prioritaires */}
               <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
                 <CardHeader>

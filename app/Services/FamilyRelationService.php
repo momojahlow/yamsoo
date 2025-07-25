@@ -154,8 +154,11 @@ class FamilyRelationService
         }
 
         // Déclencher l'événement pour générer des suggestions familiales
-        if ($requester && $target) {
+        if ($requester && $target && $createdRelationship) {
             event(new RelationshipAccepted($requester, $target, $request));
+
+            // Déclencher l'événement MemberAdded pour les nouvelles suggestions
+            event(new \App\Events\MemberAdded($target, $requester, $createdRelationship));
         }
 
         return $createdRelationship;

@@ -1,10 +1,24 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, Plus } from 'lucide-react';
+import { Users, Plus, RefreshCw } from 'lucide-react';
+import { router } from '@inertiajs/react';
 
 export function EmptySuggestions() {
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefreshSuggestions = () => {
+    setIsRefreshing(true);
+    router.post('/suggestions/refresh', {}, {
+      onFinish: () => setIsRefreshing(false),
+      onSuccess: () => {
+        // Recharger la page pour afficher les nouvelles suggestions
+        router.reload();
+      }
+    });
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
@@ -28,13 +42,24 @@ export function EmptySuggestions() {
 
           <p className="text-gray-600 dark:text-gray-400 mb-6">
             Vous n'avez pas encore reçu de suggestions de relations familiales.
-            Explorez les réseaux pour découvrir de nouveaux utilisateurs.
+            Ajoutez des membres à votre famille pour générer des suggestions automatiques.
           </p>
 
-          <Button className="w-full">
-            <Plus className="w-4 h-4 mr-2" />
-            Explorer les Réseaux
-          </Button>
+          <div className="space-y-3">
+            <Button
+              className="w-full"
+              onClick={handleRefreshSuggestions}
+              disabled={isRefreshing}
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+              {isRefreshing ? 'Génération en cours...' : 'Générer des suggestions'}
+            </Button>
+
+            <Button variant="outline" className="w-full" onClick={() => router.visit('/reseaux')}>
+              <Plus className="w-4 h-4 mr-2" />
+              Explorer les Réseaux
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
