@@ -505,7 +505,6 @@ export default function Networks({
                 {filteredUsers.map((user) => {
                   const selectedRelation = selectedRelations[user.id] || "";
                   const submitting = isSubmitting[user.id] || false;
-                  const genderLabel = user.profile?.gender === 'male' ? 'Masculin' : user.profile?.gender === 'female' ? 'Féminin' : 'Autre';
 
                   // Vérifier si une invitation a déjà été envoyée ou si la personne est déjà en famille
                   const isAlreadyFamily = familyMemberIds.includes(user.id);
@@ -515,7 +514,7 @@ export default function Networks({
                   const disableButton = isAlreadyFamily || isExistingRelation || isPending || hasSentRequest;
 
                   return (
-                    <Card key={user.id} className="rounded-2xl shadow-md border border-gray-100 p-6 flex flex-col items-center relative">
+                    <Card key={user.id} className="rounded-2xl shadow-md border border-gray-100 p-4 flex flex-col items-center relative">
                       {/* Top buttons - Yamsoo on left, Message on right */}
                       <div className="absolute top-4 left-4 right-4 flex justify-between z-10">
                         <YamsooButton
@@ -535,23 +534,22 @@ export default function Networks({
                         </Button>
                       </div>
 
-                      <div className="flex flex-col items-center w-full mt-8">
-                        <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-2 overflow-hidden">
+                      <div className="flex flex-col items-center w-full mt-6">
+                        <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mb-3 overflow-hidden">
                           {user.profile?.avatar_url ? (
                             <img
                               src={user.profile.avatar_url}
                               alt={user.name}
-                              className="w-16 h-16 object-cover"
+                              className="w-14 h-14 object-cover"
                             />
                           ) : (
-                            <span className="text-2xl font-bold text-gray-500">
+                            <span className="text-xl font-bold text-gray-500">
                               {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                             </span>
                           )}
                         </div>
                         <div className="font-bold text-lg text-brown-800 mb-1 text-center">{user.name}</div>
-                        <div className="text-sm text-gray-500 mb-1 text-center">{user.email}</div>
-                        <div className="text-xs text-gray-400 mb-2 text-center">{genderLabel}</div>
+                        <div className="text-sm text-gray-500 mb-3 text-center">{user.email}</div>
                       </div>
                       <div className="w-full mt-2">
                         <label className="block text-sm font-semibold mb-1">Ajoutez en tant que</label>

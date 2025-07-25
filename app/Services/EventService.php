@@ -95,7 +95,7 @@ class EventService
         }
 
         // Déclencher un événement
-        event(new \App\Events\RelationshipAccepted($request));
+        event(new \App\Events\RelationshipAccepted($request->requester, $request->targetUser, $request));
     }
 
     public function handleFamilyInvitation(User $inviter, User $invitee, Family $family): void

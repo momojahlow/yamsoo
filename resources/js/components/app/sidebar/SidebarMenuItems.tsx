@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { NotificationsBadge } from "./NotificationsBadge";
 import { Profile } from "@/types/notifications";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
+import { router } from "@inertiajs/react";
 
 interface SidebarMenuItemsProps {
   profile: Profile | null;
@@ -53,7 +54,7 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
       <SidebarMenuItem>
         <SidebarMenuButton
           tooltip="Accueil"
-          onClick={() => window.location.href = "/dashboard"}
+          onClick={() => router.visit("/dashboard")}
           className={cn(
             "w-full justify-start transition-transform duration-200 hover:scale-110",
             window.location.pathname === "/dashboard" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
@@ -67,7 +68,7 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
       <SidebarMenuItem>
         <SidebarMenuButton
           tooltip="Mon Profil"
-          onClick={() => window.location.href = "/profil"}
+          onClick={() => router.visit("/profil")}
           className={cn(
             "w-full justify-start transition-transform duration-200 hover:scale-110",
             window.location.pathname === "/profil" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
@@ -81,7 +82,7 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
       <SidebarMenuItem>
         <SidebarMenuButton
           tooltip="Famille"
-          onClick={() => window.location.href = "/famille"}
+          onClick={() => router.visit("/famille")}
           className={cn(
             "w-full justify-start transition-transform duration-200 hover:scale-110",
             window.location.pathname === "/famille" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
@@ -95,7 +96,7 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
       <SidebarMenuItem>
         <SidebarMenuButton
           tooltip="Albums Photo"
-          onClick={() => window.location.href = "/photo-albums"}
+          onClick={() => router.visit("/photo-albums")}
           className={cn(
             "w-full justify-start transition-transform duration-200 hover:scale-110",
             window.location.pathname.startsWith("/photo-albums") ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
@@ -109,7 +110,7 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
       <SidebarMenuItem>
         <SidebarMenuButton
           tooltip="Réseaux"
-          onClick={() => window.location.href = "/reseaux"}
+          onClick={() => router.visit("/reseaux")}
           className={cn(
             "w-full justify-start transition-transform duration-200 hover:scale-110",
             window.location.pathname === "/reseaux" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
@@ -123,7 +124,7 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
       <SidebarMenuItem className="relative">
         <SidebarMenuButton
           tooltip="Messages"
-          onClick={() => window.location.href = "/messages"}
+          onClick={() => router.visit("/messages")}
           className={cn(
             "w-full justify-start transition-transform duration-200 hover:scale-110",
             window.location.pathname === "/messages" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
@@ -156,7 +157,7 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
       <SidebarMenuItem>
         <SidebarMenuButton
           tooltip="Notifications"
-          onClick={() => window.location.href = "/notifications"}
+          onClick={() => router.visit("/notifications")}
           className={cn(
             "w-full justify-start transition-transform duration-200 hover:scale-110 relative",
             window.location.pathname === "/notifications" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
@@ -171,7 +172,7 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
       <SidebarMenuItem>
         <SidebarMenuButton
           tooltip="Suggestions"
-          onClick={() => window.location.href = "/suggestions"}
+          onClick={() => router.visit("/suggestions")}
           className={cn(
             "w-full justify-start transition-transform duration-200 hover:scale-110 relative",
             "bg-amber-50 text-amber-600 mt-2",
@@ -193,7 +194,7 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
         <SidebarMenuItem className="mt-3">
           <SidebarMenuButton
             tooltip="Administration"
-            onClick={() => window.location.href = "/admin"}
+            onClick={() => router.visit("/admin")}
             className="w-full justify-start transition-all duration-200 hover:scale-105 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 font-medium border border-purple-200 dark:border-purple-800 hover:border-purple-300 dark:hover:border-purple-700 rounded-lg"
           >
             <Shield className="h-6 w-6" />

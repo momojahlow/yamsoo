@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,7 @@ import { EmptySuggestions } from '@/components/suggestions/EmptySuggestions';
 import { SuggestionActions } from '@/components/suggestions/SuggestionActions';
 import { RelationSelector } from '@/components/suggestions/RelationSelector';
 import { FloatingLogoutButton } from '@/components/FloatingLogoutButton';
+import { RefreshCw } from 'lucide-react';
 import AppSidebarLayout from '@/Layouts/app/app-sidebar-layout';
 
 interface Suggestion {
@@ -34,6 +35,14 @@ interface Props {
 
 export default function Suggestions({ suggestions }: Props) {
   const [selectedSuggestion, setSelectedSuggestion] = useState<Suggestion | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefreshSuggestions = () => {
+    setIsRefreshing(true);
+    router.post('/suggestions/refresh', {}, {
+      onFinish: () => setIsRefreshing(false)
+    });
+  };
 
   const handleAcceptWithCorrection = (suggestionId: number, relationCode: string) => {
     // Créer un formulaire pour envoyer la requête avec la relation corrigée
@@ -88,13 +97,24 @@ export default function Suggestions({ suggestions }: Props) {
       <Head title="Suggestions" />
 
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Suggestions de Relations
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
-            Gérez vos suggestions de connexions familiales
-          </p>
+        <div className="mb-8 flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              Suggestions de Relations
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-2">
+              Gérez vos suggestions de connexions familiales
+            </p>
+          </div>
+          <Button
+            onClick={handleRefreshSuggestions}
+            disabled={isRefreshing}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Actualisation...' : 'Actualiser'}
+          </Button>
         </div>
 
         {/* Suggestions en attente */}

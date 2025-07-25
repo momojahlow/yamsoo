@@ -56,7 +56,7 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar collapsible="icon" variant="inset">
+    <Sidebar collapsible="icon" variant="sidebar">
       <SidebarContent className={`transition-all duration-300 ${state === 'collapsed' ? 'w-16 min-w-16 max-w-16' : 'w-64 min-w-64 max-w-64'}`}>
         <div className="flex h-full flex-col">
           <div className="p-2 flex items-center">

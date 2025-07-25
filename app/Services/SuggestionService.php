@@ -432,16 +432,16 @@ class SuggestionService
                 }
 
                 if ($inferredRelation) {
-                    // Créer un objet suggestion temporaire avec toutes les informations
-                    $tempSuggestion = (object) [
-                        'suggestedUser' => $suggestedUser,
-                        'type' => 'family_connection',
-                        'message' => "Via {$relatedUser->name} - {$inferredRelation['description']}",
-                        'suggested_relation_code' => $inferredRelation['code'],
-                        'suggested_relation_name' => $this->getRelationNameFromCode($inferredRelation['code'])
-                    ];
+                    // Créer et sauvegarder la suggestion dans la base de données
+                    $suggestion = $this->createSuggestion(
+                        $user,
+                        $suggestedUser->id,
+                        'family_connection',
+                        "Via {$relatedUser->name} - {$inferredRelation['description']}",
+                        $inferredRelation['code']
+                    );
 
-                    $suggestions->push($tempSuggestion);
+                    $suggestions->push($suggestion);
                 }
             }
         }
@@ -678,8 +678,26 @@ class SuggestionService
         $userCode = $userToConnector->code;
         $suggestedCode = $connectorToSuggested->code;
 
-        // Si l'utilisateur est fils/fille du connecteur (ou marqué incorrectement comme parent)
-        if (in_array($userCode, ['son', 'daughter', 'father', 'mother'])) {
+        // Debug: Log the relationship codes for troubleshooting
+        if (app()->runningInConsole()) {
+            echo "DEBUG: User ({$user->name}) -> Connector ({$connector->name}): {$userCode}\n";
+            echo "DEBUG: Connector ({$connector->name}) -> Suggested ({$suggestedUser->name}): {$suggestedCode}\n";
+        }
+
+        // PRIORITÉ 1: Si l'utilisateur est parent du connecteur ET la personne suggérée est épouse/mari du connecteur
+        if (in_array($userCode, ['father', 'mother'])) {
+            if (in_array($suggestedCode, ['wife', 'husband'])) {
+                $relationCode = $suggestedGender === 'male' ? 'son' : 'daughter';
+                $relationName = $suggestedGender === 'male' ? 'beau-fils' : 'belle-fille';
+                return [
+                    'code' => $relationCode,
+                    'description' => "Enfant par alliance - {$relationName}"
+                ];
+            }
+        }
+
+        // PRIORITÉ 2: Si l'utilisateur est fils/fille du connecteur
+        if (in_array($userCode, ['son', 'daughter'])) {
 
             // Et la personne suggérée est épouse/mari du connecteur (parent)
             if (in_array($suggestedCode, ['wife', 'husband'])) {
@@ -730,17 +748,7 @@ class SuggestionService
             }
         }
 
-        // NOUVEAU : Si l'utilisateur est parent du connecteur ET la personne suggérée est épouse/mari du connecteur
-        if (in_array($userCode, ['father', 'mother'])) {
-            if (in_array($suggestedCode, ['wife', 'husband'])) {
-                $relationCode = $suggestedGender === 'male' ? 'son' : 'daughter';
-                $relationName = $suggestedGender === 'male' ? 'beau-fils' : 'belle-fille';
-                return [
-                    'code' => $relationCode,
-                    'description' => "Enfant par alliance - {$relationName}"
-                ];
-            }
-        }
+
 
         // Relations par défaut (cousin/cousine)
         $relationCode = $suggestedGender === 'male' ? 'brother' : 'sister';

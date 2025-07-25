@@ -70,6 +70,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Routes pour les suggestions
     Route::get('suggestions', [SuggestionController::class, 'index'])->name('suggestions');
     Route::post('suggestions', [SuggestionController::class, 'store'])->name('suggestions.store');
+    Route::post('suggestions/refresh', [SuggestionController::class, 'refresh'])->name('suggestions.refresh');
     Route::patch('suggestions/{suggestion}', [SuggestionController::class, 'update'])->name('suggestions.update');
     Route::patch('suggestions/{suggestion}/accept-with-correction', [SuggestionController::class, 'acceptWithCorrection'])->name('suggestions.accept-with-correction');
     Route::delete('suggestions/{suggestion}', [SuggestionController::class, 'destroy'])->name('suggestions.destroy');

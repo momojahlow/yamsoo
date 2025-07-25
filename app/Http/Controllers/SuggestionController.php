@@ -18,6 +18,10 @@ class SuggestionController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
+
+        // Générer de nouvelles suggestions si nécessaire
+        $this->suggestionService->generateSuggestions($user);
+
         $suggestions = $this->suggestionService->getUserSuggestions($user);
         $pendingSuggestions = $this->suggestionService->getPendingSuggestions($user);
         $acceptedSuggestions = $this->suggestionService->getAcceptedSuggestions($user);
@@ -27,6 +31,22 @@ class SuggestionController extends Controller
             'pendingSuggestions' => $pendingSuggestions,
             'acceptedSuggestions' => $acceptedSuggestions,
         ]);
+    }
+
+    /**
+     * Rafraîchir les suggestions pour l'utilisateur actuel
+     */
+    public function refresh(Request $request): \Illuminate\Http\RedirectResponse
+    {
+        $user = $request->user();
+
+        // Supprimer les anciennes suggestions
+        $this->suggestionService->clearOldSuggestions($user);
+
+        // Générer de nouvelles suggestions
+        $this->suggestionService->generateSuggestions($user);
+
+        return back()->with('success', 'Suggestions mises à jour avec succès.');
     }
 
     public function store(Request $request): \Illuminate\Http\RedirectResponse

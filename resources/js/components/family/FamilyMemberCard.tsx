@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { MessageSquare, Trash2 } from "lucide-react";
-import { Inertia } from '@inertiajs/inertia';
+import { router } from '@inertiajs/react';
 
 interface FamilyMemberCardProps {
   id?: string;
@@ -57,7 +57,7 @@ export function FamilyMemberCard({
 
   const handleSendMessage = () => {
     if (id && relation !== 'Moi') {
-      Inertia.visit(`/messagerie?selectedContactId=${id}`);
+      router.visit(`/messagerie?selectedContactId=${id}`);
     }
   };
 

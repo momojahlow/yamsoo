@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -468,33 +469,50 @@ class MessagingController extends Controller
      */
     public function getStats(Request $request): JsonResponse
     {
-        $user = $request->user();
-        $range = $request->get('range', 'month');
+        try {
+            $user = $request->user();
+            $range = $request->get('range', 'month');
 
-        // Définir la période
-        $startDate = match($range) {
-            'week' => now()->subWeek(),
-            'month' => now()->subMonth(),
-            'year' => now()->subYear(),
-            default => now()->subMonth()
-        };
+            // Définir la période
+            $startDate = match($range) {
+                'week' => now()->subWeek(),
+                'month' => now()->subMonth(),
+                'year' => now()->subYear(),
+                default => now()->subMonth()
+            };
 
-        // Conversations de l'utilisateur
-        $userConversations = $user->conversations()->pluck('conversations.id');
+            // Conversations de l'utilisateur
+            $userConversations = $user->conversations()->pluck('conversations.id');
 
-        // Messages non lus
-        $unreadMessages = Message::whereIn('conversation_id', $userConversations)
-            ->where('user_id', '!=', $user->id)
-            ->whereNull('read_at')
-            ->count();
+            // Si l'utilisateur n'a pas de conversations, retourner des stats vides
+            if ($userConversations->isEmpty()) {
+                return response()->json([
+                    'totalMessages' => 0,
+                    'totalConversations' => 0,
+                    'unread_messages' => 0,
+                    'unread_conversations' => 0,
+                    'activeUsers' => 0,
+                    'averageResponseTime' => 0,
+                    'messagesThisWeek' => 0,
+                    'messagesThisMonth' => 0,
+                    'topContacts' => [],
+                    'dailyActivity' => []
+                ]);
+            }
 
-        // Conversations avec messages non lus
-        $unreadConversations = Conversation::whereIn('id', $userConversations)
-            ->whereHas('messages', function ($query) use ($user) {
-                $query->where('user_id', '!=', $user->id)
-                      ->whereNull('read_at');
-            })
-            ->count();
+            // Messages non lus
+            $unreadMessages = Message::whereIn('conversation_id', $userConversations)
+                ->where('user_id', '!=', $user->id)
+                ->whereNull('read_at')
+                ->count();
+
+            // Conversations avec messages non lus
+            $unreadConversations = Conversation::whereIn('id', $userConversations)
+                ->whereHas('messages', function ($query) use ($user) {
+                    $query->where('user_id', '!=', $user->id)
+                          ->whereNull('read_at');
+                })
+                ->count();
 
         // Statistiques générales
         $totalMessages = Message::whereIn('conversation_id', $userConversations)->count();
@@ -561,6 +579,26 @@ class MessagingController extends Controller
             'topContacts' => $topContacts,
             'dailyActivity' => $dailyActivity
         ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error in getStats: ' . $e->getMessage(), [
+                'user_id' => $request->user()?->id,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'totalMessages' => 0,
+                'totalConversations' => 0,
+                'unread_messages' => 0,
+                'unread_conversations' => 0,
+                'activeUsers' => 0,
+                'averageResponseTime' => 0,
+                'messagesThisWeek' => 0,
+                'messagesThisMonth' => 0,
+                'topContacts' => [],
+                'dailyActivity' => []
+            ], 200);
+        }
     }
 
     /**
