@@ -1,0 +1,84 @@
+-- COMMANDES SQLITE POUR DEBUG
+-- Exécutez: sqlite3 database/database.sqlite
+
+-- 1. Lister tous les utilisateurs
+.headers on
+.mode table
+SELECT id, name, email FROM users ORDER BY name;
+
+-- 2. Lister tous les types de relations
+SELECT id, code, name, name_fr FROM relationship_types ORDER BY code;
+
+-- 3. Lister TOUTES les relations existantes
+SELECT 
+    fr.id,
+    u1.name as user_name,
+    u2.name as related_user_name,
+    rt.code as relation_code,
+    rt.name as relation_name,
+    fr.status
+FROM family_relationships fr
+JOIN users u1 ON fr.user_id = u1.id
+JOIN users u2 ON fr.related_user_id = u2.id
+JOIN relationship_types rt ON fr.relationship_type_id = rt.id
+ORDER BY u1.name, u2.name;
+
+-- 4. Relations spécifiques d'Amina (remplacez X par l'ID d'Amina)
+SELECT 
+    u1.name as user_name,
+    u2.name as related_user_name,
+    rt.code as relation_code,
+    rt.name as relation_name,
+    CASE 
+        WHEN fr.user_id = (SELECT id FROM users WHERE name LIKE '%Amina%') 
+        THEN 'Amina → ' || u2.name
+        ELSE u1.name || ' → Amina'
+    END as direction
+FROM family_relationships fr
+JOIN users u1 ON fr.user_id = u1.id
+JOIN users u2 ON fr.related_user_id = u2.id
+JOIN relationship_types rt ON fr.relationship_type_id = rt.id
+WHERE fr.user_id = (SELECT id FROM users WHERE name LIKE '%Amina%') 
+   OR fr.related_user_id = (SELECT id FROM users WHERE name LIKE '%Amina%')
+ORDER BY direction;
+
+-- 5. Relation Ahmed ↔ Fatima
+SELECT 
+    u1.name as user_name,
+    u2.name as related_user_name,
+    rt.code as relation_code,
+    rt.name as relation_name
+FROM family_relationships fr
+JOIN users u1 ON fr.user_id = u1.id
+JOIN users u2 ON fr.related_user_id = u2.id
+JOIN relationship_types rt ON fr.relationship_type_id = rt.id
+WHERE (fr.user_id = (SELECT id FROM users WHERE name LIKE '%Ahmed%') 
+       AND fr.related_user_id = (SELECT id FROM users WHERE name LIKE '%Fatima%'))
+   OR (fr.user_id = (SELECT id FROM users WHERE name LIKE '%Fatima%') 
+       AND fr.related_user_id = (SELECT id FROM users WHERE name LIKE '%Ahmed%'));
+
+-- 6. Relation Amina ↔ Ahmed
+SELECT 
+    u1.name as user_name,
+    u2.name as related_user_name,
+    rt.code as relation_code,
+    rt.name as relation_name
+FROM family_relationships fr
+JOIN users u1 ON fr.user_id = u1.id
+JOIN users u2 ON fr.related_user_id = u2.id
+JOIN relationship_types rt ON fr.relationship_type_id = rt.id
+WHERE (fr.user_id = (SELECT id FROM users WHERE name LIKE '%Amina%') 
+       AND fr.related_user_id = (SELECT id FROM users WHERE name LIKE '%Ahmed%'))
+   OR (fr.user_id = (SELECT id FROM users WHERE name LIKE '%Ahmed%') 
+       AND fr.related_user_id = (SELECT id FROM users WHERE name LIKE '%Amina%'));
+
+-- 7. Suggestions actuelles pour Amina
+SELECT 
+    u.name as suggested_user_name,
+    s.suggested_relation_code,
+    s.reason,
+    s.type
+FROM suggestions s
+JOIN users u ON s.suggested_user_id = u.id
+WHERE s.user_id = (SELECT id FROM users WHERE name LIKE '%Amina%')
+ORDER BY s.created_at DESC;

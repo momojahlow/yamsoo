@@ -27,9 +27,10 @@ interface SidebarMenuItemsProps {
   suggestionCount: number;
   isCollapsed?: boolean;
   handleLogout: () => Promise<void>;
+  isLoggingOut?: boolean;
 }
 
-export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false, handleLogout }: SidebarMenuItemsProps) {
+export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false, handleLogout, isLoggingOut = false }: SidebarMenuItemsProps) {
   const { unreadCount } = useUnreadMessages();
 
   return (
@@ -206,12 +207,20 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
       {/* Bouton de déconnexion juste après Suggestions */}
       <SidebarMenuItem className="mt-3">
         <SidebarMenuButton
-          tooltip="Déconnexion"
+          tooltip={isLoggingOut ? "Déconnexion en cours..." : "Déconnexion"}
           onClick={handleLogout}
-          className="w-full justify-start transition-all duration-200 hover:scale-105 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 font-medium border border-red-200 dark:border-red-800 hover:border-red-300 dark:hover:border-red-700 rounded-lg"
+          disabled={isLoggingOut}
+          className={cn(
+            "w-full justify-start transition-all duration-200 hover:scale-105 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 font-medium border border-red-200 dark:border-red-800 hover:border-red-300 dark:hover:border-red-700 rounded-lg",
+            isLoggingOut && "opacity-50 cursor-not-allowed hover:scale-100"
+          )}
         >
-          <LogOut className="h-6 w-6" />
-          {!isCollapsed && <span className="ml-2">Déconnexion</span>}
+          <LogOut className={cn("h-6 w-6", isLoggingOut && "animate-spin")} />
+          {!isCollapsed && (
+            <span className="ml-2">
+              {isLoggingOut ? "Déconnexion..." : "Déconnexion"}
+            </span>
+          )}
         </SidebarMenuButton>
       </SidebarMenuItem>
 

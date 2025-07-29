@@ -25,7 +25,7 @@ class IntelligentSuggestionService
 
         foreach ($userRelations as $relation) {
             $relatedUser = $relation->user_id === $user->id ? $relation->relatedUser : $relation->user;
-            $relationCode = $relation->relationshipType->code;
+            $relationCode = $relation->relationshipType->name;
 
             // Générer des suggestions basées sur cette relation
             $newSuggestions = $this->generateSuggestionsFromRelation($user, $relatedUser, $relationCode);

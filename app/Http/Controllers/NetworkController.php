@@ -39,7 +39,7 @@ class NetworkController extends Controller
                 return [
                     'related_user_name' => $relation->relatedUser->name,
                     'related_user_email' => $relation->relatedUser->email,
-                    'relationship_name' => $relation->relationshipType->name_fr,
+                    'relationship_name' => $relation->relationshipType->display_name_fr,
                     'created_at' => $relation->created_at->toISOString(),
                 ];
             });
@@ -54,7 +54,7 @@ class NetworkController extends Controller
                     'id' => $request->id,
                     'requester_name' => $request->requester->name,
                     'requester_email' => $request->requester->email,
-                    'relationship_name' => $request->relationshipType->name_fr,
+                    'relationship_name' => $request->relationshipType->display_name_fr,
                     'message' => $request->message,
                     'mother_name' => $request->mother_name,
                     'created_at' => $request->created_at->toISOString(),
@@ -71,7 +71,7 @@ class NetworkController extends Controller
                     'id' => $request->id,
                     'target_user_id' => $request->target_user_id,
                     'target_user_email' => $request->targetUser->email,
-                    'relationship_name' => $request->relationshipType->name_fr,
+                    'relationship_name' => $request->relationshipType->display_name_fr,
                     'created_at' => $request->created_at->toISOString(),
                 ];
             });
@@ -88,11 +88,17 @@ class NetworkController extends Controller
             $familyMemberIds = $user->family->members->pluck('id')->toArray();
         }
 
-        $relationshipTypes = \App\Models\RelationshipType::all()->map(function($type) {
+        $relationshipTypes = \App\Models\RelationshipType::ordered()->get()->map(function($type) {
             return [
                 'id' => $type->id,
-                'name_fr' => $type->name_fr,
-                'requires_mother_name' => $type->requires_mother_name ?? false,
+                'name_fr' => $type->display_name_fr,
+                'display_name_fr' => $type->display_name_fr,
+                'display_name_ar' => $type->display_name_ar,
+                'display_name_en' => $type->display_name_en,
+                'name' => $type->name,
+                'category' => $type->category,
+                'generation_level' => $type->generation_level,
+                'requires_mother_name' => false, // Supprimé de la nouvelle structure
             ];
         });
 
@@ -105,7 +111,7 @@ class NetworkController extends Controller
                 return [
                     'related_user_name' => $relation->relatedUser->name,
                     'related_user_email' => $relation->relatedUser->email,
-                    'relationship_name' => $relation->relationshipType->name_fr,
+                    'relationship_name' => $relation->relationshipType->display_name_fr,
                     'created_at' => $relation->created_at->toISOString(),
                 ];
             });
@@ -120,7 +126,7 @@ class NetworkController extends Controller
                     'id' => $request->id,
                     'requester_name' => $request->requester->name,
                     'requester_email' => $request->requester->email,
-                    'relationship_name' => $request->relationshipType->name_fr,
+                    'relationship_name' => $request->relationshipType->display_name_fr,
                     'message' => $request->message,
                     'mother_name' => $request->mother_name,
                     'created_at' => $request->created_at->toISOString(),

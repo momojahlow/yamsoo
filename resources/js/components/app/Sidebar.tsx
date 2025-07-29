@@ -3,6 +3,7 @@ import { SidebarTrigger, SidebarContent, useSidebar, Sidebar } from "@/component
 import { useToast } from "@/hooks/use-toast";
 import { useProfile } from "@/hooks/useProfileSimple";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useState } from "react";
 
 import { SidebarMenuItems } from "./sidebar/SidebarMenuItems";
 import { Profile as NotificationProfile } from "@/types/notifications";
@@ -26,12 +27,20 @@ export function AppSidebar() {
   } as NotificationProfile : null;
 
   const { suggestionCount } = useSuggestionCount(notificationProfile);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Si on est sur mobile, ne pas afficher la sidebar
   if (isMobile) return null;
 
-    const handleLogout = async () => {
+  const handleLogout = async () => {
+    // Empêcher les clics multiples
+    if (isLoggingOut) {
+      console.log("Déconnexion déjà en cours, ignoré...");
+      return;
+    }
+
     try {
+      setIsLoggingOut(true);
       console.log("Tentative de déconnexion...");
 
       const success = await logout();
@@ -52,6 +61,8 @@ export function AppSidebar() {
         description: "Une erreur est survenue lors de la déconnexion",
         variant: "destructive",
       });
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
@@ -69,6 +80,7 @@ export function AppSidebar() {
               suggestionCount={suggestionCount}
               isCollapsed={state === 'collapsed'}
               handleLogout={handleLogout}
+              isLoggingOut={isLoggingOut}
             />
           </div>
         </div>

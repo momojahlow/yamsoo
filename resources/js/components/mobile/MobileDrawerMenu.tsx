@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Profile as NotificationProfile } from "@/types/notifications";
 import { useSuggestionCount } from "@/hooks/useSuggestionCount";
 import { logout } from "@/utils/auth";
+import { useState } from "react";
 
 // Import the refactored components
 import { MobileDrawerHeader } from "./parts/MobileDrawerHeader";
@@ -23,6 +24,7 @@ interface MobileDrawerMenuProps {
 export function MobileDrawerMenu({ open, onOpenChange }: MobileDrawerMenuProps) {
   const { toast } = useToast();
   const { profile } = useProfile();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Convert profile to NotificationProfile type
   const typedProfile = profile ? {
@@ -36,8 +38,15 @@ export function MobileDrawerMenu({ open, onOpenChange }: MobileDrawerMenuProps) 
 
   const { suggestionCount } = useSuggestionCount(typedProfile);
 
-    const handleLogout = async () => {
+  const handleLogout = async () => {
+    // Empêcher les clics multiples
+    if (isLoggingOut) {
+      console.log("Déconnexion déjà en cours depuis le drawer mobile, ignoré...");
+      return;
+    }
+
     try {
+      setIsLoggingOut(true);
       console.log("Tentative de déconnexion depuis le drawer mobile...");
 
       const success = await logout();
@@ -61,6 +70,8 @@ export function MobileDrawerMenu({ open, onOpenChange }: MobileDrawerMenuProps) 
         description: "Une erreur est survenue lors de la déconnexion",
         variant: "destructive",
       });
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
@@ -77,7 +88,7 @@ export function MobileDrawerMenu({ open, onOpenChange }: MobileDrawerMenuProps) 
           suggestionCount={suggestionCount}
         />
         <MobileDrawerThemeToggle />
-        <MobileDrawerFooter onLogout={handleLogout} />
+        <MobileDrawerFooter onLogout={handleLogout} isLoggingOut={isLoggingOut} />
       </DrawerContent>
     </Drawer>
   );

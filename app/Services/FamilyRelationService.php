@@ -8,18 +8,18 @@ use App\Models\FamilyRelationship;
 use App\Models\RelationshipRequest;
 use App\Models\RelationshipType;
 use App\Models\Conversation;
-use App\Services\IntelligentRelationshipService;
+use App\Services\SimpleRelationshipInferenceService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class FamilyRelationService
 {
-    protected IntelligentRelationshipService $intelligentRelationshipService;
+    protected SimpleRelationshipInferenceService $simpleRelationshipInferenceService;
 
-    public function __construct(IntelligentRelationshipService $intelligentRelationshipService)
+    public function __construct(SimpleRelationshipInferenceService $simpleRelationshipInferenceService)
     {
-        $this->intelligentRelationshipService = $intelligentRelationshipService;
+        $this->simpleRelationshipInferenceService = $simpleRelationshipInferenceService;
     }
     public function getUserRelationships(User $user): Collection
     {
@@ -134,22 +134,22 @@ class FamilyRelationService
 
         if ($relationshipType && $requester && $target) {
             // Déduire les relations pour le demandeur
-            $deducedForRequester = $this->intelligentRelationshipService->deduceRelationships(
+            $deducedForRequester = $this->simpleRelationshipInferenceService->deduceRelationships(
                 $requester,
                 $target,
-                $relationshipType->code
+                $relationshipType->name
             );
-            $this->intelligentRelationshipService->createDeducedRelationships($deducedForRequester);
+            $this->createDeducedRelationships($deducedForRequester);
 
             // Déduire les relations pour la cible (relation inverse)
             $inverseType = $this->getInverseRelationshipType($request->relationship_type_id, $requester, $target);
             if ($inverseType) {
-                $deducedForTarget = $this->intelligentRelationshipService->deduceRelationships(
+                $deducedForTarget = $this->simpleRelationshipInferenceService->deduceRelationships(
                     $target,
                     $requester,
-                    $inverseType->code
+                    $inverseType->name
                 );
-                $this->intelligentRelationshipService->createDeducedRelationships($deducedForTarget);
+                $this->createDeducedRelationships($deducedForTarget);
             }
         }
 
@@ -203,33 +203,70 @@ class FamilyRelationService
         // Déduire les relations automatiques
         if ($createdRelationship) {
             // Déduire les relations pour le demandeur
-            $deducedForRequester = $this->intelligentRelationshipService->deduceRelationships(
+            $deducedForRequester = $this->simpleRelationshipInferenceService->deduceRelationships(
                 $requester,
                 $target,
-                $relationshipType->code
+                $relationshipType->name
             );
-            $this->intelligentRelationshipService->createDeducedRelationships($deducedForRequester);
+            $this->createDeducedRelationships($deducedForRequester);
 
             // Déduire les relations pour la cible (relation inverse)
             $inverseType = $this->getInverseRelationshipType($relationshipType->id, $requester, $target);
             if ($inverseType) {
-                $deducedForTarget = $this->intelligentRelationshipService->deduceRelationships(
+                $deducedForTarget = $this->simpleRelationshipInferenceService->deduceRelationships(
                     $target,
                     $requester,
-                    $inverseType->code
+                    $inverseType->name
                 );
-                $this->intelligentRelationshipService->createDeducedRelationships($deducedForTarget);
+                $this->createDeducedRelationships($deducedForTarget);
             }
         }
 
         Log::info("Relation familiale créée directement", [
             'requester' => $requester->name,
             'target' => $target->name,
-            'relation' => $relationshipType->name_fr,
+            'relation' => $relationshipType->display_name_fr,
             'message' => $message
         ]);
 
         return $createdRelationship;
+    }
+
+    /**
+     * Créer les relations déduites automatiquement
+     */
+    private function createDeducedRelationships(Collection $deducedRelations): int
+    {
+        $created = 0;
+
+        foreach ($deducedRelations as $relation) {
+            try {
+                // Vérifier que la relation n'existe pas déjà
+                $exists = FamilyRelationship::where('user_id', $relation['user_id'])
+                    ->where('related_user_id', $relation['related_user_id'])
+                    ->exists();
+
+                if (!$exists) {
+                    FamilyRelationship::create([
+                        'user_id' => $relation['user_id'],
+                        'related_user_id' => $relation['related_user_id'],
+                        'relationship_type_id' => $relation['relationship_type_id'],
+                        'status' => 'accepted',
+                        'created_automatically' => true
+                    ]);
+
+                    $created++;
+                    Log::info("Relation automatique créée : " . ($relation['reason'] ?? 'Déduction automatique'));
+                }
+            } catch (\Exception $e) {
+                Log::error('Erreur lors de la création d\'une relation déduite', [
+                    'relation' => $relation,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+
+        return $created;
     }
 
     /**
@@ -253,11 +290,11 @@ class FamilyRelationService
 
         // Compter par type de relation
         foreach ($relationships as $relationship) {
-            $type = $relationship->relationshipType->name_fr;
+            $type = $relationship->relationshipType->display_name_fr;
             $statistics['by_type'][$type] = ($statistics['by_type'][$type] ?? 0) + 1;
 
             // Classer par génération
-            $code = $relationship->relationshipType->code;
+            $code = $relationship->relationshipType->name;
             if (in_array($code, ['father', 'mother', 'grandfather_paternal', 'grandmother_paternal', 'grandfather_maternal', 'grandmother_maternal', 'uncle_paternal', 'aunt_paternal', 'uncle_maternal', 'aunt_maternal'])) {
                 $statistics['by_generation']['ancestors']++;
             } elseif (in_array($code, ['brother', 'sister', 'husband', 'wife', 'cousin_paternal_m', 'cousin_paternal_f', 'cousin_maternal_m', 'cousin_maternal_f'])) {
@@ -340,29 +377,29 @@ class FamilyRelationService
         }
 
         // Pour les relations parent-enfant, adapter selon le genre du demandeur
-        if (in_array($currentType->code, ['son', 'daughter']) && $requester) {
+        if (in_array($currentType->name, ['son', 'daughter']) && $requester) {
             return $this->getParentRelationByGender($requester);
         }
 
         // Pour les relations enfant-parent, adapter selon le genre de la cible
-        if (in_array($currentType->code, ['father', 'mother']) && $target) {
+        if (in_array($currentType->name, ['father', 'mother']) && $target) {
             return $this->getChildRelationByGender($target);
         }
 
-        // Carte des relations inverses basée sur les codes (pour les autres relations)
-        $inverseCodeMap = [
+        // Carte des relations inverses basée sur les noms (pour les autres relations)
+        $inverseNameMap = [
             'brother' => 'brother', // Frère -> Frère
             'sister' => 'sister',   // Sœur -> Sœur
             'husband' => 'wife',    // Mari -> Épouse
             'wife' => 'husband',    // Épouse -> Mari
         ];
 
-        $inverseCode = $inverseCodeMap[$currentType->code] ?? null;
-        if (!$inverseCode) {
+        $inverseName = $inverseNameMap[$currentType->name] ?? null;
+        if (!$inverseName) {
             return null;
         }
 
-        return RelationshipType::where('code', $inverseCode)->first();
+        return RelationshipType::where('name', $inverseName)->first();
     }
 
     /**
@@ -372,14 +409,20 @@ class FamilyRelationService
     {
         $parentGender = $parent->profile?->gender;
 
-        if ($parentGender === 'male') {
-            return RelationshipType::where('code', 'father')->first();
-        } elseif ($parentGender === 'female') {
-            return RelationshipType::where('code', 'mother')->first();
+        // Si le genre n'est pas défini, essayer de le deviner par le prénom
+        if (!$parentGender) {
+            $parentGender = $this->guessGenderFromName($parent->name);
         }
 
-        // Par défaut, retourner père si le genre n'est pas défini
-        return RelationshipType::where('code', 'father')->first();
+        if ($parentGender === 'male') {
+            return RelationshipType::where('name', 'father')->first();
+        } elseif ($parentGender === 'female') {
+            return RelationshipType::where('name', 'mother')->first();
+        }
+
+        // Par défaut, retourner mère si le genre n'est toujours pas déterminé
+        // (changé de father à mother car plus probable dans ce contexte)
+        return RelationshipType::where('name', 'mother')->first();
     }
 
     /**
@@ -390,13 +433,50 @@ class FamilyRelationService
         $childGender = $child->profile?->gender;
 
         if ($childGender === 'male') {
-            return RelationshipType::where('code', 'son')->first();
+            return RelationshipType::where('name', 'son')->first();
         } elseif ($childGender === 'female') {
-            return RelationshipType::where('code', 'daughter')->first();
+            return RelationshipType::where('name', 'daughter')->first();
         }
 
         // Par défaut, retourner fils si le genre n'est pas défini
-        return RelationshipType::where('code', 'son')->first();
+        return RelationshipType::where('name', 'son')->first();
+    }
+
+    /**
+     * Deviner le genre à partir du prénom
+     */
+    private function guessGenderFromName(string $name): ?string
+    {
+        // Extraire le prénom (premier mot)
+        $firstName = explode(' ', trim($name))[0];
+        $firstName = strtolower($firstName);
+
+        // Prénoms féminins courants
+        $femaleNames = [
+            'fatima', 'zahra', 'amina', 'khadija', 'aicha', 'maryam', 'sara', 'leila', 'nadia', 'samira',
+            'marie', 'sophie', 'julie', 'claire', 'anne', 'isabelle', 'catherine', 'sylvie', 'martine',
+            'nour', 'yasmine', 'salma', 'iman', 'rajae', 'zineb', 'houda', 'siham', 'karima'
+        ];
+
+        // Prénoms masculins courants
+        $maleNames = [
+            'mohammed', 'ahmed', 'hassan', 'omar', 'ali', 'youssef', 'karim', 'said', 'abdelkader', 'rachid',
+            'pierre', 'jean', 'michel', 'philippe', 'alain', 'nicolas', 'christophe', 'laurent', 'david',
+            'abderrahim', 'mustapha', 'khalid', 'nabil', 'fouad', 'tarik', 'amine', 'othmane'
+        ];
+
+        if (in_array($firstName, $femaleNames)) {
+            return 'female';
+        } elseif (in_array($firstName, $maleNames)) {
+            return 'male';
+        }
+
+        // Si le prénom se termine par 'a', probablement féminin
+        if (str_ends_with($firstName, 'a') || str_ends_with($firstName, 'e')) {
+            return 'female';
+        }
+
+        return null; // Impossible de déterminer
     }
 
     public function deleteRelationship(FamilyRelationship $relationship): void
@@ -428,8 +508,8 @@ class FamilyRelationService
                 'name' => $relatedUser->name,
                 'email' => $relatedUser->email,
                 'avatar' => $relatedUser->profile?->avatar,
-                'relationship' => $relationshipType->name_fr,
-                'relationship_code' => $relationshipType->code,
+                'relationship' => $relationshipType->display_name_fr,
+                'relationship_code' => $relationshipType->name,
                 'is_online' => $relatedUser->isOnline(),
                 'last_seen_at' => $relatedUser->last_seen_at
             ];
@@ -630,8 +710,8 @@ class FamilyRelationService
 
         if ($relation) {
             return [
-                'name' => $relation->relationshipType->name_fr,
-                'description' => "Relation directe : {$relation->relationshipType->name_fr}",
+                'name' => $relation->relationshipType->display_name_fr,
+                'description' => "Relation directe : {$relation->relationshipType->display_name_fr}",
                 'relationship' => $relation,
             ];
         }
@@ -646,7 +726,7 @@ class FamilyRelationService
         if ($relation) {
             // Trouver la relation inverse
             $inverseRelation = $this->getInverseRelationshipType($relation->relationship_type_id, $targetUser, $currentUser);
-            $relationName = $inverseRelation ? $inverseRelation->name_fr : $relation->relationshipType->name_fr;
+            $relationName = $inverseRelation ? $inverseRelation->display_name_fr : $relation->relationshipType->display_name_fr;
 
             return [
                 'name' => $relationName,
@@ -712,12 +792,12 @@ class FamilyRelationService
     private function getRelationName(FamilyRelationship $relationship, User $user): string
     {
         if ($relationship->user_id === $user->id) {
-            return $relationship->relationshipType->name_fr;
+            return $relationship->relationshipType->display_name_fr;
         } else {
             // Relation inverse
             $inverseType = $this->getInverseRelationshipType($relationship->relationship_type_id,
                 User::find($relationship->user_id), $user);
-            return $inverseType ? $inverseType->name_fr : $relationship->relationshipType->name_fr;
+            return $inverseType ? $inverseType->display_name_fr : $relationship->relationshipType->display_name_fr;
         }
     }
 

@@ -37,6 +37,166 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
+// Route pour récupérer le token CSRF
+Route::get('/csrf-token', function () {
+    return response()->json(['csrf_token' => csrf_token()]);
+});
+
+// Route temporaire pour debug
+Route::get('/debug-relations', function () {
+    $output = [];
+
+    try {
+        // 1. Lister tous les utilisateurs
+        $output[] = "=== TOUS LES UTILISATEURS ===";
+        $users = \App\Models\User::all();
+        $amina_id = null;
+        $fatima_id = null;
+        $ahmed_id = null;
+        $mohamed_id = null;
+
+        foreach ($users as $user) {
+            $output[] = "{$user->name} (ID: {$user->id}) - {$user->email}";
+
+            if (stripos($user->name, 'Amina') !== false) $amina_id = $user->id;
+            if (stripos($user->name, 'Fatima') !== false) $fatima_id = $user->id;
+            if (stripos($user->name, 'Ahmed') !== false) $ahmed_id = $user->id;
+            if (stripos($user->name, 'Mohammed') !== false) $mohamed_id = $user->id;
+        }
+
+        $output[] = "";
+        $output[] = "=== UTILISATEURS CLÉS ===";
+        $output[] = "Amina ID: " . ($amina_id ?? "NON TROUVÉ");
+        $output[] = "Fatima ID: " . ($fatima_id ?? "NON TROUVÉ");
+        $output[] = "Ahmed ID: " . ($ahmed_id ?? "NON TROUVÉ");
+        $output[] = "Mohamed ID: " . ($mohamed_id ?? "NON TROUVÉ");
+
+        // 2. Lister tous les types de relations
+        $output[] = "";
+        $output[] = "=== TYPES DE RELATIONS ===";
+        $relationTypes = \App\Models\RelationshipType::all();
+        foreach ($relationTypes as $type) {
+            $output[] = "{$type->code} - {$type->name} ({$type->name_fr})";
+        }
+
+        // 3. Lister TOUTES les relations existantes
+        $output[] = "";
+        $output[] = "=== TOUTES LES RELATIONS EXISTANTES ===";
+        $relations = \App\Models\FamilyRelationship::with(['user', 'relatedUser', 'relationshipType'])->get();
+
+        if ($relations->isEmpty()) {
+            $output[] = "❌ AUCUNE RELATION TROUVÉE!";
+        } else {
+            foreach ($relations as $rel) {
+                $output[] = "{$rel->user->name} → {$rel->relatedUser->name} : {$rel->relationshipType->code} ({$rel->relationshipType->name}) [{$rel->status}]";
+            }
+        }
+
+        // 4. Relations spécifiques d'Amina
+        if ($amina_id) {
+            $output[] = "";
+            $output[] = "=== RELATIONS D'AMINA ===";
+            $aminaRelations = \App\Models\FamilyRelationship::where('user_id', $amina_id)
+                ->orWhere('related_user_id', $amina_id)
+                ->with(['user', 'relatedUser', 'relationshipType'])->get();
+
+            if ($aminaRelations->isEmpty()) {
+                $output[] = "❌ AUCUNE RELATION POUR AMINA!";
+            } else {
+                foreach ($aminaRelations as $rel) {
+                    if ($rel->user_id === $amina_id) {
+                        $output[] = "Amina → {$rel->relatedUser->name} : {$rel->relationshipType->code}";
+                    } else {
+                        $output[] = "{$rel->user->name} → Amina : {$rel->relationshipType->code}";
+                    }
+                }
+            }
+        }
+
+        // 5. Relation Ahmed ↔ Fatima
+        if ($ahmed_id && $fatima_id) {
+            $output[] = "";
+            $output[] = "=== RELATION AHMED ↔ FATIMA ===";
+            $ahmedFatimaRelation = \App\Models\FamilyRelationship::where(function($query) use ($ahmed_id, $fatima_id) {
+                $query->where('user_id', $ahmed_id)->where('related_user_id', $fatima_id);
+            })->orWhere(function($query) use ($ahmed_id, $fatima_id) {
+                $query->where('user_id', $fatima_id)->where('related_user_id', $ahmed_id);
+            })->with(['user', 'relatedUser', 'relationshipType'])->get();
+
+            if ($ahmedFatimaRelation->isEmpty()) {
+                $output[] = "❌ AUCUNE RELATION AHMED ↔ FATIMA TROUVÉE!";
+            } else {
+                foreach ($ahmedFatimaRelation as $rel) {
+                    $output[] = "✅ {$rel->user->name} → {$rel->relatedUser->name} : {$rel->relationshipType->code}";
+                }
+            }
+        }
+
+        // 6. Relation Amina ↔ Ahmed
+        if ($amina_id && $ahmed_id) {
+            $output[] = "";
+            $output[] = "=== RELATION AMINA ↔ AHMED ===";
+            $aminaAhmedRelation = \App\Models\FamilyRelationship::where(function($query) use ($amina_id, $ahmed_id) {
+                $query->where('user_id', $amina_id)->where('related_user_id', $ahmed_id);
+            })->orWhere(function($query) use ($amina_id, $ahmed_id) {
+                $query->where('user_id', $ahmed_id)->where('related_user_id', $amina_id);
+            })->with(['user', 'relatedUser', 'relationshipType'])->get();
+
+            if ($aminaAhmedRelation->isEmpty()) {
+                $output[] = "❌ AUCUNE RELATION AMINA ↔ AHMED TROUVÉE!";
+            } else {
+                foreach ($aminaAhmedRelation as $rel) {
+                    $output[] = "✅ {$rel->user->name} → {$rel->relatedUser->name} : {$rel->relationshipType->code}";
+                }
+            }
+        }
+
+        // 7. Suggestions actuelles pour Amina
+        if ($amina_id) {
+            $output[] = "";
+            $output[] = "=== SUGGESTIONS ACTUELLES POUR AMINA ===";
+            $suggestions = \App\Models\Suggestion::where('user_id', $amina_id)
+                ->with('suggestedUser')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            if ($suggestions->isEmpty()) {
+                $output[] = "❌ AUCUNE SUGGESTION POUR AMINA!";
+            } else {
+                foreach ($suggestions as $suggestion) {
+                    $output[] = "- {$suggestion->suggestedUser->name} : {$suggestion->suggested_relation_code}";
+                    $output[] = "  Raison: {$suggestion->reason}";
+                    $output[] = "  Type: {$suggestion->type}";
+
+                    if (stripos($suggestion->suggestedUser->name, 'Fatima') !== false) {
+                        $output[] = "  🎯 FATIMA TROUVÉE: {$suggestion->suggested_relation_code}";
+                        if ($suggestion->suggested_relation_code === 'mother') {
+                            $output[] = "  ✅ CORRECT!";
+                        } else {
+                            $output[] = "  ❌ INCORRECT! Devrait être 'mother'";
+                        }
+                    }
+                }
+            }
+        }
+
+        $output[] = "";
+        $output[] = "=== ANALYSE ===";
+        $output[] = "Pour que Fatima soit suggérée comme 'mother' à Amina, il faut:";
+        $output[] = "1. ✓ Amina → Ahmed : daughter (fille)";
+        $output[] = "2. ✓ Ahmed → Fatima : husband (mari)";
+        $output[] = "3. ✓ DÉDUCTION: Amina (enfant) + Fatima (conjoint) = Fatima est mère";
+        $output[] = "4. ✓ CAS 1 dans SuggestionService: enfant + conjoint → parent";
+        $output[] = "5. ✓ RÉSULTAT ATTENDU: mother";
+
+    } catch (\Exception $e) {
+        $output[] = "❌ ERREUR: " . $e->getMessage();
+        $output[] = "Trace: " . $e->getTraceAsString();
+    }
+
+    return response('<pre>' . implode("\n", $output) . '</pre>');
+});
+
 // Routes d'authentification - utilisation de Laravel Breeze
 // Les routes d'authentification sont définies dans routes/auth.php
 

@@ -1,0 +1,20 @@
+// COMMANDES RAPIDES POUR TINKER - COPIEZ-COLLEZ
+
+// Charger les utilisateurs
+$mohamed = App\Models\User::where('name', 'like', '%Mohammed%')->first();
+$fatima = App\Models\User::where('name', 'like', '%Fatima%')->first();
+$ahmed = App\Models\User::where('name', 'like', '%Ahmed%')->first();
+
+// Supprimer les anciennes suggestions
+App\Models\Suggestion::where('user_id', $mohamed->id)->delete();
+
+// Générer avec debug détaillé
+echo "🧪 GÉNÉRATION AVEC DEBUG:\n";
+$suggestionService = app(App\Services\SuggestionService::class);
+$suggestions = $suggestionService->generateSuggestions($mohamed);
+
+// Voir les résultats
+echo "\n💡 Résultats:\n";
+foreach ($suggestions as $suggestion) {
+    echo "   - {$suggestion->suggestedUser->name} : {$suggestion->suggested_relation_code}\n";
+}

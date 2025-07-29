@@ -53,10 +53,13 @@ interface Connection {
 
 interface RelationshipType {
   id: number;
-  code: string; // toujours string, valeur par défaut '' si absente
-  name: string; // toujours string, valeur par défaut '' si absente
-  name_fr: string;
-  gender: string; // toujours string, valeur par défaut '' si absente
+  name: string; // Nouveau nom principal
+  display_name_fr: string;
+  display_name_ar: string;
+  display_name_en: string;
+  name_fr: string; // Compatibilité
+  category: string;
+  generation_level: number;
   requires_mother_name: boolean;
 }
 
