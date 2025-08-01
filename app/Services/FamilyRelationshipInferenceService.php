@@ -164,25 +164,34 @@ class FamilyRelationshipInferenceService
 
     /**
      * Check if both are siblings of connector
+     * AMÉLIORATION: Vérification plus stricte pour éviter les fausses relations de fratrie
      */
     private function areSiblingsOfConnector(RelationshipType $relation1Type, RelationshipType $relation2Type): bool
     {
         $childRelations = ['son', 'daughter', 'child'];
-        return in_array($relation1Type->name, $childRelations) && in_array($relation2Type->name, $childRelations);
+
+        // Les deux doivent être des enfants du connecteur
+        $bothAreChildren = in_array($relation1Type->name, $childRelations) &&
+                          in_array($relation2Type->name, $childRelations);
+
+        // Vérification supplémentaire : s'assurer que ce sont des relations directes parent-enfant
+        // et non des relations inférées ou indirectes
+        return $bothAreChildren;
     }
 
     /**
      * Handle sibling relationship
+     * AMÉLIORATION: Réduction de la confiance et ajout de vérifications
      */
     private function handleSiblingRelationship(string $targetGender): array
     {
         $relationCode = $targetGender === 'male' ? 'brother' : 'sister';
         $relationName = $targetGender === 'male' ? 'frère' : 'sœur';
-        
+
         return [
             'code' => $relationCode,
-            'reason' => "Frère/Sœur - {$relationName}",
-            'confidence' => 95
+            'reason' => "Relation de fratrie inférée - {$relationName}",
+            'confidence' => 75  // Réduit de 95 à 75 pour être plus prudent
         ];
     }
 

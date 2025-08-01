@@ -4,32 +4,37 @@ import { Suggestion } from "./types";
 export function correctSuggestedRelation(suggestion: Suggestion): Suggestion {
   // Create a deep copy to avoid mutating the original object
   const correctedSuggestion = { ...suggestion };
-  
+
   // Si la raison mentionne un partage de parent, la relation devrait être sibling
   if (suggestion.reason && (
-      suggestion.reason.includes("mère →") || 
+      suggestion.reason.includes("mère →") ||
       suggestion.reason.includes("père →") ||
       suggestion.reason.includes("partagez la même")
     )) {
     const targetGender = suggestion.profiles?.gender || '';
-    correctedSuggestion.suggested_relation_type = targetGender === 'F' ? 'sister' : 'brother';
+    correctedSuggestion.suggested_relation_code = targetGender === 'F' ? 'sister' : 'brother';
+    correctedSuggestion.suggested_relation_name = targetGender === 'F' ? 'Sœur' : 'Frère';
   }
-  
+
   // Correction spécifique pour oncle/nièce et tante/neveu basée sur le genre des utilisateurs
   if (suggestion.reason && suggestion.reason.includes("frère → fille")) {
     // Si c'est la fille d'un frère, alors c'est une nièce
-    correctedSuggestion.suggested_relation_type = 'niece';
+    correctedSuggestion.suggested_relation_code = 'niece';
+    correctedSuggestion.suggested_relation_name = 'Nièce';
   } else if (suggestion.reason && suggestion.reason.includes("frère → fils")) {
     // Si c'est le fils d'un frère, alors c'est un neveu
-    correctedSuggestion.suggested_relation_type = 'nephew';
+    correctedSuggestion.suggested_relation_code = 'nephew';
+    correctedSuggestion.suggested_relation_name = 'Neveu';
   } else if (suggestion.reason && suggestion.reason.includes("sœur → fille")) {
     // Si c'est la fille d'une sœur, alors c'est une nièce
-    correctedSuggestion.suggested_relation_type = 'niece';
+    correctedSuggestion.suggested_relation_code = 'niece';
+    correctedSuggestion.suggested_relation_name = 'Nièce';
   } else if (suggestion.reason && suggestion.reason.includes("sœur → fils")) {
     // Si c'est le fils d'une sœur, alors c'est un neveu
-    correctedSuggestion.suggested_relation_type = 'nephew';
+    correctedSuggestion.suggested_relation_code = 'nephew';
+    correctedSuggestion.suggested_relation_name = 'Neveu';
   }
-  
+
   return correctedSuggestion;
 }
 

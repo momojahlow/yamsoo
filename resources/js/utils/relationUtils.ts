@@ -14,12 +14,12 @@ export const getRelationLabel = (relationType: string): string => {
     'child': 'Enfant',
     'baby': 'Bébé',
     'boy': 'Garçon',
-    
+
     // Conjoints
     'husband': 'Mari',
     'wife': 'Épouse',
     'spouse': 'Conjoint(e)',
-    
+
     // Fratrie
     'brother': 'Frère',
     'sister': 'Sœur',
@@ -29,6 +29,32 @@ export const getRelationLabel = (relationType: string): string => {
     'half_brother_maternal': 'Demi-frère maternel',
     'half_sister_paternal': 'Demi-sœur paternelle',
     'half_sister_maternal': 'Demi-sœur maternelle',
+
+    // Grands-parents/Petits-enfants
+    'grandfather': 'Grand-père',
+    'grandmother': 'Grand-mère',
+    'grandson': 'Petit-fils',
+    'granddaughter': 'Petite-fille',
+    'grandparent': 'Grand-parent',
+    'grandchild': 'Petit-enfant',
+
+    // Oncles/Tantes/Neveux/Nièces
+    'uncle': 'Oncle',
+    'aunt': 'Tante',
+    'nephew': 'Neveu',
+    'niece': 'Nièce',
+
+    // Relations par alliance
+    'father_in_law': 'Beau-père',
+    'mother_in_law': 'Belle-mère',
+    'son_in_law': 'Gendre',
+    'daughter_in_law': 'Belle-fille',
+    'brother_in_law': 'Beau-frère',
+    'sister_in_law': 'Belle-sœur',
+
+    // Autres
+    'cousin': 'Cousin(e)',
+    'family_member': 'Membre de la famille',
     
     // Grands-parents/Petits-enfants
     'grandfather': 'Grand-père',

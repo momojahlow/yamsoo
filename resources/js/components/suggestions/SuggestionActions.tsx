@@ -35,9 +35,20 @@ export function SuggestionActions({ suggestion, onAcceptWithRelation }: Props) {
     if (onAcceptWithRelation && selectedRelation) {
       onAcceptWithRelation(suggestion.id, selectedRelation);
     } else {
-      // Utiliser Inertia pour envoyer la requête PATCH
+      // Utiliser Inertia pour envoyer la requête PATCH avec token CSRF
       router.patch(`/suggestions/${suggestion.id}`, {
-        status: 'accepted'
+        status: 'accepted',
+        _token: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+      }, {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => {
+          // Recharger la page pour voir les changements
+          window.location.reload();
+        },
+        onError: (errors) => {
+          console.error('Erreur lors de l\'acceptation:', errors);
+        }
       });
     }
   };
@@ -45,13 +56,41 @@ export function SuggestionActions({ suggestion, onAcceptWithRelation }: Props) {
   const handleAcceptWithCorrection = () => {
     if (onAcceptWithRelation && selectedRelation) {
       onAcceptWithRelation(suggestion.id, selectedRelation);
+    } else {
+      // Utiliser Inertia pour envoyer la requête PATCH avec correction
+      router.patch(`/suggestions/${suggestion.id}`, {
+        status: 'accepted',
+        corrected_relation_code: selectedRelation,
+        _token: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+      }, {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: () => {
+          // Recharger la page pour voir les changements
+          window.location.reload();
+        },
+        onError: (errors) => {
+          console.error('Erreur lors de l\'acceptation avec correction:', errors);
+        }
+      });
     }
   };
 
   const handleReject = () => {
-    // Utiliser Inertia pour envoyer la requête PATCH
+    // Utiliser Inertia pour envoyer la requête PATCH avec token CSRF
     router.patch(`/suggestions/${suggestion.id}`, {
-      status: 'rejected'
+      status: 'rejected',
+      _token: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+    }, {
+      preserveState: true,
+      preserveScroll: true,
+      onSuccess: () => {
+        // Recharger la page pour voir les changements
+        window.location.reload();
+      },
+      onError: (errors) => {
+        console.error('Erreur lors du rejet:', errors);
+      }
     });
   };
 
@@ -65,6 +104,16 @@ export function SuggestionActions({ suggestion, onAcceptWithRelation }: Props) {
     { value: 'sister', label: 'Sœur' },
     { value: 'husband', label: 'Mari' },
     { value: 'wife', label: 'Épouse' },
+    // Grands-parents
+    { value: 'grandfather', label: 'Grand-père' },
+    { value: 'grandmother', label: 'Grand-mère' },
+    { value: 'grandson', label: 'Petit-fils' },
+    { value: 'granddaughter', label: 'Petite-fille' },
+    // Oncles et tantes
+    { value: 'uncle', label: 'Oncle' },
+    { value: 'aunt', label: 'Tante' },
+    { value: 'nephew', label: 'Neveu' },
+    { value: 'niece', label: 'Nièce' },
     // Relations par alliance
     { value: 'father_in_law', label: 'Beau-père' },
     { value: 'mother_in_law', label: 'Belle-mère' },

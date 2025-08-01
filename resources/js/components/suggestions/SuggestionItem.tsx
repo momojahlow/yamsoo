@@ -27,14 +27,15 @@ export function SuggestionItem({ suggestion, onAccept, onReject }: SuggestionIte
   const correctedSuggestion = correctSuggestedRelation(suggestion);
   
   const [showRelationSelect, setShowRelationSelect] = useState(false);
-  const [selectedRelationType, setSelectedRelationType] = useState<string>(correctedSuggestion.suggested_relation_type || '');
+  const [selectedRelationType, setSelectedRelationType] = useState<string>(correctedSuggestion.suggested_relation_code || '');
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Determine if this is a family-derived suggestion
   const isFamilySuggestion = correctedSuggestion.id?.startsWith('family-suggestion-');
-  
-  // Use type assertion to convert string to FamilyRelationType
-  const relationLabel = getRelationLabel(correctedSuggestion.suggested_relation_type as FamilyRelationType);
+
+  // Use the French name if available, otherwise use the relation label from code
+  const relationLabel = correctedSuggestion.suggested_relation_name ||
+                       getRelationLabel(correctedSuggestion.suggested_relation_code as FamilyRelationType);
   
   const targetName = getTargetName(correctedSuggestion);
   

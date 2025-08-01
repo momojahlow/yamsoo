@@ -37,6 +37,14 @@ class RelationshipType extends Model
     }
 
     /**
+     * Scope pour ordonner par sort_order
+     */
+    public function scopeOrdered($query)
+    {
+        return $query->orderBy('sort_order');
+    }
+
+    /**
      * Scope pour filtrer par catégorie
      */
     public function scopeByCategory($query, string $category)
@@ -53,11 +61,15 @@ class RelationshipType extends Model
     }
 
     /**
-     * Scope pour ordonner par sort_order
+     * Obtenir le nom d'affichage dans la langue spécifiée
      */
-    public function scopeOrdered($query)
+    public function getDisplayName(string $locale = 'fr'): string
     {
-        return $query->orderBy('sort_order');
+        return match($locale) {
+            'ar' => $this->display_name_ar,
+            'en' => $this->display_name_en,
+            default => $this->display_name_fr,
+        };
     }
 
     /**
@@ -90,17 +102,5 @@ class RelationshipType extends Model
     public function isExtendedRelation(): bool
     {
         return $this->category === 'extended';
-    }
-
-    /**
-     * Obtenir le nom d'affichage dans la langue spécifiée
-     */
-    public function getDisplayName(string $locale = 'fr'): string
-    {
-        return match($locale) {
-            'ar' => $this->display_name_ar,
-            'en' => $this->display_name_en,
-            default => $this->display_name_fr,
-        };
     }
 }

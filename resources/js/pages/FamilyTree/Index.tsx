@@ -8,6 +8,7 @@ import { Users, Heart, Baby, Crown, TreePine, ArrowLeft, ZoomIn, ZoomOut, Rotate
 import { Link } from '@inertiajs/react';
 import TreeNode from '@/components/FamilyTree/TreeNode';
 import TreeConnections from '@/components/FamilyTree/TreeConnections';
+import { getRelationLabel } from '@/utils/familyUtils';
 
 interface User {
     id: number;
@@ -108,7 +109,7 @@ const FamilyTreeIndex: React.FC<Props> = ({ user, treeData, relationships, stati
                     x: parentX,
                     y: parentY,
                     level: -1,
-                    relationshipType: parent.relationship_type,
+                    relationshipType: getRelationLabel(parent.relationship_code || ''),
                     relationshipCode: parent.relationship_code,
                 });
             });
@@ -121,7 +122,7 @@ const FamilyTreeIndex: React.FC<Props> = ({ user, treeData, relationships, stati
                 x: centerX + siblingSpacing,
                 y: centerY,
                 level: 0,
-                relationshipType: treeData.spouse.relationship_type,
+                relationshipType: getRelationLabel(treeData.spouse.relationship_code || ''),
                 relationshipCode: treeData.spouse.relationship_code,
             });
         }
@@ -135,7 +136,7 @@ const FamilyTreeIndex: React.FC<Props> = ({ user, treeData, relationships, stati
                     x: siblingX,
                     y: centerY,
                     level: 0,
-                    relationshipType: sibling.relationship_type,
+                    relationshipType: getRelationLabel(sibling.relationship_code || ''),
                     relationshipCode: sibling.relationship_code,
                 });
             });
@@ -151,7 +152,7 @@ const FamilyTreeIndex: React.FC<Props> = ({ user, treeData, relationships, stati
                     x: childX,
                     y: childY,
                     level: 1,
-                    relationshipType: child.relationship_type,
+                    relationshipType: getRelationLabel(child.relationship_code || ''),
                     relationshipCode: child.relationship_code,
                 });
             });
@@ -168,7 +169,7 @@ const FamilyTreeIndex: React.FC<Props> = ({ user, treeData, relationships, stati
                     x: grandparentX,
                     y: grandparentY,
                     level: -2,
-                    relationshipType: grandparent.relationship_type,
+                    relationshipType: getRelationLabel(grandparent.relationship_code || ''),
                     relationshipCode: grandparent.relationship_code,
                 });
             });

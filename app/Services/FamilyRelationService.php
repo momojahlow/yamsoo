@@ -66,6 +66,27 @@ class FamilyRelationService
             throw new \InvalidArgumentException('Type de relation invalide.');
         }
 
+        // Vérifier qu'une relation n'existe pas déjà
+        $existingRelation = FamilyRelationship::where('user_id', $requester->id)
+            ->where('related_user_id', $targetUserId)
+            ->where('relationship_type_id', $relationshipTypeId)
+            ->first();
+
+        if ($existingRelation) {
+            throw new \InvalidArgumentException('Une relation de ce type existe déjà entre ces utilisateurs.');
+        }
+
+        // Vérifier qu'une demande n'existe pas déjà
+        $existingRequest = RelationshipRequest::where('requester_id', $requester->id)
+            ->where('target_user_id', $targetUserId)
+            ->where('relationship_type_id', $relationshipTypeId)
+            ->where('status', 'pending')
+            ->first();
+
+        if ($existingRequest) {
+            throw new \InvalidArgumentException('Une demande de relation de ce type est déjà en attente entre ces utilisateurs.');
+        }
+
         // Créer la demande avec vérification
         $request = RelationshipRequest::create([
             'requester_id' => $requester->id,
@@ -143,7 +164,7 @@ class FamilyRelationService
 
             // Déduire les relations pour la cible (relation inverse)
             $inverseType = $this->getInverseRelationshipType($request->relationship_type_id, $requester, $target);
-            if ($inverseType) {
+            if ($inverseType && $inverseType->name) {
                 $deducedForTarget = $this->simpleRelationshipInferenceService->deduceRelationships(
                     $target,
                     $requester,
@@ -247,16 +268,24 @@ class FamilyRelationService
                     ->exists();
 
                 if (!$exists) {
-                    FamilyRelationship::create([
-                        'user_id' => $relation['user_id'],
-                        'related_user_id' => $relation['related_user_id'],
-                        'relationship_type_id' => $relation['relationship_type_id'],
-                        'status' => 'accepted',
-                        'created_automatically' => true
-                    ]);
+                    // AMÉLIORATION: Validation supplémentaire avant création automatique
+                    if ($this->validateAutomaticRelation($relation)) {
+                        FamilyRelationship::create([
+                            'user_id' => $relation['user_id'],
+                            'related_user_id' => $relation['related_user_id'],
+                            'relationship_type_id' => $relation['relationship_type_id'],
+                            'status' => 'accepted',
+                            'created_automatically' => true
+                        ]);
 
-                    $created++;
-                    Log::info("Relation automatique créée : " . ($relation['reason'] ?? 'Déduction automatique'));
+                        $created++;
+                        Log::info("Relation automatique créée : " . ($relation['reason'] ?? 'Déduction automatique'));
+                    } else {
+                        Log::warning("Relation automatique rejetée lors de la validation", [
+                            'relation' => $relation,
+                            'reason' => 'Validation échouée'
+                        ]);
+                    }
                 }
             } catch (\Exception $e) {
                 Log::error('Erreur lors de la création d\'une relation déduite', [
@@ -267,6 +296,121 @@ class FamilyRelationService
         }
 
         return $created;
+    }
+
+    /**
+     * Valide une relation automatique avant sa création
+     * AMÉLIORATION: Prévient la création de relations incorrectes
+     */
+    private function validateAutomaticRelation(array $relation): bool
+    {
+        try {
+            $user1 = User::find($relation['user_id']);
+            $user2 = User::find($relation['related_user_id']);
+            $relationshipType = RelationshipType::find($relation['relationship_type_id']);
+
+            if (!$user1 || !$user2 || !$relationshipType) {
+                return false;
+            }
+
+            // Validation spécifique pour les relations de fratrie
+            if (in_array($relationshipType->name, ['brother', 'sister'])) {
+                return $this->validateSiblingRelation($user1, $user2);
+            }
+
+            // Validation pour les relations parent-enfant
+            if (in_array($relationshipType->name, ['father', 'mother', 'son', 'daughter'])) {
+                return $this->validateParentChildRelation($user1, $user2, $relationshipType->name);
+            }
+
+            // Pour les autres types de relations, accepter par défaut
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la validation d\'une relation automatique', [
+                'relation' => $relation,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Valide une relation de fratrie
+     */
+    private function validateSiblingRelation(User $user1, User $user2): bool
+    {
+        // Vérifier l'âge - une différence de plus de 25 ans est suspecte pour des frères/sœurs
+        $age1 = $user1->profile?->birth_date ? now()->diffInYears($user1->profile->birth_date) : null;
+        $age2 = $user2->profile?->birth_date ? now()->diffInYears($user2->profile->birth_date) : null;
+
+        if ($age1 && $age2 && abs($age1 - $age2) > 25) {
+            Log::info("Relation de fratrie rejetée : différence d'âge trop importante", [
+                'user1' => $user1->name,
+                'user2' => $user2->name,
+                'age_diff' => abs($age1 - $age2)
+            ]);
+            return false;
+        }
+
+        // Vérifier qu'ils ont au moins un parent en commun
+        $user1Parents = $this->getUserParents($user1);
+        $user2Parents = $this->getUserParents($user2);
+
+        $commonParents = $user1Parents->intersect($user2Parents);
+
+        if ($commonParents->isEmpty()) {
+            Log::info("Relation de fratrie rejetée : aucun parent en commun trouvé", [
+                'user1' => $user1->name,
+                'user2' => $user2->name
+            ]);
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Valide une relation parent-enfant
+     */
+    private function validateParentChildRelation(User $user1, User $user2, string $relationType): bool
+    {
+        // Déterminer qui est le parent et qui est l'enfant
+        $isUser1Parent = in_array($relationType, ['father', 'mother']);
+        $parent = $isUser1Parent ? $user1 : $user2;
+        $child = $isUser1Parent ? $user2 : $user1;
+
+        // Vérifier l'âge - un parent doit avoir au moins 15 ans de plus que l'enfant
+        $parentAge = $parent->profile?->birth_date ? now()->diffInYears($parent->profile->birth_date) : null;
+        $childAge = $child->profile?->birth_date ? now()->diffInYears($child->profile->birth_date) : null;
+
+        if ($parentAge && $childAge) {
+            $ageDiff = $parentAge - $childAge;
+            if ($ageDiff < 15 || $ageDiff > 60) {
+                Log::info("Relation parent-enfant rejetée : différence d'âge inappropriée", [
+                    'parent' => $parent->name,
+                    'child' => $child->name,
+                    'age_diff' => $ageDiff
+                ]);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Obtient les parents d'un utilisateur
+     */
+    private function getUserParents(User $user): Collection
+    {
+        return FamilyRelationship::where('user_id', $user->id)
+            ->whereHas('relationshipType', function($query) {
+                $query->whereIn('name', ['father', 'mother']);
+            })
+            ->with('relatedUser')
+            ->get()
+            ->pluck('relatedUser');
     }
 
     /**
@@ -297,7 +441,7 @@ class FamilyRelationService
             $code = $relationship->relationshipType->name;
             if (in_array($code, ['father', 'mother', 'grandfather_paternal', 'grandmother_paternal', 'grandfather_maternal', 'grandmother_maternal', 'uncle_paternal', 'aunt_paternal', 'uncle_maternal', 'aunt_maternal'])) {
                 $statistics['by_generation']['ancestors']++;
-            } elseif (in_array($code, ['brother', 'sister', 'husband', 'wife', 'cousin_paternal_m', 'cousin_paternal_f', 'cousin_maternal_m', 'cousin_maternal_f'])) {
+            } elseif (in_array($code, ['brother', 'sister', 'husband', 'wife', 'cousin'])) {
                 $statistics['by_generation']['same_generation']++;
             } elseif (in_array($code, ['son', 'daughter', 'grandson', 'granddaughter', 'nephew', 'niece'])) {
                 $statistics['by_generation']['descendants']++;
@@ -376,30 +520,45 @@ class FamilyRelationService
             return null;
         }
 
-        // Pour les relations parent-enfant, adapter selon le genre du demandeur
-        if (in_array($currentType->name, ['son', 'daughter']) && $requester) {
-            return $this->getParentRelationByGender($requester);
+        // Logique corrigée pour les relations parent-enfant
+        switch ($currentType->name) {
+            // Si quelqu'un demande à être "father" ou "mother" pour la cible,
+            // alors la cible voit le demandeur comme "son" ou "daughter"
+            case 'father':
+            case 'mother':
+                return $requester ? $this->getChildRelationByGender($requester) : null;
+
+            // Si quelqu'un demande à être "son" ou "daughter" pour la cible,
+            // alors la cible voit le demandeur comme "father" ou "mother"
+            case 'son':
+            case 'daughter':
+                return $requester ? $this->getParentRelationByGender($requester) : null;
+
+            // Relations symétriques - la relation inverse dépend du genre du demandeur
+            case 'brother':
+                return $requester ? $this->getSiblingRelationByGender($requester) : null;
+            case 'sister':
+                return $requester ? $this->getSiblingRelationByGender($requester) : null;
+
+            // Relations de mariage
+            case 'husband':
+                return RelationshipType::where('name', 'wife')->first();
+            case 'wife':
+                return RelationshipType::where('name', 'husband')->first();
+
+            // Relations par alliance
+            case 'father_in_law':
+                return $target ? $this->getChildInLawRelationByGender($target) : null;
+            case 'mother_in_law':
+                return $target ? $this->getChildInLawRelationByGender($target) : null;
+            case 'son_in_law':
+                return $target ? $this->getParentInLawRelationByGender($target) : null;
+            case 'daughter_in_law':
+                return $target ? $this->getParentInLawRelationByGender($target) : null;
+
+            default:
+                return null;
         }
-
-        // Pour les relations enfant-parent, adapter selon le genre de la cible
-        if (in_array($currentType->name, ['father', 'mother']) && $target) {
-            return $this->getChildRelationByGender($target);
-        }
-
-        // Carte des relations inverses basée sur les noms (pour les autres relations)
-        $inverseNameMap = [
-            'brother' => 'brother', // Frère -> Frère
-            'sister' => 'sister',   // Sœur -> Sœur
-            'husband' => 'wife',    // Mari -> Épouse
-            'wife' => 'husband',    // Épouse -> Mari
-        ];
-
-        $inverseName = $inverseNameMap[$currentType->name] ?? null;
-        if (!$inverseName) {
-            return null;
-        }
-
-        return RelationshipType::where('name', $inverseName)->first();
     }
 
     /**
@@ -432,6 +591,11 @@ class FamilyRelationService
     {
         $childGender = $child->profile?->gender;
 
+        // Si le genre n'est pas défini dans le profil, essayer de le deviner à partir du nom
+        if (!$childGender) {
+            $childGender = $this->guessGenderFromName($child->name);
+        }
+
         if ($childGender === 'male') {
             return RelationshipType::where('name', 'son')->first();
         } elseif ($childGender === 'female') {
@@ -440,6 +604,66 @@ class FamilyRelationService
 
         // Par défaut, retourner fils si le genre n'est pas défini
         return RelationshipType::where('name', 'son')->first();
+    }
+
+    /**
+     * Retourne la relation frère/sœur appropriée selon le genre
+     */
+    private function getSiblingRelationByGender(User $sibling): ?RelationshipType
+    {
+        $siblingGender = $sibling->profile?->gender;
+
+        if (!$siblingGender) {
+            $siblingGender = $this->guessGenderFromName($sibling->name);
+        }
+
+        if ($siblingGender === 'male') {
+            return RelationshipType::where('name', 'brother')->first();
+        } elseif ($siblingGender === 'female') {
+            return RelationshipType::where('name', 'sister')->first();
+        }
+
+        return RelationshipType::where('name', 'brother')->first();
+    }
+
+    /**
+     * Retourne la relation beau-fils/belle-fille appropriée selon le genre
+     */
+    private function getChildInLawRelationByGender(User $child): ?RelationshipType
+    {
+        $childGender = $child->profile?->gender;
+
+        if (!$childGender) {
+            $childGender = $this->guessGenderFromName($child->name);
+        }
+
+        if ($childGender === 'male') {
+            return RelationshipType::where('name', 'son_in_law')->first();
+        } elseif ($childGender === 'female') {
+            return RelationshipType::where('name', 'daughter_in_law')->first();
+        }
+
+        return RelationshipType::where('name', 'son_in_law')->first();
+    }
+
+    /**
+     * Retourne la relation beau-père/belle-mère appropriée selon le genre
+     */
+    private function getParentInLawRelationByGender(User $parent): ?RelationshipType
+    {
+        $parentGender = $parent->profile?->gender;
+
+        if (!$parentGender) {
+            $parentGender = $this->guessGenderFromName($parent->name);
+        }
+
+        if ($parentGender === 'male') {
+            return RelationshipType::where('name', 'father_in_law')->first();
+        } elseif ($parentGender === 'female') {
+            return RelationshipType::where('name', 'mother_in_law')->first();
+        }
+
+        return RelationshipType::where('name', 'father_in_law')->first();
     }
 
     /**

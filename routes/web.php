@@ -218,6 +218,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('famille/arbre', [FamilyTreeController::class, 'index'])->name('family.tree');
     Route::post('families/{family}/members', [FamilyController::class, 'addMember'])->name('families.add-member');
 
+    // API pour l'arbre familial
+    Route::get('api/family-relations', [FamilyTreeController::class, 'getFamilyRelations'])->name('api.family.relations');
+
     // Routes pour les messages
     Route::get('messagerie', [MessageController::class, 'index'])->name('messages');
     Route::get('messagerie/{conversationId}', [MessageController::class, 'show'])->name('messages.conversation');

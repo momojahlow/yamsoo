@@ -6,6 +6,7 @@ use App\Models\Suggestion;
 use App\Models\User;
 use App\Models\FamilyRelationship;
 use App\Models\RelationshipType;
+use App\Models\RelationshipRequest;
 use App\Services\FamilyRelationService;
 use App\Services\SimpleRelationshipInferenceService;
 use Illuminate\Support\Collection;
@@ -33,20 +34,10 @@ class SuggestionService
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($suggestion) {
-                // Ajouter la relation suggérée si elle existe
-                if ($suggestion->suggested_relation_code) {
-                    $relationNames = [
-                        'father' => 'Père',
-                        'mother' => 'Mère',
-                        'son' => 'Fils',
-                        'daughter' => 'Fille',
-                        'brother' => 'Frère',
-                        'sister' => 'Sœur',
-                        'husband' => 'Mari',
-                        'wife' => 'Épouse',
-                    ];
-
-                    $suggestion->suggested_relation_name = $relationNames[$suggestion->suggested_relation_code] ?? ucfirst($suggestion->suggested_relation_code);
+                // Si suggested_relation_name n'existe pas, le récupérer depuis la base de données
+                if ($suggestion->suggested_relation_code && !$suggestion->suggested_relation_name) {
+                    $relationType = RelationshipType::where('name', $suggestion->suggested_relation_code)->first();
+                    $suggestion->suggested_relation_name = $relationType ? $relationType->display_name_fr : ucfirst($suggestion->suggested_relation_code);
                 }
 
                 return $suggestion;
@@ -55,13 +46,27 @@ class SuggestionService
 
     public function createSuggestion(User $user, int $suggestedUserId, string $type, string $message = '', ?string $suggestedRelationCode = null): Suggestion
     {
+        // Vérifier qu'on peut créer cette suggestion
+        if ($this->hasExistingSuggestion($user, $suggestedUserId)) {
+            throw new \InvalidArgumentException('Une suggestion, relation ou demande existe déjà entre ces utilisateurs.');
+        }
+
+        // Déterminer le nom de la relation à partir du code
+        $relationName = null;
+        if ($suggestedRelationCode) {
+            $relationType = RelationshipType::where('name', $suggestedRelationCode)->first();
+            $relationName = $relationType ? $relationType->display_name_fr : $suggestedRelationCode;
+        }
+
         return Suggestion::create([
             'user_id' => $user->id,
             'suggested_user_id' => $suggestedUserId,
             'type' => $type,
             'status' => 'pending',
             'message' => $message,
+            'reason' => $message,
             'suggested_relation_code' => $suggestedRelationCode,
+            'suggested_relation_name' => $relationName,
         ]);
     }
 
@@ -80,9 +85,9 @@ class SuggestionService
             $suggestion->update(['status' => 'accepted']);
         }
 
-        // Créer DIRECTEMENT la relation familiale (pas une demande)
+        // Créer une DEMANDE de relation familiale (pas directement)
         if ($relationCode) {
-            $this->createFamilyRelationshipFromSuggestion($suggestion, $relationCode);
+            $this->createRelationshipRequestFromSuggestion($suggestion, $relationCode);
         }
     }
 
@@ -176,9 +181,9 @@ class SuggestionService
     }
 
     /**
-     * Crée DIRECTEMENT une relation familiale à partir d'une suggestion acceptée
+     * Crée une demande de relation familiale à partir d'une suggestion acceptée
      */
-    private function createFamilyRelationshipFromSuggestion(Suggestion $suggestion, string $relationCode): void
+    private function createRelationshipRequestFromSuggestion(Suggestion $suggestion, string $relationCode): void
     {
         // Récupérer les utilisateurs
         $requester = User::find($suggestion->user_id);
@@ -205,62 +210,7 @@ class SuggestionService
         }
 
         try {
-            // Créer DIRECTEMENT la relation familiale via le service
-            $createdRelationship = $this->familyRelationService->createDirectRelationship(
-                $requester,
-                $targetUser,
-                $relationshipType,
-                "Relation créée automatiquement à partir d'une suggestion acceptée"
-            );
-
-            \Log::info("Relation familiale créée directement à partir d'une suggestion", [
-                'suggestion_id' => $suggestion->id,
-                'relationship_id' => $createdRelationship->id,
-                'requester' => $requester->name,
-                'target' => $targetUser->name,
-                'relation' => $relationshipType->name_fr
-            ]);
-
-        } catch (\Exception $e) {
-            \Log::error("Erreur lors de la création de la relation familiale", [
-                'suggestion_id' => $suggestion->id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-        }
-    }
-
-    /**
-     * Crée une demande de relation familiale à partir d'une suggestion acceptée (ANCIENNE MÉTHODE)
-     */
-    private function createRelationshipRequestFromSuggestion(Suggestion $suggestion, string $relationCode): void
-    {
-        // Récupérer les utilisateurs
-        $requester = User::find($suggestion->user_id);
-        $targetUser = User::find($suggestion->suggested_user_id);
-
-        if (!$requester || !$targetUser) {
-            \Log::error("Utilisateurs non trouvés pour la suggestion", [
-                'suggestion_id' => $suggestion->id,
-                'requester_id' => $suggestion->user_id,
-                'target_user_id' => $suggestion->suggested_user_id
-            ]);
-            return;
-        }
-
-        // Récupérer le type de relation
-        $relationshipType = RelationshipType::where('code', $relationCode)->first();
-
-        if (!$relationshipType) {
-            \Log::error("Type de relation non trouvé", [
-                'relation_code' => $relationCode,
-                'suggestion_id' => $suggestion->id
-            ]);
-            return;
-        }
-
-        try {
-            // Créer la demande de relation via le service FamilyRelationService
+            // Créer une DEMANDE de relation familiale (pas directement)
             $request = $this->familyRelationService->createRelationshipRequest(
                 $requester,
                 $targetUser->id,
@@ -274,7 +224,7 @@ class SuggestionService
                 'request_id' => $request->id,
                 'requester' => $requester->name,
                 'target' => $targetUser->name,
-                'relation' => $relationshipType->name_fr
+                'relation' => $relationshipType->display_name_fr
             ]);
 
         } catch (\Exception $e) {
@@ -288,9 +238,41 @@ class SuggestionService
 
     private function hasExistingSuggestion(User $user, int $suggestedUserId): bool
     {
-        return Suggestion::where('user_id', $user->id)
+        // Vérifier s'il y a déjà une suggestion
+        $existingSuggestion = Suggestion::where('user_id', $user->id)
             ->where('suggested_user_id', $suggestedUserId)
             ->exists();
+
+        if ($existingSuggestion) {
+            return true;
+        }
+
+        // Vérifier s'il y a déjà une relation établie
+        $existingRelation = FamilyRelationship::where('user_id', $user->id)
+            ->where('related_user_id', $suggestedUserId)
+            ->exists();
+
+        if ($existingRelation) {
+            return true;
+        }
+
+        // Vérifier s'il y a déjà une demande de relation en attente
+        $existingRequest = RelationshipRequest::where('requester_id', $user->id)
+            ->where('target_user_id', $suggestedUserId)
+            ->where('status', 'pending')
+            ->exists();
+
+        if ($existingRequest) {
+            return true;
+        }
+
+        // Vérifier dans l'autre sens aussi (demande reçue)
+        $existingIncomingRequest = RelationshipRequest::where('requester_id', $suggestedUserId)
+            ->where('target_user_id', $user->id)
+            ->where('status', 'pending')
+            ->exists();
+
+        return $existingIncomingRequest;
     }
 
     public function getPendingSuggestions(User $user): Collection
@@ -565,13 +547,20 @@ class SuggestionService
         $user1Age = $user1->profile?->birth_date ? now()->diffInYears($user1->profile->birth_date) : null;
         $user2Age = $user2->profile?->birth_date ? now()->diffInYears($user2->profile->birth_date) : null;
 
-        // Si même génération (différence d'âge < 10 ans), suggérer frère/sœur ou cousin(e)
-        if ($user1Age && $user2Age && abs($user1Age - $user2Age) < 10) {
-            return $user2Gender === 'male' ? 'frère' : 'sœur';
+        // AMÉLIORATION: Logique plus prudente pour éviter les fausses relations de fratrie
+        // Ne plus suggérer automatiquement frère/sœur basé uniquement sur l'âge
+        // Privilégier cousin(e) qui est une relation plus générale et moins spécifique
+
+        if ($user1Age && $user2Age && abs($user1Age - $user2Age) < 5) {
+            // Différence d'âge très faible (< 5 ans) : possiblement cousin(e) proche
+            return $user2Gender === 'male' ? 'cousin' : 'cousine';
+        } elseif ($user1Age && $user2Age && abs($user1Age - $user2Age) < 15) {
+            // Différence d'âge modérée (5-15 ans) : cousin(e)
+            return $user2Gender === 'male' ? 'cousin' : 'cousine';
         }
 
-        // Sinon, suggérer cousin(e)
-        return $user2Gender === 'male' ? 'cousin' : 'cousine';
+        // Sinon, suggérer membre de famille générique
+        return 'membre de famille';
     }
 
     /**
@@ -635,8 +624,20 @@ class SuggestionService
             // L'utilisateur est l'initiateur, retourner son type de relation
             return $relation->relationshipType;
         } else {
-            // L'utilisateur est la cible, retourner le type de relation inverse
-            return $this->getInverseRelationshipTypeByCode($relation->relationshipType, $user);
+            // L'utilisateur est la cible, chercher la vraie relation inverse dans la base de données
+            $inverseRelation = FamilyRelationship::where('user_id', $user->id)
+                ->where('related_user_id', $relation->user_id)
+                ->where('status', 'accepted')
+                ->with('relationshipType')
+                ->first();
+
+            if ($inverseRelation) {
+                // Utiliser la vraie relation inverse de la base de données
+                return $inverseRelation->relationshipType;
+            } else {
+                // Fallback: utiliser la logique d'inversion
+                return $this->getInverseRelationshipTypeByCode($relation->relationshipType, $user);
+            }
         }
     }
 
@@ -805,6 +806,195 @@ class SuggestionService
             }
         }
 
+        // CAS NOUVEAU: L'utilisateur est parent du connecteur ET la personne suggérée est conjoint du connecteur
+        // Exemple: Mohammed (user) est fils d'Ahmed (connector), Fatima (suggested) est épouse d'Ahmed
+        // Résultat: Fatima est mère de Mohammed
+        // MAIS AUSSI: Mohammed (user) a Ahmed comme père (father), Fatima (suggested) est épouse d'Ahmed
+        // Résultat: Fatima est mère de Mohammed
+        if (in_array($userCode, ['father', 'mother']) && in_array($suggestedCode, ['wife', 'husband'])) {
+            $relationCode = $suggestedGender === 'male' ? 'father' : 'mother';
+            $relationName = $suggestedGender === 'male' ? 'père' : 'mère';
+
+            if (app()->runningInConsole()) {
+                echo "   ✅ CAS PARENT + CONJOINT DÉCLENCHÉ: parent + conjoint → parent ({$relationCode})\n";
+            }
+
+            return [
+                'code' => $relationCode,
+                'description' => "Parent - {$relationName} via mariage avec {$connector->name}"
+            ];
+        }
+
+        // CAS NOUVEAU: L'utilisateur est parent du connecteur ET la personne suggérée est enfant du connecteur
+        // Exemple: Mohammed (user) a Ahmed comme père (father), Amina (suggested) est fille d'Ahmed
+        // Résultat: Amina est sœur de Mohammed
+        if (in_array($userCode, ['father', 'mother']) && in_array($suggestedCode, ['son', 'daughter'])) {
+            $relationCode = $suggestedGender === 'male' ? 'brother' : 'sister';
+            $relationName = $suggestedGender === 'male' ? 'frère' : 'sœur';
+
+            if (app()->runningInConsole()) {
+                echo "   ✅ CAS PARENT + ENFANT DÉCLENCHÉ: parent + enfant → frère/sœur ({$relationCode})\n";
+            }
+
+            return [
+                'code' => $relationCode,
+                'description' => "Frère/Sœur - {$relationName} via parent commun {$connector->name}"
+            ];
+        }
+
+        // CAS RELATIONS PAR ALLIANCE: L'utilisateur est conjoint du connecteur ET la personne suggérée est parent du connecteur
+        // Exemple: Youssef (user) est mari d'Amina (connector), Ahmed (suggested) est père d'Amina
+        // Résultat: Ahmed est beau-père de Youssef
+        if (in_array($userCode, ['husband', 'wife']) && in_array($suggestedCode, ['father', 'mother'])) {
+            $relationCode = $suggestedGender === 'male' ? 'father_in_law' : 'mother_in_law';
+            $relationName = $suggestedGender === 'male' ? 'beau-père' : 'belle-mère';
+
+            if (app()->runningInConsole()) {
+                echo "   ✅ CAS ALLIANCE PARENT DÉCLENCHÉ: conjoint + parent → beau-parent ({$relationCode})\n";
+            }
+
+            return [
+                'code' => $relationCode,
+                'description' => "Parent par alliance - {$relationName} via mariage avec {$connector->name}"
+            ];
+        }
+
+        // CAS RELATIONS PAR ALLIANCE: L'utilisateur est conjoint du connecteur ET la personne suggérée est frère/sœur du connecteur
+        // Exemple: Youssef (user) est mari d'Amina (connector), Mohammed (suggested) est frère d'Amina
+        // Résultat: Mohammed est beau-frère de Youssef
+        if (in_array($userCode, ['husband', 'wife']) && in_array($suggestedCode, ['brother', 'sister'])) {
+            $relationCode = $suggestedGender === 'male' ? 'brother_in_law' : 'sister_in_law';
+            $relationName = $suggestedGender === 'male' ? 'beau-frère' : 'belle-sœur';
+
+            if (app()->runningInConsole()) {
+                echo "   ✅ CAS ALLIANCE FRÈRE/SŒUR DÉCLENCHÉ: conjoint + frère/sœur → beau-frère/belle-sœur ({$relationCode})\n";
+            }
+
+            return [
+                'code' => $relationCode,
+                'description' => "Frère/Sœur par alliance - {$relationName} via mariage avec {$connector->name}"
+            ];
+        }
+
+        // CAS RELATIONS DIRECTES VIA FRÈRE/SŒUR: L'utilisateur est frère/sœur du connecteur ET la personne suggérée est parent du connecteur
+        // Exemple: Leila (user) est sœur d'Amina (connector), Ahmed (suggested) est père d'Amina
+        // Résultat: Ahmed est père de Leila (relation directe, pas par alliance)
+        if (in_array($userCode, ['brother', 'sister']) && in_array($suggestedCode, ['father', 'mother'])) {
+            $relationCode = $suggestedGender === 'male' ? 'father' : 'mother';
+            $relationName = $suggestedGender === 'male' ? 'père' : 'mère';
+
+            if (app()->runningInConsole()) {
+                echo "   ✅ CAS FRÈRE/SŒUR + PARENT DÉCLENCHÉ: frère/sœur + parent → parent ({$relationCode})\n";
+            }
+
+            return [
+                'code' => $relationCode,
+                'description' => "Parent - {$relationName} via relation familiale avec {$connector->name}"
+            ];
+        }
+
+        // CAS RELATIONS DIRECTES VIA FRÈRE/SŒUR: L'utilisateur est frère/sœur du connecteur ET la personne suggérée est frère/sœur du connecteur
+        // Exemple: Leila (user) est sœur d'Amina (connector), Mohammed (suggested) est frère d'Amina
+        // Résultat: Mohammed est frère de Leila
+        if (in_array($userCode, ['brother', 'sister']) && in_array($suggestedCode, ['brother', 'sister'])) {
+            $relationCode = $suggestedGender === 'male' ? 'brother' : 'sister';
+            $relationName = $suggestedGender === 'male' ? 'frère' : 'sœur';
+
+            if (app()->runningInConsole()) {
+                echo "   ✅ CAS FRÈRE/SŒUR + FRÈRE/SŒUR DÉCLENCHÉ: frère/sœur + frère/sœur → frère/sœur ({$relationCode})\n";
+            }
+
+            return [
+                'code' => $relationCode,
+                'description' => "Frère/Sœur - {$relationName} via relation familiale avec {$connector->name}"
+            ];
+        }
+
+        // CAS RELATIONS GRAND-PARENT: L'utilisateur est enfant du connecteur ET la personne suggérée est parent du connecteur
+        // Exemple: Karim (user) est fils d'Amina (connector), Ahmed (suggested) est père d'Amina
+        // Résultat: Ahmed est grand-père de Karim
+        if (in_array($userCode, ['son', 'daughter']) && in_array($suggestedCode, ['father', 'mother'])) {
+            $relationCode = $suggestedGender === 'male' ? 'grandfather' : 'grandmother';
+            $relationName = $suggestedGender === 'male' ? 'grand-père' : 'grand-mère';
+
+            if (app()->runningInConsole()) {
+                echo "   ✅ CAS GRAND-PARENT DÉCLENCHÉ: enfant + parent → grand-parent ({$relationCode})\n";
+            }
+
+            return [
+                'code' => $relationCode,
+                'description' => "Grand-parent - {$relationName} via {$connector->name}"
+            ];
+        }
+
+        // CAS RELATIONS ONCLE/TANTE: L'utilisateur est enfant du connecteur ET la personne suggérée est frère/sœur du connecteur
+        // Exemple: Karim (user) est fils d'Amina (connector), Leila (suggested) est sœur d'Amina
+        // Résultat: Leila est tante de Karim
+        if (in_array($userCode, ['son', 'daughter']) && in_array($suggestedCode, ['brother', 'sister'])) {
+            $relationCode = $suggestedGender === 'male' ? 'uncle' : 'aunt';
+            $relationName = $suggestedGender === 'male' ? 'oncle' : 'tante';
+
+            if (app()->runningInConsole()) {
+                echo "   ✅ CAS ONCLE/TANTE DÉCLENCHÉ: enfant + frère/sœur → oncle/tante ({$relationCode})\n";
+            }
+
+            return [
+                'code' => $relationCode,
+                'description' => "Oncle/Tante - {$relationName} via {$connector->name}"
+            ];
+        }
+
+        // CAS RELATIONS GRAND-PARENT INVERSE: L'utilisateur a le connecteur comme parent ET la personne suggérée a le connecteur comme enfant
+        // Exemple: Karim (user) a Amina comme mère (mother), Ahmed (suggested) a Amina comme fille (daughter)
+        // Résultat: Ahmed est grand-père de Karim
+        if (in_array($userCode, ['mother', 'father']) && in_array($suggestedCode, ['father', 'mother'])) {
+            $relationCode = $suggestedGender === 'male' ? 'grandfather' : 'grandmother';
+            $relationName = $suggestedGender === 'male' ? 'grand-père' : 'grand-mère';
+
+            if (app()->runningInConsole()) {
+                echo "   ✅ CAS GRAND-PARENT INVERSE DÉCLENCHÉ: parent + parent → grand-parent ({$relationCode})\n";
+            }
+
+            return [
+                'code' => $relationCode,
+                'description' => "Grand-parent - {$relationName} via {$connector->name}"
+            ];
+        }
+
+        // CAS RELATIONS ONCLE/TANTE INVERSE: L'utilisateur a le connecteur comme parent ET la personne suggérée a le connecteur comme frère/sœur
+        // Exemple: Karim (user) a Amina comme mère (mother), Leila (suggested) a Amina comme sœur (sister)
+        // Résultat: Leila est tante de Karim
+        if (in_array($userCode, ['mother', 'father']) && in_array($suggestedCode, ['brother', 'sister'])) {
+            $relationCode = $suggestedGender === 'male' ? 'uncle' : 'aunt';
+            $relationName = $suggestedGender === 'male' ? 'oncle' : 'tante';
+
+            if (app()->runningInConsole()) {
+                echo "   ✅ CAS ONCLE/TANTE INVERSE DÉCLENCHÉ: parent + frère/sœur → oncle/tante ({$relationCode})\n";
+            }
+
+            return [
+                'code' => $relationCode,
+                'description' => "Oncle/Tante - {$relationName} via {$connector->name}"
+            ];
+        }
+
+        // CAS RELATIONS PAR ALLIANCE INVERSE: L'utilisateur est frère/sœur du connecteur ET la personne suggérée est conjoint du connecteur
+        // Exemple: Leila (user) est sœur d'Amina (connector), Youssef (suggested) est mari d'Amina
+        // Résultat: Youssef est beau-frère de Leila
+        if (in_array($userCode, ['brother', 'sister']) && in_array($suggestedCode, ['husband', 'wife'])) {
+            $relationCode = $suggestedGender === 'male' ? 'brother_in_law' : 'sister_in_law';
+            $relationName = $suggestedGender === 'male' ? 'beau-frère' : 'belle-sœur';
+
+            if (app()->runningInConsole()) {
+                echo "   ✅ CAS ALLIANCE INVERSE DÉCLENCHÉ: frère/sœur + conjoint → beau-frère/belle-sœur ({$relationCode})\n";
+            }
+
+            return [
+                'code' => $relationCode,
+                'description' => "Frère/Sœur par alliance - {$relationName} via mariage de {$connector->name}"
+            ];
+        }
+
         // CAS 1 INVERSE: La personne suggérée est enfant du connecteur ET l'utilisateur est conjoint du connecteur
         // Exemple: Ahmed (user) est mari de Fatima (connector), Mohammed (suggested) est fils de Fatima
         // Résultat: Mohammed est fils d'Ahmed
@@ -819,6 +1009,40 @@ class SuggestionService
             return [
                 'code' => $relationCode,
                 'description' => "Enfant - {$relationName} via mariage"
+            ];
+        }
+
+        // CAS 1 INVERSE BIS: L'utilisateur est conjoint du connecteur ET le connecteur est parent de la personne suggérée
+        // Exemple: Fatima (user) est épouse d'Ahmed (connector), Ahmed est père d'Amina (suggested)
+        // Résultat: Amina est fille de Fatima (belle-fille)
+        if (in_array($userCode, ['husband', 'wife']) && in_array($suggestedCode, ['father', 'mother'])) {
+            $relationCode = $suggestedGender === 'male' ? 'son' : 'daughter';
+            $relationName = $suggestedGender === 'male' ? 'fils' : 'fille';
+
+            if (app()->runningInConsole()) {
+                echo "   ✅ CAS 1 INVERSE BIS DÉCLENCHÉ: conjoint + parent → enfant ({$relationCode})\n";
+            }
+
+            return [
+                'code' => $relationCode,
+                'description' => "Enfant - {$relationName} via mariage avec {$connector->name}"
+            ];
+        }
+
+        // CAS FRÈRE/SŒUR: L'utilisateur est enfant du connecteur ET le connecteur est parent de la personne suggérée
+        // Exemple: Amina (user) est fille d'Ahmed (connector), Ahmed est père de Mohammed (suggested)
+        // Résultat: Mohammed est frère d'Amina
+        if (in_array($userCode, ['son', 'daughter']) && in_array($suggestedCode, ['father', 'mother'])) {
+            $relationCode = $suggestedGender === 'male' ? 'brother' : 'sister';
+            $relationName = $suggestedGender === 'male' ? 'frère' : 'sœur';
+
+            if (app()->runningInConsole()) {
+                echo "   ✅ CAS FRÈRE/SŒUR DÉCLENCHÉ: enfant + parent → frère/sœur ({$relationCode})\n";
+            }
+
+            return [
+                'code' => $relationCode,
+                'description' => "Frère/Sœur - {$relationName} via parent commun {$connector->name}"
             ];
         }
 
@@ -1049,8 +1273,13 @@ class SuggestionService
     /**
      * Force la logique parent/enfant correcte pour corriger les erreurs de déduction
      */
-    private function forceCorrectParentChildLogic(string $userCode, string $suggestedCode, User $user, User $suggestedUser, User $connector, string $suggestedGender): ?array
+    private function forceCorrectParentChildLogic(string $userCode, string $suggestedCode, User $user, User $suggestedUser, User $connector, ?string $suggestedGender): ?array
     {
+        // Si le genre n'est pas défini, essayer de le deviner
+        if (!$suggestedGender) {
+            $suggestedGender = $this->guessGenderFromName($suggestedUser);
+        }
+
         // CORRECTION SPÉCIFIQUE: Enfant + Conjoint → Parent
         // Si l'utilisateur est enfant ET la personne suggérée est mariée avec le connecteur
         if (in_array($userCode, ['son', 'daughter'])) {

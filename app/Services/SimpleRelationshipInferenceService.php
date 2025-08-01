@@ -80,6 +80,11 @@ class SimpleRelationshipInferenceService
                 $otherUser = null;
                 $relationFromRelatedUserToOther = null;
 
+                // Vérifier que relationshipType existe
+                if (!$existingRelation->relationshipType) {
+                    continue;
+                }
+
                 // Déterminer la relation de relatedUser vers l'autre personne
                 if ($existingRelation->user_id === $relatedUser->id) {
                     // relatedUser → otherUser
