@@ -28,13 +28,17 @@ interface SidebarMenuItemsProps {
   isCollapsed?: boolean;
   handleLogout: () => Promise<void>;
   isLoggingOut?: boolean;
+  isMobile?: boolean;
 }
 
-export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false, handleLogout, isLoggingOut = false }: SidebarMenuItemsProps) {
+export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false, handleLogout, isLoggingOut = false, isMobile = false }: SidebarMenuItemsProps) {
   const { unreadCount } = useUnreadMessages();
 
   return (
-    <SidebarMenu className="flex flex-col h-full space-y-3 px-1">
+    <SidebarMenu className={cn(
+      "flex flex-col h-full space-y-2 px-1",
+      isMobile ? "space-y-1 px-2" : "space-y-3 px-1"
+    )}>
       {/* Yamsoo menu item - Commenté car la fonctionnalité est accessible via le menu Réseaux */}
       {/*
       <SidebarMenuItem>
@@ -61,8 +65,8 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
             window.location.pathname === "/dashboard" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
           )}
         >
-          <Calendar className="h-6 w-6" />
-          {!isCollapsed && <span className="ml-2">Accueil</span>}
+          <Calendar className="h-5 w-5 sm:h-6 sm:w-6" />
+          {(!isCollapsed || isMobile) && <span className="ml-2 text-sm sm:text-base">Accueil</span>}
         </SidebarMenuButton>
       </SidebarMenuItem>
 
@@ -75,8 +79,8 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
             window.location.pathname === "/profil" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
           )}
         >
-          <User className="h-6 w-6" />
-          {!isCollapsed && <span className="ml-2">Mon Profil</span>}
+          <User className="h-5 w-5 sm:h-6 sm:w-6" />
+          {(!isCollapsed || isMobile) && <span className="ml-2 text-sm sm:text-base">Mon Profil</span>}
         </SidebarMenuButton>
       </SidebarMenuItem>
 
@@ -89,8 +93,8 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
             window.location.pathname === "/famille" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
           )}
         >
-          <Trees className="h-6 w-6" />
-          {!isCollapsed && <span className="ml-2">Famille</span>}
+          <Trees className="h-5 w-5 sm:h-6 sm:w-6" />
+          {(!isCollapsed || isMobile) && <span className="ml-2 text-sm sm:text-base">Famille</span>}
         </SidebarMenuButton>
       </SidebarMenuItem>
 
@@ -103,8 +107,8 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
             window.location.pathname.startsWith("/photo-albums") ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
           )}
         >
-          <Camera className="h-6 w-6" />
-          {!isCollapsed && <span className="ml-2">Albums Photo</span>}
+          <Camera className="h-5 w-5 sm:h-6 sm:w-6" />
+          {(!isCollapsed || isMobile) && <span className="ml-2 text-sm sm:text-base">Albums Photo</span>}
         </SidebarMenuButton>
       </SidebarMenuItem>
 
@@ -117,8 +121,8 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
             window.location.pathname === "/reseaux" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
           )}
         >
-          <Network className="h-6 w-6" />
-          {!isCollapsed && <span className="ml-2">Réseaux</span>}
+          <Network className="h-5 w-5 sm:h-6 sm:w-6" />
+          {(!isCollapsed || isMobile) && <span className="ml-2 text-sm sm:text-base">Réseaux</span>}
         </SidebarMenuButton>
       </SidebarMenuItem>
 
@@ -131,8 +135,8 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
             window.location.pathname === "/messages" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
           )}
         >
-          <MessageSquare className="h-6 w-6" />
-          {!isCollapsed && <span className="ml-2">Messages</span>}
+          <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6" />
+          {(!isCollapsed || isMobile) && <span className="ml-2 text-sm sm:text-base">Messages</span>}
         </SidebarMenuButton>
         {/* Badge pour messages non lus - Version ultra-simple */}
         {unreadCount > 0 && (
@@ -164,9 +168,9 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
             window.location.pathname === "/notifications" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
           )}
         >
-          <Bell className="h-6 w-6" />
-          {!isCollapsed && <span className="ml-2">Notifications</span>}
-          <NotificationsBadge profile={profile} isCollapsed={isCollapsed} hideWhenCollapsed={true} />
+          <Bell className="h-5 w-5 sm:h-6 sm:w-6" />
+          {(!isCollapsed || isMobile) && <span className="ml-2 text-sm sm:text-base">Notifications</span>}
+          <NotificationsBadge profile={profile} isCollapsed={isCollapsed && !isMobile} hideWhenCollapsed={true} />
         </SidebarMenuButton>
       </SidebarMenuItem>
 
@@ -180,9 +184,9 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
             window.location.pathname === "/suggestions" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
           )}
         >
-          <Sparkles className="h-6 w-6" />
-          {!isCollapsed && <span className="ml-2">Suggestions</span>}
-          {suggestionCount > 0 && !isCollapsed && (
+          <Sparkles className="h-5 w-5 sm:h-6 sm:w-6" />
+          {(!isCollapsed || isMobile) && <span className="ml-2 text-sm sm:text-base">Suggestions</span>}
+          {suggestionCount > 0 && (!isCollapsed || isMobile) && (
             <span className="absolute min-w-5 h-5 flex items-center justify-center rounded-full bg-red-500 text-[11px] font-medium text-white top-1 right-2">
             {suggestionCount}
             </span>
@@ -198,8 +202,8 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
             onClick={() => router.visit("/admin")}
             className="w-full justify-start transition-all duration-200 hover:scale-105 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 font-medium border border-purple-200 dark:border-purple-800 hover:border-purple-300 dark:hover:border-purple-700 rounded-lg"
           >
-            <Shield className="h-6 w-6" />
-            {!isCollapsed && <span className="ml-2">Administration</span>}
+            <Shield className="h-5 w-5 sm:h-6 sm:w-6" />
+            {(!isCollapsed || isMobile) && <span className="ml-2 text-sm sm:text-base">Administration</span>}
           </SidebarMenuButton>
         </SidebarMenuItem>
       )}
@@ -215,9 +219,9 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
             isLoggingOut && "opacity-50 cursor-not-allowed hover:scale-100"
           )}
         >
-          <LogOut className={cn("h-6 w-6", isLoggingOut && "animate-spin")} />
-          {!isCollapsed && (
-            <span className="ml-2">
+          <LogOut className={cn("h-5 w-5 sm:h-6 sm:w-6", isLoggingOut && "animate-spin")} />
+          {(!isCollapsed || isMobile) && (
+            <span className="ml-2 text-sm sm:text-base">
               {isLoggingOut ? "Déconnexion..." : "Déconnexion"}
             </span>
           )}

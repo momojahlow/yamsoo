@@ -38,28 +38,31 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
       <Head title="Yamsoo - Connexions Familiales" />
 
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50">
-        {/* Header */}
-        <header className="container mx-auto px-4 py-6">
+        {/* Header responsive */}
+        <header className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
           <nav className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform duration-200">
-                <span className="text-white font-bold text-2xl">Y</span>
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              {/* Logo responsive - thumb sur mobile, complet sur desktop */}
+              <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform duration-200">
+                <span className="text-white font-bold text-sm sm:text-lg md:text-2xl">Y</span>
               </div>
-              <span className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
+              {/* Texte Yamsoo caché sur mobile, visible à partir de sm */}
+              <span className="hidden sm:block text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
                 Yamsoo!
               </span>
             </div>
 
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               {user ? (
                 // Utilisateur connecté
                 <>
-                  <span className="text-gray-600 font-medium">
+                  <span className="hidden sm:block text-gray-600 font-medium text-sm sm:text-base">
                     Bonjour, {user.name}
                   </span>
                   <Link href={route('dashboard')}>
-                    <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg transform hover:scale-105 transition-all duration-200">
-                      Mon compte
+                    <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg transform hover:scale-105 transition-all duration-200 text-sm sm:text-base px-3 sm:px-4 py-2">
+                      <span className="hidden sm:inline">Mon compte</span>
+                      <span className="sm:hidden">Compte</span>
                     </Button>
                   </Link>
                 </>
@@ -68,15 +71,17 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
                 <>
                   {canLogin && (
                     <Link href={route('login')}>
-                      <Button variant="ghost" className="font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 transition-colors duration-200">
-                        Se connecter
+                      <Button variant="ghost" className="font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 transition-colors duration-200 text-sm sm:text-base px-2 sm:px-4 py-2">
+                        <span className="hidden sm:inline">Se connecter</span>
+                        <span className="sm:hidden">Connexion</span>
                       </Button>
                     </Link>
                   )}
                   {canRegister && (
                     <Link href={route('register')}>
-                      <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg transform hover:scale-105 transition-all duration-200">
-                        S'inscrire
+                      <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg transform hover:scale-105 transition-all duration-200 text-sm sm:text-base px-3 sm:px-4 py-2">
+                        <span className="hidden sm:inline">S'inscrire</span>
+                        <span className="sm:hidden">Inscription</span>
                       </Button>
                     </Link>
                   )}
@@ -329,11 +334,13 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
         {/* Footer */}
         <footer className="container mx-auto px-4 py-16 border-t border-orange-200 mt-20 bg-gradient-to-r from-orange-50 to-red-50">
           <div className="text-center">
-            <div className="flex items-center justify-center space-x-3 mb-6">
-              <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-lg">Y</span>
+            <div className="flex items-center justify-center space-x-2 sm:space-x-3 mb-6">
+              {/* Logo responsive - thumb sur mobile, complet sur desktop */}
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg">
+                <span className="text-white font-bold text-sm sm:text-lg">Y</span>
               </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
+              {/* Texte Yamsoo caché sur très petit mobile, visible à partir de sm */}
+              <span className="hidden sm:block text-xl sm:text-2xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
                 Yamsoo!
               </span>
             </div>
@@ -341,7 +348,10 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
               Connecter les familles, créer des souvenirs
             </p>
             <p className="text-gray-500 mb-2">
-              &copy; 2024 Yamsoo. Tous droits réservés.
+              &copy; 2024 Yamsoo. Tous droits réservés. •
+              <Link href="/conditions-generales" className="text-orange-600 hover:text-orange-700 underline ml-1">
+                Conditions Générales
+              </Link>
             </p>
             <p className="text-sm text-gray-400">
               Propulsé par Laravel {laravelVersion} & PHP {phpVersion}

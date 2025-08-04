@@ -96,7 +96,25 @@ class SuggestionController extends Controller
     }
 
     /**
-     * Accepter une suggestion avec une relation corrigée
+     * Envoyer une demande de relation basée sur une suggestion
+     */
+    public function sendRelationRequest(Request $request, Suggestion $suggestion): \Illuminate\Http\RedirectResponse
+    {
+        $validated = $request->validate([
+            'relation_code' => 'required|string|in:father,mother,son,daughter,brother,sister,husband,wife,grandfather,grandmother,grandson,granddaughter,uncle,aunt,nephew,niece,father_in_law,mother_in_law,brother_in_law,sister_in_law,stepson,stepdaughter',
+        ]);
+
+        // Envoyer une demande de relation au lieu d'accepter directement
+        $this->suggestionService->sendRelationRequestFromSuggestion(
+            $suggestion,
+            $validated['relation_code']
+        );
+
+        return back()->with('success', 'Demande de relation envoyée avec succès.');
+    }
+
+    /**
+     * Accepter une suggestion avec une relation corrigée (méthode legacy)
      */
     public function acceptWithCorrection(Request $request, Suggestion $suggestion): \Illuminate\Http\RedirectResponse
     {

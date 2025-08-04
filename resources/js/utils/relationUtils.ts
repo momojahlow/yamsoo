@@ -52,54 +52,30 @@ export const getRelationLabel = (relationType: string): string => {
     'brother_in_law': 'Beau-frère',
     'sister_in_law': 'Belle-sœur',
 
-    // Autres
-    'cousin': 'Cousin(e)',
-    'family_member': 'Membre de la famille',
-    
-    // Grands-parents/Petits-enfants
-    'grandfather': 'Grand-père',
-    'grandmother': 'Grand-mère',
-    'grandson': 'Petit-fils',
-    'granddaughter': 'Petite-fille',
-    
-    // Oncles/Tantes
-    'uncle': 'Oncle',
+    // Relations étendues
     'uncle_paternal': 'Oncle paternel',
     'uncle_maternal': 'Oncle maternel',
-    'aunt': 'Tante',
     'aunt_paternal': 'Tante paternelle',
     'aunt_maternal': 'Tante maternelle',
-    
-    // Neveux/Nièces
-    'nephew': 'Neveu',
-    'niece': 'Nièce',
     'nephew_brother': 'Neveu (frère)',
     'niece_brother': 'Nièce (frère)',
     'nephew_sister': 'Neveu (sœur)',
     'niece_sister': 'Nièce (sœur)',
-    
-    // Cousins
-    'cousin': 'Cousin(e)',
     'cousin_paternal_m': 'Cousin paternel',
     'cousin_maternal_m': 'Cousin maternel',
     'cousin_paternal_f': 'Cousine paternelle',
     'cousin_maternal_f': 'Cousine maternelle',
-    
-    // Belle-famille
-    'father_in_law': 'Beau-père',
-    'mother_in_law': 'Belle-mère',
-    'son_in_law': 'Gendre',
-    'daughter_in_law': 'Belle-fille',
-    'brother_in_law': 'Beau-frère',
-    'sister_in_law': 'Belle-sœur',
+
+    // Relations par remariage
     'stepfather': 'Beau-père',
     'stepmother': 'Belle-mère',
     'stepson': 'Beau-fils',
     'stepdaughter': 'Belle-fille',
     'stepbrother': 'Demi-frère',
     'stepsister': 'Demi-sœur',
-    
-    // Autres
+
+    // Autres relations
+    'family_member': 'Membre de la famille',
     'friend_m': 'Ami',
     'friend_f': 'Amie',
     'colleague': 'Collègue',

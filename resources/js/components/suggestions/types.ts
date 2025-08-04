@@ -12,6 +12,7 @@ export interface Suggestion {
   target_name?: string;
   target_avatar_url?: string;
   reason?: string;
+  has_pending_request?: boolean; // Indique si une demande de relation est en cours
   profiles?: {
     first_name: string | null;
     last_name: string | null;

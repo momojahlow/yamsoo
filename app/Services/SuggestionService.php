@@ -51,13 +51,7 @@ class SuggestionService
             throw new \InvalidArgumentException('Une suggestion, relation ou demande existe déjà entre ces utilisateurs.');
         }
 
-        // Déterminer le nom de la relation à partir du code
-        $relationName = null;
-        if ($suggestedRelationCode) {
-            $relationType = RelationshipType::where('name', $suggestedRelationCode)->first();
-            $relationName = $relationType ? $relationType->display_name_fr : $suggestedRelationCode;
-        }
-
+        // Ne plus stocker de relation spécifique - laisser l'utilisateur choisir
         return Suggestion::create([
             'user_id' => $user->id,
             'suggested_user_id' => $suggestedUserId,
@@ -65,8 +59,8 @@ class SuggestionService
             'status' => 'pending',
             'message' => $message,
             'reason' => $message,
-            'suggested_relation_code' => $suggestedRelationCode,
-            'suggested_relation_name' => $relationName,
+            'suggested_relation_code' => null, // Plus de relation suggérée automatiquement
+            'suggested_relation_name' => null, // Plus de nom de relation suggéré
         ]);
     }
 
@@ -94,6 +88,18 @@ class SuggestionService
     public function rejectSuggestion(Suggestion $suggestion): void
     {
         $suggestion->update(['status' => 'rejected']);
+    }
+
+    /**
+     * Envoie une demande de relation basée sur une suggestion (nouveau système)
+     */
+    public function sendRelationRequestFromSuggestion(Suggestion $suggestion, string $relationCode): void
+    {
+        // Marquer la suggestion comme acceptée (demande envoyée)
+        $suggestion->update(['status' => 'accepted']);
+
+        // Créer une demande de relation familiale
+        $this->createRelationshipRequestFromSuggestion($suggestion, $relationCode);
     }
 
     public function deleteSuggestion(Suggestion $suggestion): void
@@ -280,7 +286,22 @@ class SuggestionService
         return Suggestion::where('user_id', $user->id)
             ->where('status', 'pending')
             ->with(['suggestedUser.profile'])
-            ->get();
+            ->get()
+            ->map(function ($suggestion) use ($user) {
+                // Vérifier s'il y a une demande de relation en cours
+                $hasExistingRequest = RelationshipRequest::where(function ($query) use ($user, $suggestion) {
+                    $query->where('requester_id', $user->id)
+                          ->where('target_user_id', $suggestion->suggested_user_id);
+                })->orWhere(function ($query) use ($user, $suggestion) {
+                    $query->where('requester_id', $suggestion->suggested_user_id)
+                          ->where('target_user_id', $user->id);
+                })->where('status', 'pending')->exists();
+
+                // Ajouter l'information à la suggestion
+                $suggestion->has_pending_request = $hasExistingRequest;
+
+                return $suggestion;
+            });
     }
 
     public function getAcceptedSuggestions(User $user): Collection
@@ -418,13 +439,13 @@ class SuggestionService
                 }
 
                 if ($inferredRelation) {
-                    // Créer et sauvegarder la suggestion dans la base de données
+                    // Créer et sauvegarder la suggestion dans la base de données (sans relation spécifique)
                     $suggestion = $this->createSuggestion(
                         $user,
                         $suggestedUser->id,
                         'family_link',
-                        "Via {$relatedUser->name} - {$inferredRelation['description']}",
-                        $inferredRelation['code']
+                        "Via {$relatedUser->name} - {$inferredRelation['description']}"
+                        // Plus de code de relation - l'utilisateur choisira
                     );
 
                     $suggestions->push($suggestion);

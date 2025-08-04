@@ -235,6 +235,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('suggestions', [SuggestionController::class, 'store'])->name('suggestions.store');
     Route::post('suggestions/refresh', [SuggestionController::class, 'refresh'])->name('suggestions.refresh');
     Route::patch('suggestions/{suggestion}', [SuggestionController::class, 'update'])->name('suggestions.update');
+    Route::post('suggestions/{suggestion}/send-request', [SuggestionController::class, 'sendRelationRequest'])->name('suggestions.send-request');
     Route::patch('suggestions/{suggestion}/accept-with-correction', [SuggestionController::class, 'acceptWithCorrection'])->name('suggestions.accept-with-correction');
     Route::delete('suggestions/{suggestion}', [SuggestionController::class, 'destroy'])->name('suggestions.destroy');
 
@@ -347,5 +348,11 @@ Route::middleware('auth')->group(function () {
     });
 });
 
+// Routes publiques
+Route::get('/conditions-generales', function () {
+    return Inertia::render('TermsOfService');
+})->name('terms-of-service');
 
-
+Route::get('/terms', function () {
+    return redirect()->route('terms-of-service');
+})->name('terms');

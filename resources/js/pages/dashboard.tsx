@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import AppSidebarLayout from '@/Layouts/app/app-sidebar-layout';
+import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
 import {
   Users,
   Heart,
@@ -152,62 +152,64 @@ const Dashboard: React.FC<DashboardProps> = ({
     <AppSidebarLayout>
       <Head title="Tableau de bord" />
 
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-        <div className="max-w-7xl mx-auto p-6 space-y-8">
-          {/* Header avec salutation personnalisée */}
-          <div className="text-center py-8">
-            <div className="flex items-center justify-center mb-4">
-              <div className="text-6xl mr-4">
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50">
+        <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 space-y-6 sm:space-y-8">
+          {/* Header principal - Responsive */}
+          <div className="text-center py-4 sm:py-6 md:py-8">
+            <div className="flex flex-col items-center justify-center mb-4 sm:mb-6 gap-3 sm:gap-4">
+              <div className="text-4xl sm:text-5xl md:text-6xl">
                 {getGenderIcon(profile?.gender)}
               </div>
-              <div>
-                <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                  Bonjour, {profile?.first_name || user.name} !
+              <div className="text-center">
+                <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent mb-2 leading-tight">
+                  Tableau de bord
                 </h1>
-                <p className="text-xl text-gray-600">
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-600">
                   Bienvenue sur votre réseau familial
                 </p>
               </div>
             </div>
-            
-            <div className="flex items-center justify-center space-x-4 mt-6">
-              <Link href="/famille/arbre">
-                <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                  <TreePine className="w-5 h-5 mr-2" />
-                  Voir l'arbre familial
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mt-4 sm:mt-6">
+              <Link href="/famille/arbre" className="w-full sm:w-auto">
+                <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg hover:scale-105 transition-all duration-200">
+                  <TreePine className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                  <span className="hidden sm:inline">Voir l'arbre familial</span>
+                  <span className="sm:hidden">Arbre familial</span>
                 </Button>
               </Link>
-              <Link href="/suggestions">
-                <Button variant="outline" size="lg">
-                  <UserPlus className="w-5 h-5 mr-2" />
-                  Découvrir des relations
+              <Link href="/suggestions" className="w-full sm:w-auto">
+                <Button variant="outline" size="lg" className="w-full sm:w-auto border-gray-200 hover:border-orange-300 hover:bg-orange-50 transition-all duration-200">
+                  <UserPlus className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                  <span className="hidden sm:inline">Découvrir des relations</span>
+                  <span className="sm:hidden">Découvrir</span>
                 </Button>
               </Link>
             </div>
           </div>
 
-          {/* Statistiques principales */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Statistiques principales - Responsive */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
             {stats.map((stat, index) => (
               <Link key={index} href={stat.href}>
-                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105 bg-white/80 backdrop-blur-sm">
-                  <CardContent className="p-6">
+                <Card className="border-0 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer hover:scale-105 bg-gradient-to-br from-white to-gray-50/50">
+                  <CardContent className="p-3 sm:p-4 md:p-6">
                     <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-600 mb-1">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1 truncate">
                           {stat.title}
                         </p>
-                        <p className="text-3xl font-bold text-gray-900 mb-1">
+                        <p className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1">
                           {stat.value}
                         </p>
                         {stat.change && (
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-gray-500 truncate">
                             {stat.change}
                           </p>
                         )}
                       </div>
-                      <div className={`p-4 rounded-xl ${stat.bgColor} transition-colors`}>
-                        <stat.icon className={`w-8 h-8 ${stat.color}`} />
+                      <div className={`p-2 sm:p-3 md:p-4 rounded-lg sm:rounded-xl ${stat.bgColor} transition-colors flex-shrink-0 ml-2`}>
+                        <stat.icon className={`w-4 h-4 sm:w-6 sm:h-6 md:w-8 md:h-8 ${stat.color}`} />
                       </div>
                     </div>
                   </CardContent>
@@ -216,7 +218,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             ))}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
             {/* Activité récente */}
             <div className="lg:col-span-2">
               <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
