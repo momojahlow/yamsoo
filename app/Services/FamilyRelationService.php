@@ -121,7 +121,17 @@ class FamilyRelationService
                 'responded_at' => now(),
             ]);
 
-            // Créer la relation familiale principale
+            // CORRECTION SÉMANTIQUE: Quand Ahmed demande à être "father" de Youssef,
+            // cela signifie qu'Ahmed veut voir Youssef comme "son" et Youssef veut voir Ahmed comme "father"
+
+            $requester = User::find($request->requester_id);
+            $target = User::find($request->target_user_id);
+            $requestedType = RelationshipType::find($request->relationship_type_id);
+
+            // Déterminer la relation inverse pour le requester
+            $inverseTypeForRequester = $this->getInverseRelationshipType($request->relationship_type_id, $requester, $target);
+
+            // Créer la relation principale: requester voit target comme demandé
             $createdRelationship = FamilyRelationship::create([
                 'user_id' => $request->requester_id,
                 'related_user_id' => $request->target_user_id,
@@ -131,19 +141,14 @@ class FamilyRelationService
                 'accepted_at' => now(),
             ]);
 
-            // Créer la relation inverse si nécessaire
-            $requester = User::find($request->requester_id);
-            $target = User::find($request->target_user_id);
-            $inverseType = $this->getInverseRelationshipType($request->relationship_type_id, $requester, $target);
-            if ($inverseType) {
-                FamilyRelationship::create([
-                    'user_id' => $request->target_user_id,
-                    'related_user_id' => $request->requester_id,
-                    'relationship_type_id' => $inverseType->id,
-                    'status' => 'accepted',
-                    'accepted_at' => now(),
+            // Créer la relation inverse: target voit requester comme la relation inverse
+            FamilyRelationship::create([
+                'user_id' => $request->target_user_id,
+                'related_user_id' => $request->requester_id,
+                'relationship_type_id' => $inverseTypeForRequester ? $inverseTypeForRequester->id : $request->relationship_type_id,
+                'status' => 'accepted',
+                'accepted_at' => now(),
                 ]);
-            }
 
             // Les déductions se feront après la transaction pour avoir toutes les relations de base
         });
@@ -520,16 +525,16 @@ class FamilyRelationService
             return null;
         }
 
-        // Logique corrigée pour les relations parent-enfant
+        // Logique CORRIGÉE pour les relations parent-enfant
         switch ($currentType->name) {
             // Si quelqu'un demande à être "father" ou "mother" pour la cible,
-            // alors la cible voit le demandeur comme "son" ou "daughter"
+            // alors la cible voit le demandeur comme "father" ou "mother" (basé sur le genre de la cible)
             case 'father':
             case 'mother':
-                return $requester ? $this->getChildRelationByGender($requester) : null;
+                return $target ? $this->getChildRelationByGender($target) : null;
 
             // Si quelqu'un demande à être "son" ou "daughter" pour la cible,
-            // alors la cible voit le demandeur comme "father" ou "mother"
+            // alors la cible voit le demandeur comme "father" ou "mother" (basé sur le genre du demandeur)
             case 'son':
             case 'daughter':
                 return $requester ? $this->getParentRelationByGender($requester) : null;

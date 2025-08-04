@@ -79,4 +79,11 @@ return [
         'max_retries' => env('EVENTS_MAX_RETRIES', 3),
     ],
 
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY'),
+        'model' => env('GEMINI_MODEL', 'gemini-1.5-flash'),
+        'timeout' => env('GEMINI_TIMEOUT', 30),
+        'max_tokens' => env('GEMINI_MAX_TOKENS', 1000),
+    ],
+
 ];
