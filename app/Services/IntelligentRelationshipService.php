@@ -219,16 +219,18 @@ class IntelligentRelationshipService
                 continue;
             }
 
-            // Appliquer les règles de déduction
-            $deducedRelationCode = $this->getDeducedRelation($relationshipCode, $relationFromRelatedUserToOther, $user, $otherUser);
+            // Appliquer les règles de déduction seulement si on a les deux relations
+            if ($relationFromRelatedUserToOther) {
+                $deducedRelationCode = $this->getDeducedRelation($relationshipCode, $relationFromRelatedUserToOther, $user, $otherUser);
 
-            if ($deducedRelationCode) {
-                $deducedRelations->push([
-                    'user_id' => $user->id,
-                    'related_user_id' => $otherUser->id,
-                    'relationship_code' => $deducedRelationCode,
-                    'deduction_path' => "{$user->name} → {$relatedUser->name} ({$relationshipCode}) + {$relatedUser->name} → {$otherUser->name} ({$relationFromRelatedUserToOther}) = {$deducedRelationCode}"
-                ]);
+                if ($deducedRelationCode) {
+                    $deducedRelations->push([
+                        'user_id' => $user->id,
+                        'related_user_id' => $otherUser->id,
+                        'relationship_code' => $deducedRelationCode,
+                        'deduction_path' => "{$user->name} → {$relatedUser->name} ({$relationshipCode}) + {$relatedUser->name} → {$otherUser->name} ({$relationFromRelatedUserToOther}) = {$deducedRelationCode}"
+                    ]);
+                }
             }
         }
 

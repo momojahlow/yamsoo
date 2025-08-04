@@ -16,7 +16,7 @@ export function AppSidebar() {
   const { toast } = useToast();
   const { profile } = useProfile();
   const isMobile = useIsMobile();
-  const { state } = useSidebar();
+  const { state, setOpen } = useSidebar();
 
   // Convert profile to NotificationProfile type
   const notificationProfile = profile ? {

@@ -60,7 +60,13 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
                     Bonjour, {user.name}
                   </span>
                   <Link href={route('dashboard')}>
-                    <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg transform hover:scale-105 transition-all duration-200 text-sm sm:text-base px-3 sm:px-4 py-2">
+                    <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg transform hover:scale-105 transition-all duration-200 text-sm sm:text-base px-3 sm:px-4 py-2 flex items-center gap-2">
+                      {/* Avatar pour mobile */}
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-white/20 rounded-full flex items-center justify-center sm:hidden">
+                        <span className="text-white text-xs font-bold">
+                          {user.name?.charAt(0)?.toUpperCase() || 'U'}
+                        </span>
+                      </div>
                       <span className="hidden sm:inline">Mon compte</span>
                       <span className="sm:hidden">Compte</span>
                     </Button>
@@ -120,9 +126,10 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
                 // Utilisateur connecté - Boutons vers les fonctionnalités
                 <>
                   <Link href={route('dashboard')}>
-                    <Button size="lg" className="px-10 py-4 text-lg font-semibold bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl">
-                      Accéder à mon tableau de bord
-                      <ArrowRight className="w-5 h-5 ml-2" />
+                    <Button size="lg" className="px-6 sm:px-10 py-3 sm:py-4 text-base sm:text-lg font-semibold bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl">
+                      <span className="hidden sm:inline">Accéder à mon tableau de bord</span>
+                      <span className="sm:hidden">Mon tableau de bord</span>
+                      <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
                     </Button>
                   </Link>
                   <Link href={route('family')}>
