@@ -196,7 +196,7 @@ export default function Networks({
   if (safeUsers.length === 0) {
     return (
       <AppLayout>
-        <div className="min-h-screen flex w-full bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="min-h-screen flex w-full bg-gradient-to-br from-orange-50 via-white to-red-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
           <main className="flex-1 p-6 md:p-8 md:ml-16 pb-20 md:pb-8">
             <Head title="Réseaux" />
             <EmptyProfilesState />
@@ -208,8 +208,8 @@ export default function Networks({
 
   return (
     <AppLayout>
-      <div className="min-h-screen flex w-full bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <main className="flex-1 p-6 md:p-8 md:ml-16 pb-20 md:pb-8">
+      <div className="min-h-screen flex w-full bg-gradient-to-br from-orange-50 via-white to-red-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <main className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8 md:ml-16 pb-20 md:pb-8">
           <Head title="Réseaux" />
 
           <div className="max-w-7xl mx-auto">
@@ -218,14 +218,14 @@ export default function Networks({
               <div className="flex items-center justify-between mb-8">
                 <div>
                   <div className="flex items-center mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mr-4 shadow-lg">
-                      <Users className="w-6 h-6 text-white" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl sm:rounded-2xl flex items-center justify-center mr-3 sm:mr-4 shadow-lg">
+                      <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                     </div>
                     <div>
-                      <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
+                      <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white">
                         Réseaux
                       </h1>
-                      <p className="text-gray-600 dark:text-gray-400 mt-1">
+                      <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1 sm:mt-2">
                         Découvrez et connectez-vous avec votre famille élargie
                       </p>
                     </div>
@@ -236,71 +236,72 @@ export default function Networks({
                     console.log('Bouton cliqué, showAddRelation:', !showAddRelation);
                     setShowAddRelation(true);
                   }}
-                  className="hidden md:flex bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg"
+                  className="hidden sm:flex bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg"
                 >
                   <UserPlus className="w-4 h-4 mr-2" />
-                  Ajouter une relation
+                  <span className="hidden md:inline">Ajouter une relation</span>
+                  <span className="md:hidden">Ajouter</span>
                 </Button>
               </div>
 
-              {/* Stats modernes */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white cursor-pointer hover:scale-105 transition-transform" onClick={() => scrollToSection('relations-section')}>
-                  <CardContent className="p-6">
+              {/* Stats modernes responsive */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+                <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-500 to-red-500 text-white cursor-pointer hover:scale-105 transition-transform" onClick={() => scrollToSection('relations-section')}>
+                  <CardContent className="p-4 sm:p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-blue-100 text-sm font-medium">Relations</p>
-                        <p className="text-3xl font-bold">{safeExistingRelations.length}</p>
+                        <p className="text-orange-100 text-xs sm:text-sm font-medium">Relations</p>
+                        <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{safeExistingRelations.length}</p>
                       </div>
-                      <Heart className="w-8 h-8 text-blue-200" />
+                      <Heart className="w-6 h-6 sm:w-8 sm:h-8 text-orange-200" />
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card className="border-0 shadow-lg bg-gradient-to-br from-green-500 to-green-600 text-white cursor-pointer hover:scale-105 transition-transform" onClick={() => scrollToSection('connections-section')}>
-                  <CardContent className="p-6">
+                  <CardContent className="p-4 sm:p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-green-100 text-sm font-medium">Connectés</p>
-                        <p className="text-3xl font-bold">{safeConnections.length}</p>
+                        <p className="text-green-100 text-xs sm:text-sm font-medium">Connectés</p>
+                        <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{safeConnections.length}</p>
                       </div>
-                      <CheckCircle className="w-8 h-8 text-green-200" />
+                      <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-green-200" />
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-500 to-orange-600 text-white cursor-pointer hover:scale-105 transition-transform" onClick={() => scrollToSection('pending-section')}>
-                  <CardContent className="p-6">
+                <Card className="border-0 shadow-lg bg-gradient-to-br from-yellow-500 to-orange-500 text-white cursor-pointer hover:scale-105 transition-transform" onClick={() => scrollToSection('pending-section')}>
+                  <CardContent className="p-4 sm:p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-orange-100 text-sm font-medium">Reçues</p>
-                        <p className="text-3xl font-bold">{safePendingRequests.length}</p>
+                        <p className="text-yellow-100 text-xs sm:text-sm font-medium">Reçues</p>
+                        <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{safePendingRequests.length}</p>
                       </div>
-                      <Clock className="w-8 h-8 text-orange-200" />
+                      <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-200" />
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white cursor-pointer hover:scale-105 transition-transform" onClick={() => scrollToSection('sent-section')}>
-                  <CardContent className="p-6">
+                <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-500 to-indigo-500 text-white cursor-pointer hover:scale-105 transition-transform" onClick={() => scrollToSection('sent-section')}>
+                  <CardContent className="p-4 sm:p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-blue-100 text-sm font-medium">Envoyées</p>
-                        <p className="text-3xl font-bold">{safeSentRequests.length}</p>
+                        <p className="text-blue-100 text-xs sm:text-sm font-medium">Envoyées</p>
+                        <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{safeSentRequests.length}</p>
                       </div>
-                      <Clock className="w-8 h-8 text-blue-200" />
+                      <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-blue-200" />
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-500 to-purple-600 text-white cursor-pointer hover:scale-105 transition-transform" onClick={() => scrollToSection('discover-section')}>
-                  <CardContent className="p-6">
+                <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-500 to-pink-500 text-white cursor-pointer hover:scale-105 transition-transform" onClick={() => scrollToSection('discover-section')}>
+                  <CardContent className="p-4 sm:p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-purple-100 text-sm font-medium">Découvertes</p>
-                        <p className="text-3xl font-bold">{safeUsers.length}</p>
+                        <p className="text-purple-100 text-xs sm:text-sm font-medium">Découvertes</p>
+                        <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{safeUsers.length}</p>
                       </div>
-                      <Globe className="w-8 h-8 text-purple-200" />
+                      <Globe className="w-6 h-6 sm:w-8 sm:h-8 text-purple-200" />
                     </div>
                   </CardContent>
                 </Card>
@@ -401,23 +402,25 @@ export default function Networks({
                                 )}
                               </div>
                             </div>
-                            <div className="flex gap-3 ml-6">
+                            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 ml-0 sm:ml-6 mt-3 sm:mt-0">
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+                                className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 w-full sm:w-auto"
                                 onClick={() => handleRejectRequest(request.id)}
                               >
                                 <XCircle className="w-4 h-4 mr-1" />
-                                Rejeter
+                                <span className="hidden sm:inline">Rejeter</span>
+                                <span className="sm:hidden">Non</span>
                               </Button>
                               <Button
                                 size="sm"
-                                className="bg-green-600 hover:bg-green-700 shadow-md"
+                                className="bg-green-600 hover:bg-green-700 shadow-md w-full sm:w-auto"
                                 onClick={() => handleAcceptRequest(request.id)}
                               >
                                 <CheckCircle className="w-4 h-4 mr-1" />
-                                Accepter
+                                <span className="hidden sm:inline">Accepter</span>
+                                <span className="sm:hidden">Oui</span>
                               </Button>
                             </div>
                           </div>

@@ -128,6 +128,8 @@ export default function Notifications({ notifications, unreadCount }: Notificati
                     switch (type) {
                       case 'relationship_request':
                         return 'Demande de relation';
+                      case 'relationship_accepted':
+                        return 'Relation acceptée';
                       case 'message':
                         return 'Nouveau message';
                       case 'suggestion':
