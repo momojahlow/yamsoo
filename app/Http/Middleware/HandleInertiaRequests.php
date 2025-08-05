@@ -62,6 +62,32 @@ class HandleInertiaRequests extends Middleware
                 'location' => $request->url(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+
+            // Données de traduction
+            'locale' => app()->getLocale(),
+            'available_locales' => config('app.available_locales', ['fr' => 'Français', 'ar' => 'العربية']),
+            'translations' => $this->getTranslations(),
         ];
+    }
+
+    /**
+     * Charger les traductions pour la langue actuelle
+     */
+    private function getTranslations(): array
+    {
+        $locale = app()->getLocale();
+        $translationPath = lang_path("{$locale}/common.php");
+
+        if (file_exists($translationPath)) {
+            return require $translationPath;
+        }
+
+        // Fallback vers le français si le fichier n'existe pas
+        $fallbackPath = lang_path("fr/common.php");
+        if (file_exists($fallbackPath)) {
+            return require $fallbackPath;
+        }
+
+        return [];
     }
 }

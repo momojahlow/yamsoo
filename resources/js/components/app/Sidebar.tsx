@@ -6,6 +6,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
 import { Link } from "@inertiajs/react";
 import { X } from "lucide-react";
+import { QuickLanguageToggle } from "@/components/LanguageToggle";
 
 import { SidebarMenuItems } from "./sidebar/SidebarMenuItems";
 import { Profile as NotificationProfile } from "@/types/notifications";
@@ -98,17 +99,23 @@ export function AppSidebar() {
               )}
             </Link>
 
-            {/* Trigger pour desktop, bouton fermer pour mobile */}
-            {!isMobile ? (
-              <SidebarTrigger className="ml-2" />
-            ) : (
-              <button
-                onClick={() => setOpen(false)}
-                className="ml-2 p-1.5 rounded-lg text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-colors duration-200"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            )}
+            {/* Actions à droite */}
+            <div className="flex items-center gap-2">
+              {/* Sélecteur de langue */}
+              <QuickLanguageToggle />
+
+              {/* Trigger pour desktop, bouton fermer pour mobile */}
+              {!isMobile ? (
+                <SidebarTrigger />
+              ) : (
+                <button
+                  onClick={() => setOpen(false)}
+                  className="p-1.5 rounded-lg text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-colors duration-200"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="flex-1 flex flex-col">

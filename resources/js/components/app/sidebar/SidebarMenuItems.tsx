@@ -21,6 +21,7 @@ import { NotificationsBadge } from "./NotificationsBadge";
 import { Profile } from "@/types/notifications";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { router } from "@inertiajs/react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface SidebarMenuItemsProps {
   profile: Profile | null;
@@ -33,6 +34,7 @@ interface SidebarMenuItemsProps {
 
 export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false, handleLogout, isLoggingOut = false, isMobile = false }: SidebarMenuItemsProps) {
   const { unreadCount } = useUnreadMessages();
+  const { t, isRTL } = useTranslation();
 
   return (
     <SidebarMenu className={cn(
@@ -58,7 +60,7 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
 
       <SidebarMenuItem>
         <SidebarMenuButton
-          tooltip="Accueil"
+          tooltip={t('dashboard')}
           onClick={() => router.visit("/dashboard")}
           className={cn(
             "w-full justify-start transition-transform duration-200 hover:scale-110",
@@ -66,13 +68,13 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
           )}
         >
           <Calendar className="h-5 w-5 sm:h-6 sm:w-6" />
-          {(!isCollapsed || isMobile) && <span className="ml-2 text-sm sm:text-base">Accueil</span>}
+          {(!isCollapsed || isMobile) && <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm sm:text-base`}>{t('dashboard')}</span>}
         </SidebarMenuButton>
       </SidebarMenuItem>
 
       <SidebarMenuItem>
         <SidebarMenuButton
-          tooltip="Mon Profil"
+          tooltip={t('profile')}
           onClick={() => router.visit("/profil")}
           className={cn(
             "w-full justify-start transition-transform duration-200 hover:scale-110",
@@ -80,13 +82,13 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
           )}
         >
           <User className="h-5 w-5 sm:h-6 sm:w-6" />
-          {(!isCollapsed || isMobile) && <span className="ml-2 text-sm sm:text-base">Mon Profil</span>}
+          {(!isCollapsed || isMobile) && <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm sm:text-base`}>{t('profile')}</span>}
         </SidebarMenuButton>
       </SidebarMenuItem>
 
       <SidebarMenuItem>
         <SidebarMenuButton
-          tooltip="Famille"
+          tooltip={t('family')}
           onClick={() => router.visit("/famille")}
           className={cn(
             "w-full justify-start transition-transform duration-200 hover:scale-110",
@@ -94,13 +96,13 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
           )}
         >
           <Trees className="h-5 w-5 sm:h-6 sm:w-6" />
-          {(!isCollapsed || isMobile) && <span className="ml-2 text-sm sm:text-base">Famille</span>}
+          {(!isCollapsed || isMobile) && <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm sm:text-base`}>{t('family')}</span>}
         </SidebarMenuButton>
       </SidebarMenuItem>
 
       <SidebarMenuItem>
         <SidebarMenuButton
-          tooltip="Albums Photo"
+          tooltip={t('photo_albums')}
           onClick={() => router.visit("/photo-albums")}
           className={cn(
             "w-full justify-start transition-transform duration-200 hover:scale-110",
@@ -108,13 +110,13 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
           )}
         >
           <Camera className="h-5 w-5 sm:h-6 sm:w-6" />
-          {(!isCollapsed || isMobile) && <span className="ml-2 text-sm sm:text-base">Albums Photo</span>}
+          {(!isCollapsed || isMobile) && <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm sm:text-base`}>{t('photo_albums')}</span>}
         </SidebarMenuButton>
       </SidebarMenuItem>
 
       <SidebarMenuItem>
         <SidebarMenuButton
-          tooltip="Réseaux"
+          tooltip={t('networks')}
           onClick={() => router.visit("/reseaux")}
           className={cn(
             "w-full justify-start transition-transform duration-200 hover:scale-110",
@@ -122,13 +124,13 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
           )}
         >
           <Network className="h-5 w-5 sm:h-6 sm:w-6" />
-          {(!isCollapsed || isMobile) && <span className="ml-2 text-sm sm:text-base">Réseaux</span>}
+          {(!isCollapsed || isMobile) && <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm sm:text-base`}>{t('networks')}</span>}
         </SidebarMenuButton>
       </SidebarMenuItem>
 
       <SidebarMenuItem className="relative">
         <SidebarMenuButton
-          tooltip="Messages"
+          tooltip={t('messages')}
           onClick={() => router.visit("/messages")}
           className={cn(
             "w-full justify-start transition-transform duration-200 hover:scale-110",
@@ -136,7 +138,7 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
           )}
         >
           <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6" />
-          {(!isCollapsed || isMobile) && <span className="ml-2 text-sm sm:text-base">Messages</span>}
+          {(!isCollapsed || isMobile) && <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm sm:text-base`}>{t('messages')}</span>}
         </SidebarMenuButton>
         {/* Badge pour messages non lus - Version ultra-simple */}
         {unreadCount > 0 && (
@@ -161,7 +163,7 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
 
       <SidebarMenuItem>
         <SidebarMenuButton
-          tooltip="Notifications"
+          tooltip={t('notifications')}
           onClick={() => router.visit("/notifications")}
           className={cn(
             "w-full justify-start transition-transform duration-200 hover:scale-110 relative",
@@ -169,14 +171,14 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
           )}
         >
           <Bell className="h-5 w-5 sm:h-6 sm:w-6" />
-          {(!isCollapsed || isMobile) && <span className="ml-2 text-sm sm:text-base">Notifications</span>}
+          {(!isCollapsed || isMobile) && <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm sm:text-base`}>{t('notifications')}</span>}
           <NotificationsBadge profile={profile} isCollapsed={isCollapsed && !isMobile} hideWhenCollapsed={true} />
         </SidebarMenuButton>
       </SidebarMenuItem>
 
       <SidebarMenuItem>
         <SidebarMenuButton
-          tooltip="Suggestions"
+          tooltip={t('suggestions')}
           onClick={() => router.visit("/suggestions")}
           className={cn(
             "w-full justify-start transition-transform duration-200 hover:scale-110 relative",
@@ -185,9 +187,9 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
           )}
         >
           <Sparkles className="h-5 w-5 sm:h-6 sm:w-6" />
-          {(!isCollapsed || isMobile) && <span className="ml-2 text-sm sm:text-base">Suggestions</span>}
+          {(!isCollapsed || isMobile) && <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm sm:text-base`}>{t('suggestions')}</span>}
           {suggestionCount > 0 && (!isCollapsed || isMobile) && (
-            <span className="absolute min-w-5 h-5 flex items-center justify-center rounded-full bg-red-500 text-[11px] font-medium text-white top-1 right-2">
+            <span className={`absolute min-w-5 h-5 flex items-center justify-center rounded-full bg-red-500 text-[11px] font-medium text-white top-1 ${isRTL ? 'left-2' : 'right-2'}`}>
             {suggestionCount}
             </span>
           )}
@@ -198,12 +200,12 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
       {profile?.user?.role && ['admin', 'super_admin'].includes(profile.user.role) && (
         <SidebarMenuItem className="mt-3">
           <SidebarMenuButton
-            tooltip="Administration"
+            tooltip={t('settings')}
             onClick={() => router.visit("/admin")}
             className="w-full justify-start transition-all duration-200 hover:scale-105 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 font-medium border border-purple-200 dark:border-purple-800 hover:border-purple-300 dark:hover:border-purple-700 rounded-lg"
           >
             <Shield className="h-5 w-5 sm:h-6 sm:w-6" />
-            {(!isCollapsed || isMobile) && <span className="ml-2 text-sm sm:text-base">Administration</span>}
+            {(!isCollapsed || isMobile) && <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm sm:text-base`}>{t('settings')}</span>}
           </SidebarMenuButton>
         </SidebarMenuItem>
       )}
@@ -211,7 +213,7 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
       {/* Bouton de déconnexion juste après Suggestions */}
       <SidebarMenuItem className="mt-3">
         <SidebarMenuButton
-          tooltip={isLoggingOut ? "Déconnexion en cours..." : "Déconnexion"}
+          tooltip={isLoggingOut ? t('loading') : t('logout')}
           onClick={handleLogout}
           disabled={isLoggingOut}
           className={cn(
@@ -221,8 +223,8 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
         >
           <LogOut className={cn("h-5 w-5 sm:h-6 sm:w-6", isLoggingOut && "animate-spin")} />
           {(!isCollapsed || isMobile) && (
-            <span className="ml-2 text-sm sm:text-base">
-              {isLoggingOut ? "Déconnexion..." : "Déconnexion"}
+            <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm sm:text-base`}>
+              {isLoggingOut ? t('loading') : t('logout')}
             </span>
           )}
         </SidebarMenuButton>

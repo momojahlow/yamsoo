@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
   Users,
   Heart,
@@ -101,6 +102,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   unreadNotifications,
   pendingRequests
 }) => {
+  const { t, isRTL } = useTranslation();
+
   const getGenderIcon = (gender?: string) => {
     return gender === 'female' ? '👩' : '👨';
   };
@@ -111,7 +114,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   const stats = [
     {
-      title: "Membres de famille",
+      title: t('total_members'),
       value: dashboardStats.total_family_members.toString(),
       icon: Users,
       color: "text-blue-600",
@@ -120,7 +123,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       href: "/famille"
     },
     {
-      title: "Suggestions",
+      title: t('pending_suggestions'),
       value: dashboardStats.pending_suggestions.toString(),
       icon: Heart,
       color: "text-pink-600",
@@ -129,7 +132,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       href: "/suggestions"
     },
     {
-      title: "Notifications",
+      title: t('notifications'),
       value: unreadNotifications.toString(),
       icon: Bell,
       color: "text-orange-600",
@@ -138,7 +141,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       href: "/notifications"
     },
     {
-      title: "Demandes reçues",
+      title: t('pending_requests'),
       value: pendingRequests.length.toString(),
       icon: UserPlus,
       color: "text-purple-600",
@@ -150,9 +153,9 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <AppSidebarLayout>
-      <Head title="Tableau de bord" />
+      <Head title={t('dashboard')} />
 
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50">
+      <div className={`min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50 ${isRTL ? 'rtl' : 'ltr'}`}>
         <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 space-y-6 sm:space-y-8">
           {/* Header principal - Responsive */}
           <div className="text-center py-4 sm:py-6 md:py-8">
@@ -162,27 +165,27 @@ const Dashboard: React.FC<DashboardProps> = ({
               </div>
               <div className="text-center">
                 <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent mb-2 leading-tight">
-                  Tableau de bord
+                  {t('dashboard')}
                 </h1>
                 <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-600">
-                  Bienvenue sur votre réseau familial
+                  {t('welcome')}
                 </p>
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mt-4 sm:mt-6">
+            <div className={`flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mt-4 sm:mt-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <Link href="/famille/arbre" className="w-full sm:w-auto">
-                <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg hover:scale-105 transition-all duration-200">
-                  <TreePine className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                  <span className="hidden sm:inline">Voir l'arbre familial</span>
-                  <span className="sm:hidden">Arbre familial</span>
+                <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg hover:scale-105 transition-all duration-200 text-white font-medium">
+                  <TreePine className={`w-4 h-4 sm:w-5 sm:h-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  <span className="hidden sm:inline">{t('view_family_tree')}</span>
+                  <span className="sm:hidden">{t('family_tree')}</span>
                 </Button>
               </Link>
               <Link href="/suggestions" className="w-full sm:w-auto">
                 <Button variant="outline" size="lg" className="w-full sm:w-auto border-gray-200 hover:border-orange-300 hover:bg-orange-50 transition-all duration-200">
-                  <UserPlus className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                  <span className="hidden sm:inline">Découvrir des relations</span>
-                  <span className="sm:hidden">Découvrir</span>
+                  <UserPlus className={`w-4 h-4 sm:w-5 sm:h-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  <span className="hidden sm:inline">{t('discover_people')}</span>
+                  <span className="sm:hidden">{t('suggestions')}</span>
                 </Button>
               </Link>
             </div>
@@ -224,9 +227,9 @@ const Dashboard: React.FC<DashboardProps> = ({
               <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Activity className="w-6 h-6 text-blue-600 mr-3" />
-                      Activité récente
+                    <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <Activity className={`w-6 h-6 text-blue-600 ${isRTL ? 'ml-3' : 'mr-3'}`} />
+                      {t('recent_activity')}
                     </div>
                     <Badge variant="secondary">{recentActivities.length}</Badge>
                   </CardTitle>
@@ -270,9 +273,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <UserPlus className="w-6 h-6 text-purple-600 mr-3" />
-                        Demandes reçues
+                      <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <UserPlus className={`w-6 h-6 text-purple-600 ${isRTL ? 'ml-3' : 'mr-3'}`} />
+                        {t('pending_requests')}
                       </div>
                       <Link href="/reseaux">
                         <Button variant="ghost" size="sm">
@@ -295,11 +298,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                               {request.requester?.name || request.requester_name}
                             </p>
                             <p className="text-xs text-gray-500">
-                              Souhaite être votre {request.relationship_type?.display_name_fr || request.relationship_name}
+                              {t('request_relationship')} {request.relationship_type?.display_name_fr || request.relationship_name}
                             </p>
                           </div>
                           <Badge variant="outline" className="text-xs">
-                            Nouveau
+                            {t('new')}
                           </Badge>
                         </div>
                       ))}
@@ -321,9 +324,9 @@ const Dashboard: React.FC<DashboardProps> = ({
               <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Heart className="w-6 h-6 text-pink-600 mr-3" />
-                      Suggestions
+                    <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <Heart className={`w-6 h-6 text-pink-600 ${isRTL ? 'ml-3' : 'mr-3'}`} />
+                      {t('suggestions')}
                     </div>
                     <Link href="/suggestions">
                       <Button variant="ghost" size="sm">
@@ -355,7 +358,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     ) : (
                       <div className="text-center py-4 text-gray-500">
                         <Heart className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                        <p className="text-sm">Aucune suggestion</p>
+                        <p className="text-sm">{t('no_suggestions')}</p>
                       </div>
                     )}
                   </div>
@@ -365,29 +368,29 @@ const Dashboard: React.FC<DashboardProps> = ({
               {/* Actions rapides */}
               <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Plus className="w-6 h-6 text-green-600 mr-3" />
-                    Actions rapides
+                  <CardTitle className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <Plus className={`w-6 h-6 text-green-600 ${isRTL ? 'ml-3' : 'mr-3'}`} />
+                    {t('quick_actions')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     <Link href="/family-relations">
-                      <Button variant="outline" className="w-full justify-start">
-                        <UserPlus className="w-4 h-4 mr-2" />
-                        Ajouter une relation
+                      <Button variant="outline" className={`w-full ${isRTL ? 'justify-end' : 'justify-start'}`}>
+                        <UserPlus className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                        {t('add_relationship')}
                       </Button>
                     </Link>
                     <Link href="/famille/arbre">
-                      <Button variant="outline" className="w-full justify-start">
-                        <TreePine className="w-4 h-4 mr-2" />
-                        Explorer l'arbre
+                      <Button variant="outline" className={`w-full ${isRTL ? 'justify-end' : 'justify-start'}`}>
+                        <TreePine className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                        {t('explore_tree')}
                       </Button>
                     </Link>
                     <Link href="/profile">
-                      <Button variant="outline" className="w-full justify-start">
-                        <Crown className="w-4 h-4 mr-2" />
-                        Modifier mon profil
+                      <Button variant="outline" className={`w-full ${isRTL ? 'justify-end' : 'justify-start'}`}>
+                        <Crown className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                        {t('edit_my_profile')}
                       </Button>
                     </Link>
                   </div>

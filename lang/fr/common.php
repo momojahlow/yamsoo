@@ -1,0 +1,359 @@
+<?php
+
+return [
+    // Navigation
+    'dashboard' => 'Tableau de bord',
+    'profile' => 'Profil',
+    'family' => 'Famille',
+    'family_tree' => 'Arbre familial',
+    'networks' => 'Réseaux',
+    'messages' => 'Messages',
+    'notifications' => 'Notifications',
+    'suggestions' => 'Suggestions',
+    'photo_albums' => 'Albums Photo',
+    'settings' => 'Paramètres',
+    'logout' => 'Déconnexion',
+
+    // Actions
+    'save' => 'Enregistrer',
+    'cancel' => 'Annuler',
+    'edit' => 'Modifier',
+    'delete' => 'Supprimer',
+    'add' => 'Ajouter',
+    'create' => 'Créer',
+    'update' => 'Mettre à jour',
+    'search' => 'Rechercher',
+    'filter' => 'Filtrer',
+    'send' => 'Envoyer',
+    'accept' => 'Accepter',
+    'reject' => 'Rejeter',
+    'yes' => 'Oui',
+    'no' => 'Non',
+    'close' => 'Fermer',
+    'back' => 'Retour',
+
+    // Status
+    'pending' => 'En attente',
+    'accepted' => 'Accepté',
+    'rejected' => 'Rejeté',
+    'active' => 'Actif',
+    'inactive' => 'Inactif',
+    'online' => 'En ligne',
+    'offline' => 'Hors ligne',
+
+    // Time
+    'today' => 'Aujourd\'hui',
+    'yesterday' => 'Hier',
+    'this_week' => 'Cette semaine',
+    'this_month' => 'Ce mois',
+    'this_year' => 'Cette année',
+    'minutes_ago' => 'il y a :count minute|il y a :count minutes',
+    'hours_ago' => 'il y a :count heure|il y a :count heures',
+    'days_ago' => 'il y a :count jour|il y a :count jours',
+
+    // Forms
+    'name' => 'Nom',
+    'first_name' => 'Prénom',
+    'last_name' => 'Nom de famille',
+    'email' => 'Email',
+    'password' => 'Mot de passe',
+    'confirm_password' => 'Confirmer le mot de passe',
+    'phone' => 'Téléphone',
+    'address' => 'Adresse',
+    'city' => 'Ville',
+    'country' => 'Pays',
+    'bio' => 'Biographie',
+    'gender' => 'Genre',
+    'male' => 'Homme',
+    'female' => 'Femme',
+    'birth_date' => 'Date de naissance',
+    'language' => 'Langue',
+
+    // Messages
+    'welcome' => 'Bienvenue',
+    'hello' => 'Bonjour',
+    'goodbye' => 'Au revoir',
+    'thank_you' => 'Merci',
+    'please' => 'S\'il vous plaît',
+    'sorry' => 'Désolé',
+    'error' => 'Erreur',
+    'success' => 'Succès',
+    'warning' => 'Attention',
+    'info' => 'Information',
+
+    // Family relations
+    'father' => 'Père',
+    'mother' => 'Mère',
+    'son' => 'Fils',
+    'daughter' => 'Fille',
+    'brother' => 'Frère',
+    'sister' => 'Sœur',
+    'grandfather' => 'Grand-père',
+    'grandmother' => 'Grand-mère',
+    'grandson' => 'Petit-fils',
+    'granddaughter' => 'Petite-fille',
+    'uncle' => 'Oncle',
+    'aunt' => 'Tante',
+    'nephew' => 'Neveu',
+    'niece' => 'Nièce',
+    'cousin' => 'Cousin(e)',
+    'husband' => 'Mari',
+    'wife' => 'Épouse',
+
+    // Notifications
+    'new_message' => 'Nouveau message',
+    'relationship_request' => 'Demande de relation',
+    'relationship_accepted' => 'Relation acceptée',
+    'family_update' => 'Mise à jour familiale',
+    'suggestion' => 'Nouvelle suggestion',
+    'birthday' => 'Anniversaire',
+
+    // Common phrases
+    'no_data' => 'Aucune donnée disponible',
+    'loading' => 'Chargement...',
+    'view_all' => 'Voir tout',
+    'show_more' => 'Afficher plus',
+    'show_less' => 'Afficher moins',
+    'read_more' => 'Lire plus',
+    'read_less' => 'Lire moins',
+
+    // Welcome page
+    'welcome_to_yamsoo' => 'Bienvenue sur Yamsoo!',
+    'family_network_description' => 'Connectez-vous avec votre famille et découvrez votre histoire',
+    'get_started' => 'Commencer',
+    'learn_more' => 'En savoir plus',
+    'sign_in' => 'Se connecter',
+    'sign_up' => 'S\'inscrire',
+    'my_account' => 'Mon compte',
+    'access_dashboard' => 'Accéder à mon tableau de bord',
+    'features' => 'Fonctionnalités',
+    'build_family_tree' => 'Construisez votre arbre familial',
+    'connect_with_family' => 'Connectez-vous avec votre famille',
+    'share_memories' => 'Partagez vos souvenirs',
+    'discover_heritage' => 'Découvrez votre héritage',
+
+    // Dashboard specific
+    'quick_actions' => 'Actions rapides',
+    'recent_activity' => 'Activité récente',
+    'family_stats' => 'Statistiques familiales',
+    'upcoming_birthdays' => 'Anniversaires à venir',
+    'recent_members' => 'Nouveaux membres',
+    'priority_suggestions' => 'Suggestions prioritaires',
+
+    // Profile page
+    'personal_information' => 'Informations personnelles',
+    'edit_profile' => 'Modifier le profil',
+    'profile_picture' => 'Photo de profil',
+    'contact_information' => 'Informations de contact',
+    'privacy_settings' => 'Paramètres de confidentialité',
+
+    // Family page
+    'family_members' => 'Membres de la famille',
+    'add_member' => 'Ajouter un membre',
+    'family_relationships' => 'Relations familiales',
+    'family_statistics' => 'Statistiques familiales',
+
+    // Networks page
+    'my_network' => 'Mon réseau',
+    'connections' => 'Connexions',
+    'pending_requests' => 'Demandes en attente',
+    'sent_requests' => 'Demandes envoyées',
+    'discover_people' => 'Découvrir des personnes',
+    'add_connection' => 'Ajouter une connexion',
+
+    // Photo Albums
+    'my_albums' => 'Mes albums',
+    'create_album' => 'Créer un album',
+    'upload_photos' => 'Télécharger des photos',
+    'family_photos' => 'Photos de famille',
+    'shared_albums' => 'Albums partagés',
+
+    // Suggestions
+    'family_suggestions' => 'Suggestions familiales',
+    'potential_relatives' => 'Parents potentiels',
+    'connection_suggestions' => 'Suggestions de connexions',
+    'review_suggestion' => 'Examiner la suggestion',
+
+    // Welcome page cards
+    'build_tree_title' => 'Construisez votre arbre',
+    'build_tree_description' => 'Créez et explorez votre arbre généalogique interactif',
+    'connect_family_title' => 'Connectez-vous',
+    'connect_family_description' => 'Retrouvez et connectez-vous avec vos proches',
+    'share_moments_title' => 'Partagez vos moments',
+    'share_moments_description' => 'Créez des souvenirs durables avec votre famille',
+    'discover_history_title' => 'Découvrez votre histoire',
+    'discover_history_description' => 'Explorez vos racines et votre héritage familial',
+
+    // Footer
+    'all_rights_reserved' => 'Tous droits réservés',
+    'terms_conditions' => 'Conditions générales',
+    'privacy_policy' => 'Politique de confidentialité',
+    'contact_us' => 'Nous contacter',
+
+    // Dashboard cards
+    'total_members' => 'Membres totaux',
+    'active_connections' => 'Connexions actives',
+    'unread_messages' => 'Messages non lus',
+    'pending_suggestions' => 'Suggestions en attente',
+    'view_family_tree' => 'Voir l\'arbre familial',
+    'add_family_member' => 'Ajouter un membre',
+    'send_message' => 'Envoyer un message',
+    'view_suggestions' => 'Voir les suggestions',
+
+    // Stats
+    'connected_families' => 'Familles connectées',
+    'created_relationships' => 'Relations créées',
+    'customer_satisfaction' => 'Satisfaction client',
+
+    // Dashboard stats
+    'total_members' => 'Membres totaux',
+    'pending_suggestions' => 'Suggestions en attente',
+    'pending_requests' => 'Demandes en attente',
+
+    // Additional translations
+    'hello' => 'Bonjour',
+    'family_tree' => 'Arbre familial',
+
+    // Welcome page - Why choose section
+    'why_choose_yamsoo' => 'Pourquoi choisir Yamsoo',
+    'revolutionary_platform' => 'Une plateforme révolutionnaire conçue spécifiquement pour renforcer les liens familiaux à l\'ère numérique',
+
+    // Benefits cards
+    'ultra_secure' => 'Ultra Sécurisé',
+    'ultra_secure_desc' => 'Vos données familiales sont protégées par un chiffrement de niveau militaire',
+    'always_accessible' => 'Toujours Accessible',
+    'always_accessible_desc' => 'Accédez à votre famille depuis n\'importe quel appareil, n\'importe où',
+    'ultra_fast' => 'Ultra Rapide',
+    'ultra_fast_desc' => 'Interface optimisée pour une expérience fluide et réactive',
+    'made_with_love' => 'Fait avec ❤️',
+    'made_with_love_desc' => 'Conçu avec passion pour rapprocher les familles du monde entier',
+
+    // Call to action
+    'ready_to_reunite' => 'Prêt à réunir votre famille',
+    'start_journey' => 'Commencez votre voyage familial dès aujourd\'hui',
+    'join_thousands' => 'Rejoignez des milliers de familles qui ont déjà découvert la magie de Yamsoo',
+
+    // Footer
+    'footer_description' => 'La plateforme qui rapproche les familles',
+    'quick_links' => 'Liens rapides',
+    'about_us' => 'À propos',
+    'how_it_works' => 'Comment ça marche',
+    'pricing' => 'Tarifs',
+    'support' => 'Support',
+    'legal' => 'Légal',
+    'terms_of_service' => 'Conditions d\'utilisation',
+    'privacy_policy' => 'Politique de confidentialité',
+    'cookies_policy' => 'Politique des cookies',
+    'follow_us' => 'Suivez-nous',
+    'newsletter' => 'Newsletter',
+    'subscribe_newsletter' => 'Abonnez-vous à notre newsletter',
+    'enter_email' => 'Entrez votre email',
+    'subscribe' => 'S\'abonner',
+    'copyright' => 'Tous droits réservés',
+
+    // Dashboard sections
+    'quick_actions' => 'Actions rapides',
+    'recent_activity' => 'Activité récente',
+    'family_statistics' => 'Statistiques familiales',
+    'personal_information' => 'Informations personnelles',
+    'connected_families' => 'Familles connectées',
+    'add_member' => 'Ajouter un membre',
+    'show_family_tree' => 'Afficher l\'arbre familial',
+    'my_family' => 'Ma famille',
+    'request_relationship' => 'Souhaite être votre',
+    'new' => 'Nouveau',
+
+    // Dashboard additional
+    'no_suggestions' => 'Aucune suggestion',
+    'new_relationship' => 'Nouvelle relation :',
+    'add_relationship' => 'Ajouter une relation',
+    'explore_tree' => 'Explorer l\'arbre',
+    'edit_my_profile' => 'Modifier mon profil',
+
+    // Profile page
+    'manage_personal_info' => 'Gérez vos informations personnelles',
+    'edit' => 'Modifier',
+    'camera' => 'Caméra',
+    'file' => 'Fichier',
+    'no_bio_available' => 'Aucune bio disponible',
+    'active_member' => 'Membre actif',
+    'connected_family' => 'Famille connectée',
+    'not_specified' => 'Non renseigné',
+
+    // Family page
+    'spouse' => 'Épouse',
+    'add_relations' => 'Ajouter des relations',
+    'invite_new_members' => 'Inviter de nouveaux membres',
+    'family_messaging' => 'Messagerie familiale',
+    'communicate_with_family' => 'Communiquer avec votre famille',
+    'family_tree' => 'Arbre généalogique',
+    'view_family_links' => 'Voir les liens familiaux',
+
+    // Photo Albums
+    'photo_albums_of' => 'Albums Photo de',
+    'manage_share_memories' => 'Gérez et partagez vos souvenirs en famille',
+    'create_album' => 'Créer un album',
+    'no_photo_albums' => 'Aucun album photo',
+    'create_first_album_desc' => 'Créez votre premier album pour commencer à partager vos souvenirs !',
+    'create_my_first_album' => 'Créer mon premier album',
+
+    // Networks page
+    'relations' => 'Relations',
+    'connected' => 'Connectés',
+    'received' => 'Reçues',
+    'sent' => 'Envoyées',
+    'discoveries' => 'Découvertes',
+    'family_relations' => 'Relations Familiales',
+    'your_established_family_links' => 'Vos liens familiaux établis',
+    'my_relations' => 'Mes relations',
+    'discover_users' => 'Découvrir des utilisateurs',
+    'find_connect_new_members' => 'Trouvez et connectez-vous avec de nouveaux membres',
+    'add_as' => 'Ajoutez en tant que',
+    'select_family_relation' => 'Sélectionner une relation familiale',
+    'request_relation' => 'Demander une relation',
+    'relation_request_as' => 'Demande de relation en tant que',
+    'son' => 'Fils',
+    'sent_on' => 'Envoyée le',
+    'request_pending' => 'Demande en cours',
+
+    // Messages
+    'no_suggestions_desc' => 'Vous n\'avez pas encore reçu de suggestions de relations familiales. Explorez les réseaux pour découvrir de nouveaux utilisateurs.',
+    'explore_networks' => 'Explorer les Réseaux',
+
+    // Notifications
+    'stay_informed' => 'Restez informé des dernières activités',
+    'unread' => 'non lues',
+    'mark_all_read' => 'Tout marquer comme lu',
+    'relation_accepted' => 'Relation acceptée',
+    'accepted_your_request' => 'a accepté votre demande de relation',
+    'relation_request' => 'Demande de relation',
+    'wants_to_be_your' => 'souhaite être votre',
+    'brother' => 'frère',
+    'mark_as_read' => 'Marquer comme lu',
+    'birthday' => 'Anniversaire',
+
+    // Suggestions
+    'no_suggestions_moment' => 'Aucune suggestion pour le moment',
+    'no_family_suggestions_found' => 'Nous n\'avons pas encore trouvé de suggestions de relations familiales pour vous.',
+    'start_exploring_network' => 'Commencez par explorer notre réseau ou ajoutez des membres à votre famille.',
+    'view_my_family' => 'Voir ma Famille',
+    'suggestions_appear_automatically' => 'Les suggestions apparaîtront automatiquement lorsque nous détecterons des',
+
+    // Family page additional
+    'no_family_members_yet' => 'Vous n\'avez pas encore de membres dans votre famille. Commencez par ajouter des relations familiales.',
+    'members_in_family' => 'membre(s) dans votre famille',
+    'show_family_tree' => 'Afficher l\'arbre familial',
+
+    // Family Tree page
+    'total_relations' => 'Total des Relations',
+    'family_members' => 'membres de la famille',
+    'generations' => 'Générations',
+    'generations_represented' => 'générations représentées',
+    'no_family_relations' => 'Aucune relation familiale',
+    'start_building_family_tree' => 'Commencez à construire votre arbre familial en ajoutant des relations.',
+
+    // Additional
+    'add' => 'Ajouter',
+    'already_family' => 'Déjà en famille',
+    'invitation_received' => 'Invitation reçue',
+];

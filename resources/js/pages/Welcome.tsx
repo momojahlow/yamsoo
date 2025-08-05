@@ -3,6 +3,8 @@ import { Head, Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { route } from 'ziggy-js';
+import { QuickLanguageToggle } from '@/components/LanguageToggle';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
   Heart,
   MessageSquare,
@@ -33,11 +35,13 @@ interface Props {
 
 export default function Welcome({ canLogin, canRegister, laravelVersion, phpVersion, auth }: Props) {
   const { user } = auth;
+  const { t, isRTL } = useTranslation();
+
   return (
     <>
-      <Head title="Yamsoo - Connexions Familiales" />
+      <Head title={`Yamsoo - ${t('family_network_description')}`} />
 
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50">
+      <div className={`min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50 ${isRTL ? 'rtl' : 'ltr'}`}>
         {/* Header responsive */}
         <header className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
           <nav className="flex items-center justify-between">
@@ -53,6 +57,9 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
             </div>
 
             <div className="flex items-center space-x-2 sm:space-x-4">
+              {/* Sélecteur de langue */}
+              <QuickLanguageToggle />
+
               {user ? (
                 // Utilisateur connecté
                 <>
@@ -67,8 +74,8 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
                           {user.name?.charAt(0)?.toUpperCase() || 'U'}
                         </span>
                       </div>
-                      <span className="hidden sm:inline">Mon compte</span>
-                      <span className="sm:hidden">Compte</span>
+                      <span className="hidden sm:inline">{t('my_account')}</span>
+                      <span className="sm:hidden">{t('my_account')}</span>
                     </Button>
                   </Link>
                 </>
@@ -78,16 +85,16 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
                   {canLogin && (
                     <Link href={route('login')}>
                       <Button variant="ghost" className="font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 transition-colors duration-200 text-sm sm:text-base px-2 sm:px-4 py-2">
-                        <span className="hidden sm:inline">Se connecter</span>
-                        <span className="sm:hidden">Connexion</span>
+                        <span className="hidden sm:inline">{t('sign_in')}</span>
+                        <span className="sm:hidden">{t('sign_in')}</span>
                       </Button>
                     </Link>
                   )}
                   {canRegister && (
                     <Link href={route('register')}>
                       <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg transform hover:scale-105 transition-all duration-200 text-sm sm:text-base px-3 sm:px-4 py-2">
-                        <span className="hidden sm:inline">S'inscrire</span>
-                        <span className="sm:hidden">Inscription</span>
+                        <span className="hidden sm:inline">{t('sign_up')}</span>
+                        <span className="sm:hidden">{t('sign_up')}</span>
                       </Button>
                     </Link>
                   )}
@@ -101,24 +108,22 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
         <main className="container mx-auto px-4 py-16">
           <div className="text-center mb-20">
             <div className="mb-8">
-              <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-orange-100 to-red-100 rounded-full text-orange-700 text-sm font-medium mb-8 shadow-md">
-                <Heart className="w-5 h-5 mr-2 text-red-500" />
-                La plateforme familiale qui rapproche les cœurs
+              <div className={`inline-flex items-center px-6 py-3 bg-gradient-to-r from-orange-100 to-red-100 rounded-full text-orange-700 text-sm font-medium mb-8 shadow-md ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <Heart className={`w-5 h-5 text-red-500 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                {t('family_network_description')}
               </div>
             </div>
 
             <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-8 leading-tight">
-              Votre famille,
+              {t('welcome_to_yamsoo')}
               <br />
               <span className="bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
-                plus proche que jamais
+                {t('connect_with_family')}
               </span>
             </h1>
 
             <p className="text-xl text-gray-600 mb-12 max-w-4xl mx-auto leading-relaxed">
-              Yamsoo révolutionne les liens familiaux. Créez votre arbre généalogique interactif,
-              partagez vos souvenirs précieux et restez connecté avec tous vos proches,
-              où qu'ils soient dans le monde.
+              {t('build_family_tree')}. {t('share_memories')}, {t('discover_heritage')}.
             </p>
 
             <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6 mb-16">
@@ -126,15 +131,15 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
                 // Utilisateur connecté - Boutons vers les fonctionnalités
                 <>
                   <Link href={route('dashboard')}>
-                    <Button size="lg" className="px-6 sm:px-10 py-3 sm:py-4 text-base sm:text-lg font-semibold bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl">
-                      <span className="hidden sm:inline">Accéder à mon tableau de bord</span>
-                      <span className="sm:hidden">Mon tableau de bord</span>
-                      <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
+                    <Button size="lg" className={`px-6 sm:px-10 py-3 sm:py-4 text-base sm:text-lg font-semibold bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <span className="hidden sm:inline">{t('access_dashboard')}</span>
+                      <span className="sm:hidden">{t('dashboard')}</span>
+                      <ArrowRight className={`w-4 h-4 sm:w-5 sm:h-5 ${isRTL ? 'mr-2' : 'ml-2'}`} />
                     </Button>
                   </Link>
                   <Link href={route('family')}>
                     <Button variant="outline" size="lg" className="px-10 py-4 text-lg font-semibold border-2 border-orange-300 text-orange-600 hover:bg-orange-50 hover:border-orange-400 transition-all duration-200 rounded-xl">
-                      Ma famille
+                      {t('family')}
                     </Button>
                   </Link>
                 </>
@@ -142,14 +147,14 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
                 // Utilisateur non connecté - Boutons d'inscription/connexion
                 <>
                   <Link href={route('register')}>
-                    <Button size="lg" className="px-10 py-4 text-lg font-semibold bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl">
-                      Créer ma famille
-                      <ArrowRight className="w-5 h-5 ml-2" />
+                    <Button size="lg" className={`px-10 py-4 text-lg font-semibold bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      {t('get_started')}
+                      <ArrowRight className={`w-5 h-5 ${isRTL ? 'mr-2' : 'ml-2'}`} />
                     </Button>
                   </Link>
                   <Link href={route('login')}>
                     <Button variant="outline" size="lg" className="px-10 py-4 text-lg font-semibold border-2 border-orange-300 text-orange-600 hover:bg-orange-50 hover:border-orange-400 transition-all duration-200 rounded-xl">
-                      Se connecter
+                      {t('sign_in')}
                     </Button>
                   </Link>
                 </>
@@ -160,15 +165,15 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-3xl mx-auto">
               <div className="text-center p-6 bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-orange-100">
                 <div className="text-4xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent mb-2">15K+</div>
-                <div className="text-gray-600 font-medium">Familles connectées</div>
+                <div className="text-gray-600 font-medium">{t('connected_families')}</div>
               </div>
               <div className="text-center p-6 bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-red-100">
                 <div className="text-4xl font-bold bg-gradient-to-r from-red-500 to-pink-500 bg-clip-text text-transparent mb-2">75K+</div>
-                <div className="text-gray-600 font-medium">Relations créées</div>
+                <div className="text-gray-600 font-medium">{t('created_relationships')}</div>
               </div>
               <div className="text-center p-6 bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-orange-100">
                 <div className="text-4xl font-bold bg-gradient-to-r from-orange-500 to-yellow-500 bg-clip-text text-transparent mb-2">99%</div>
-                <div className="text-gray-600 font-medium">Satisfaction client</div>
+                <div className="text-gray-600 font-medium">{t('customer_satisfaction')}</div>
               </div>
             </div>
           </div>
@@ -180,13 +185,11 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
                 <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg transform hover:scale-110 transition-transform duration-200">
                   <TreePine className="w-8 h-8 text-white" />
                 </div>
-                <CardTitle className="text-xl text-gray-800">Arbre Généalogique</CardTitle>
+                <CardTitle className="text-xl text-gray-800">{t('build_tree_title')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 leading-relaxed">
-                  Créez et visualisez votre arbre généalogique interactif.
-                  Découvrez vos racines et partagez votre histoire familiale
-                  avec des outils de visualisation avancés.
+                  {t('build_tree_description')}
                 </p>
               </CardContent>
             </Card>
@@ -196,13 +199,11 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
                 <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg transform hover:scale-110 transition-transform duration-200">
                   <MessageSquare className="w-8 h-8 text-white" />
                 </div>
-                <CardTitle className="text-xl text-gray-800">Messagerie Familiale</CardTitle>
+                <CardTitle className="text-xl text-gray-800">{t('connect_family_title')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 leading-relaxed">
-                  Communiquez en privé avec vos proches. Partagez des photos,
-                  des messages et restez connecté en temps réel avec une
-                  messagerie sécurisée et intuitive.
+                  {t('connect_family_description')}
                 </p>
               </CardContent>
             </Card>
@@ -212,13 +213,11 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
                 <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-red-400 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg transform hover:scale-110 transition-transform duration-200">
                   <Users className="w-8 h-8 text-white" />
                 </div>
-                <CardTitle className="text-xl text-gray-800">Suggestions Intelligentes</CardTitle>
+                <CardTitle className="text-xl text-gray-800">{t('discover_history_title')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 leading-relaxed">
-                  Recevez des suggestions de connexions familiales basées sur
-                  vos relations existantes et votre réseau. Notre IA vous aide
-                  à découvrir de nouveaux liens familiaux.
+                  {t('discover_history_description')}
                 </p>
               </CardContent>
             </Card>
@@ -228,12 +227,11 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
           <div className="mb-20">
             <div className="text-center mb-16">
               <h2 className="text-4xl font-bold text-gray-900 mb-6">
-                Pourquoi choisir
-                <span className="bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent"> Yamsoo</span> ?
+                {t('why_choose_yamsoo')}
+                <span className="bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent"> ?</span>
               </h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-                Une plateforme révolutionnaire conçue spécifiquement pour renforcer
-                les liens familiaux à l'ère numérique
+                {t('revolutionary_platform')}
               </p>
             </div>
 
@@ -242,9 +240,9 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
                 <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
                   <Shield className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="font-bold text-lg mb-3 text-gray-800">Ultra Sécurisé</h3>
+                <h3 className="font-bold text-lg mb-3 text-gray-800">{t('ultra_secure')}</h3>
                 <p className="text-gray-600 leading-relaxed">
-                  Vos données familiales sont protégées par un chiffrement de niveau bancaire et des protocoles de sécurité avancés
+                  {t('ultra_secure_desc')}
                 </p>
               </div>
 
@@ -252,9 +250,9 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
                 <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
                   <Zap className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="font-bold text-lg mb-3 text-gray-800">Ultra Rapide</h3>
+                <h3 className="font-bold text-lg mb-3 text-gray-800">{t('ultra_fast')}</h3>
                 <p className="text-gray-600 leading-relaxed">
-                  Interface ultra-rapide et responsive optimisée pour tous vos appareils, mobile et desktop
+                  {t('ultra_fast_desc')}
                 </p>
               </div>
 
@@ -262,9 +260,9 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
                 <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-red-400 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
                   <Globe className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="font-bold text-lg mb-3 text-gray-800">Toujours Accessible</h3>
+                <h3 className="font-bold text-lg mb-3 text-gray-800">{t('always_accessible')}</h3>
                 <p className="text-gray-600 leading-relaxed">
-                  Disponible partout dans le monde, 24h/24 et 7j/7 avec une disponibilité de 99.9%
+                  {t('always_accessible_desc')}
                 </p>
               </div>
 
@@ -272,9 +270,9 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
                 <div className="w-16 h-16 bg-gradient-to-br from-red-400 to-pink-400 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
                   <Heart className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="font-bold text-lg mb-3 text-gray-800">Fait avec ❤️</h3>
+                <h3 className="font-bold text-lg mb-3 text-gray-800">{t('made_with_love')}</h3>
                 <p className="text-gray-600 leading-relaxed">
-                  Conçu avec passion pour renforcer les liens familiaux et créer des souvenirs durables
+                  {t('made_with_love_desc')}
                 </p>
               </div>
             </div>
@@ -293,25 +291,24 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
 
                 <div className="relative z-10">
                   <h2 className="text-4xl md:text-5xl font-bold mb-6">
-                    Prêt à réunir votre famille ?
+                    {t('ready_to_reunite')} ?
                   </h2>
                   <p className="text-orange-100 mb-10 text-xl max-w-3xl mx-auto leading-relaxed">
-                    Rejoignez plus de 15 000 familles qui utilisent Yamsoo pour
-                    maintenir des liens forts et créer des souvenirs inoubliables.
+                    {t('join_thousands')}
                   </p>
                   <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6">
                     {user ? (
                       // Utilisateur connecté
                       <>
                         <Link href={route('messages.index')}>
-                          <Button size="lg" className="px-10 py-4 text-lg font-semibold bg-white text-orange-600 hover:bg-gray-100 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl">
-                            Mes messages
-                            <ArrowRight className="w-5 h-5 ml-2" />
+                          <Button size="lg" className={`px-10 py-4 text-lg font-semibold bg-white text-orange-600 hover:bg-gray-100 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            {t('messages')}
+                            <ArrowRight className={`w-5 h-5 ${isRTL ? 'mr-2' : 'ml-2'}`} />
                           </Button>
                         </Link>
                         <Link href={route('family.tree')}>
                           <Button variant="outline" size="lg" className="px-10 py-4 text-lg font-semibold border-2 border-white text-white hover:bg-white hover:text-orange-600 transition-all duration-200 rounded-xl">
-                            Mon arbre familial
+                            {t('family_tree')}
                           </Button>
                         </Link>
                       </>
@@ -319,14 +316,14 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
                       // Utilisateur non connecté
                       <>
                         <Link href={route('register')}>
-                          <Button size="lg" className="px-10 py-4 text-lg font-semibold bg-white text-orange-600 hover:bg-gray-100 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl">
-                            Créer ma famille maintenant
-                            <ArrowRight className="w-5 h-5 ml-2" />
+                          <Button size="lg" className={`px-10 py-4 text-lg font-semibold bg-white text-orange-600 hover:bg-gray-100 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            {t('get_started')}
+                            <ArrowRight className={`w-5 h-5 ${isRTL ? 'mr-2' : 'ml-2'}`} />
                           </Button>
                         </Link>
                         <Link href={route('login')}>
                           <Button variant="outline" size="lg" className="px-10 py-4 text-lg font-semibold border-2 border-white text-white hover:bg-white hover:text-orange-600 transition-all duration-200 rounded-xl">
-                            Découvrir Yamsoo
+                            {t('learn_more')}
                           </Button>
                         </Link>
                       </>
@@ -352,12 +349,12 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
               </span>
             </div>
             <p className="text-gray-600 mb-4 text-lg">
-              Connecter les familles, créer des souvenirs
+              {t('footer_description')}
             </p>
             <p className="text-gray-500 mb-2">
-              &copy; 2024 Yamsoo. Tous droits réservés. •
-              <Link href="/conditions-generales" className="text-orange-600 hover:text-orange-700 underline ml-1">
-                Conditions Générales
+              &copy; 2024 Yamsoo. {t('copyright')} •
+              <Link href="/conditions-generales" className={`text-orange-600 hover:text-orange-700 underline ${isRTL ? 'mr-1' : 'ml-1'}`}>
+                {t('terms_conditions')}
               </Link>
             </p>
             <p className="text-sm text-gray-400">

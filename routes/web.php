@@ -13,6 +13,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PhotoAlbumController;
 use App\Http\Controllers\PhotoController;
+use App\Http\Controllers\LanguageController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -345,6 +346,18 @@ Route::middleware('auth')->group(function () {
         // Fonctionnalités familiales
         Route::post('/conversations/family-group', [App\Http\Controllers\MessagingController::class, 'createFamilyGroup']);
         Route::get('/conversations/family-suggestions', [App\Http\Controllers\MessagingController::class, 'getFamilySuggestions']);
+    });
+});
+
+// Routes de langue (sans préfixe pour la compatibilité)
+Route::get('/language/{locale}', [LanguageController::class, 'switch'])->name('language.switch');
+Route::get('/api/languages', [LanguageController::class, 'getAvailableLanguages'])->name('language.available');
+
+// Routes localisées
+Route::group(['prefix' => '{locale}', 'where' => ['locale' => 'fr|ar'], 'middleware' => 'setlocale'], function () {
+    // Page d'accueil localisée
+    Route::get('/', function () {
+        return redirect('/');
     });
 });
 

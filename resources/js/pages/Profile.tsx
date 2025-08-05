@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FormField } from "@/components/form/FormField";
 import { GenderField } from "@/components/form/GenderField";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/hooks/useTranslation";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
 import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
@@ -47,7 +47,7 @@ interface ProfilePageProps {
 }
 
 const ProfilePage = ({ user, profile }: ProfilePageProps) => {
-  const { t } = useTranslation();
+  const { t, isRTL } = useTranslation();
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
@@ -117,10 +117,10 @@ const ProfilePage = ({ user, profile }: ProfilePageProps) => {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="text-center sm:text-left">
                 <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent leading-tight">
-                  Mon Profil
+                  {t('profile')}
                 </h1>
                 <p className="text-gray-600 mt-2 sm:mt-3 text-xs sm:text-sm md:text-base max-w-2xl mx-auto sm:mx-0 leading-relaxed">
-                  Gérez vos informations personnelles
+                  {t('manage_personal_info')}
                 </p>
               </div>
 
@@ -129,10 +129,10 @@ const ProfilePage = ({ user, profile }: ProfilePageProps) => {
                 {!isEditing ? (
                   <Button
                     onClick={() => setIsEditing(true)}
-                    className="w-full sm:w-auto h-9 sm:h-10 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-medium transition-all duration-200 shadow-lg hover:shadow-xl text-sm"
+                    className={`w-full sm:w-auto h-9 sm:h-10 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-medium transition-all duration-200 shadow-lg hover:shadow-xl text-sm flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}
                   >
-                    <Edit3 className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                    Modifier
+                    <Edit3 className={`w-3 h-3 sm:w-4 sm:h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                    {t('edit')}
                   </Button>
                 ) : (
                   <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
@@ -164,11 +164,11 @@ const ProfilePage = ({ user, profile }: ProfilePageProps) => {
               <Card className="border-0 shadow-sm bg-gradient-to-br from-white to-gray-50/50">
                 <CardHeader className="p-4 sm:p-6">
                   <CardTitle className="flex items-center justify-between text-base sm:text-lg md:text-xl">
-                    <div className="flex items-center">
-                      <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg flex items-center justify-center mr-2 sm:mr-3">
+                    <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <div className={`w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg flex items-center justify-center ${isRTL ? 'ml-2 sm:ml-3' : 'mr-2 sm:mr-3'}`}>
                         <User className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
                       </div>
-                      <span className="text-sm sm:text-base md:text-lg">Informations personnelles</span>
+                      <span className="text-sm sm:text-base md:text-lg">{t('personal_information')}</span>
                     </div>
                     {isMobile && !isEditing && (
                       <Button size="sm" onClick={() => setIsEditing(true)} className="h-8 w-8 p-0">

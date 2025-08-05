@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { route } from 'ziggy-js';
 import { Menu, X } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface User {
   id: number;
@@ -19,6 +20,7 @@ interface YamsooHeaderProps {
 
 export function YamsooHeader({ user, showNavigation = true, className = "" }: YamsooHeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { t, isRTL } = useTranslation();
 
   return (
     <header className={`bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-50 ${className}`}>
@@ -43,21 +45,21 @@ export function YamsooHeader({ user, showNavigation = true, className = "" }: Ya
                 // Utilisateur connecté
                 <>
                   <Link href={route('dashboard')} className="text-gray-600 hover:text-orange-600 font-medium transition-colors duration-200">
-                    Tableau de bord
+                    {t('dashboard')}
                   </Link>
                   <Link href={route('family')} className="text-gray-600 hover:text-orange-600 font-medium transition-colors duration-200">
-                    Ma famille
+                    {t('family')}
                   </Link>
                   <Link href={route('profile.index')} className="text-gray-600 hover:text-orange-600 font-medium transition-colors duration-200">
-                    Mon profil
+                    {t('profile')}
                   </Link>
-                  <div className="flex items-center space-x-3">
+                  <div className={`flex items-center space-x-3 ${isRTL ? 'space-x-reverse' : ''}`}>
                     <span className="text-gray-600 font-medium text-sm">
-                      Bonjour, {user.name}
+                      {t('hello')}, {user.name}
                     </span>
                     <Link href={route('dashboard')}>
                       <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg hover:scale-105 transition-all duration-200 text-sm">
-                        Mon compte
+                        {t('my_account')}
                       </Button>
                     </Link>
                   </div>
@@ -67,12 +69,12 @@ export function YamsooHeader({ user, showNavigation = true, className = "" }: Ya
                 <>
                   <Link href={route('login')}>
                     <Button variant="ghost" className="font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 transition-colors duration-200">
-                      Se connecter
+                      {t('sign_in')}
                     </Button>
                   </Link>
                   <Link href={route('register')}>
                     <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg hover:scale-105 transition-all duration-200">
-                      S'inscrire
+                      {t('sign_up')}
                     </Button>
                   </Link>
                 </>

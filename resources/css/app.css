@@ -159,3 +159,82 @@
         @apply bg-background text-foreground;
     }
 }
+
+/* Support RTL pour l'arabe */
+[dir="rtl"] {
+    direction: rtl;
+}
+
+[dir="ltr"] {
+    direction: ltr;
+}
+
+/* Ajustements RTL pour les composants */
+[dir="rtl"] .rtl\:space-x-reverse > :not([hidden]) ~ :not([hidden]) {
+    --tw-space-x-reverse: 1;
+}
+
+[dir="rtl"] .rtl\:flex-row-reverse {
+    flex-direction: row-reverse;
+}
+
+/* Ajustements pour les marges et paddings en RTL */
+[dir="rtl"] .rtl\:mr-2 {
+    margin-right: 0.5rem;
+    margin-left: 0;
+}
+
+[dir="rtl"] .rtl\:ml-2 {
+    margin-left: 0.5rem;
+    margin-right: 0;
+}
+
+[dir="rtl"] .rtl\:pr-2 {
+    padding-right: 0.5rem;
+    padding-left: 0;
+}
+
+[dir="rtl"] .rtl\:pl-2 {
+    padding-left: 0.5rem;
+    padding-right: 0;
+}
+
+/* Ajustements pour les bordures en RTL */
+[dir="rtl"] .rtl\:border-r {
+    border-right-width: 1px;
+    border-left-width: 0;
+}
+
+[dir="rtl"] .rtl\:border-l {
+    border-left-width: 1px;
+    border-right-width: 0;
+}
+
+/* Ajustements pour le texte en RTL */
+[dir="rtl"] .rtl\:text-right {
+    text-align: right;
+}
+
+[dir="rtl"] .rtl\:text-left {
+    text-align: left;
+}
+
+/* Police arabe */
+[dir="rtl"] {
+    font-family: 'Noto Sans Arabic', 'Tajawal', 'Cairo', 'Amiri', system-ui, sans-serif;
+}
+
+/* Ajustements pour les dropdowns et menus en RTL */
+[dir="rtl"] .dropdown-content {
+    right: 0;
+    left: auto;
+}
+
+/* Animations et transitions pour RTL */
+[dir="rtl"] .slide-in-from-right {
+    transform: translateX(100%);
+}
+
+[dir="rtl"] .slide-in-from-left {
+    transform: translateX(-100%);
+}

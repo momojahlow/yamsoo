@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Connection {
     from: { x: number; y: number };
@@ -13,6 +14,7 @@ interface TreeConnectionsProps {
 }
 
 const TreeConnections: React.FC<TreeConnectionsProps> = ({ connections, containerWidth, containerHeight }) => {
+    const { isRTL } = useTranslation();
     const getConnectionStyle = (type: string) => {
         const styles = {
             parent: { stroke: '#3b82f6', strokeWidth: 2, strokeDasharray: 'none' },
@@ -24,17 +26,23 @@ const TreeConnections: React.FC<TreeConnectionsProps> = ({ connections, containe
     };
 
     const createPath = (from: { x: number; y: number }, to: { x: number; y: number }, type: string) => {
-        const midY = from.y + (to.y - from.y) / 2;
+        // Inverser les coordonnées X pour RTL
+        const fromX = isRTL ? containerWidth - from.x : from.x;
+        const toX = isRTL ? containerWidth - to.x : to.x;
+        const fromY = from.y;
+        const toY = to.y;
+
+        const midY = fromY + (toY - fromY) / 2;
         
         if (type === 'spouse') {
             // Ligne droite pour les conjoints
-            return `M ${from.x} ${from.y} L ${to.x} ${to.y}`;
+            return `M ${fromX} ${fromY} L ${toX} ${toY}`;
         } else if (type === 'sibling') {
             // Ligne courbe pour les frères et sœurs
-            return `M ${from.x} ${from.y} Q ${from.x + (to.x - from.x) / 2} ${midY - 20} ${to.x} ${to.y}`;
+            return `M ${fromX} ${fromY} Q ${fromX + (toX - fromX) / 2} ${midY - 20} ${toX} ${toY}`;
         } else {
             // Ligne en L pour parent-enfant
-            return `M ${from.x} ${from.y} L ${from.x} ${midY} L ${to.x} ${midY} L ${to.x} ${to.y}`;
+            return `M ${fromX} ${fromY} L ${fromX} ${midY} L ${toX} ${midY} L ${toX} ${toY}`;
         }
     };
 
