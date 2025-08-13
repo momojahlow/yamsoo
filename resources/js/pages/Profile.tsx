@@ -10,7 +10,7 @@ import { GenderField } from "@/components/form/GenderField";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
-import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
+import { KwdDashboardLayout } from '@/Layouts/modern';
 import {
   User,
   Mail,
@@ -107,10 +107,10 @@ const ProfilePage = ({ user, profile }: ProfilePageProps) => {
   ];
 
   return (
-    <AppSidebarLayout breadcrumbs={breadcrumbs}>
-      <Head title="Mon Profil" />
+    <KwdDashboardLayout title={t('profile')}>
+      <Head title={t('profile')} />
 
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50">
+      <div>
         <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 lg:py-12">
           {/* Header responsive */}
           <div className="mb-6 sm:mb-8 md:mb-12">
@@ -354,7 +354,7 @@ const ProfilePage = ({ user, profile }: ProfilePageProps) => {
           </div>
         </div>
       </div>
-    </AppSidebarLayout>
+    </KwdDashboardLayout>
   );
 };
 

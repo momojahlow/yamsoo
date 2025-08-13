@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
+import { KwdDashboardLayout } from '@/Layouts/modern';
 import { useTranslation } from '@/hooks/useTranslation';
 import {
   Users,
@@ -152,7 +152,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   ];
 
   return (
-    <AppSidebarLayout>
+    <KwdDashboardLayout title={t('dashboard')}>
       <Head title={t('dashboard')} />
 
       <div className={`min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50 ${isRTL ? 'rtl' : 'ltr'}`}>
@@ -400,7 +400,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>
         </div>
       </div>
-    </AppSidebarLayout>
+    </KwdDashboardLayout>
   );
 };
 

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Head } from '@inertiajs/react';
 import { Search, Phone, Video, MoreVertical, Paperclip, Smile, Send, ArrowLeft, Settings, BarChart3, Users, Plus } from 'lucide-react';
-import AppSidebarLayout from '@/Layouts/app/app-sidebar-layout';
+import { KwdDashboardLayout } from '@/Layouts/modern';
+import { useTranslation } from '@/hooks/useTranslation';
 import ConversationList from '@/components/messaging/ConversationList';
 import ChatArea from '@/components/messaging/ChatArea';
 import UserSearch from '@/components/messaging/UserSearch';
@@ -37,6 +38,7 @@ interface MessagingProps {
 }
 
 export default function Messaging({ conversations, user }: MessagingProps) {
+    const { t } = useTranslation();
     const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
     const [showUserSearch, setShowUserSearch] = useState(false);
     const [showMessageSearch, setShowMessageSearch] = useState(false);
@@ -69,8 +71,8 @@ export default function Messaging({ conversations, user }: MessagingProps) {
     };
 
     return (
-        <AppSidebarLayout>
-            <Head title="Messagerie - Yamsoo" />
+        <KwdDashboardLayout title={t('messaging')}>
+            <Head title={t('messaging')} />
 
             <div className="h-screen bg-gray-50 flex">
                 {/* Sidebar - Liste des conversations */}
@@ -259,6 +261,6 @@ export default function Messaging({ conversations, user }: MessagingProps) {
                     />
                 )}
             </div>
-        </AppSidebarLayout>
+        </KwdDashboardLayout>
     );
 }

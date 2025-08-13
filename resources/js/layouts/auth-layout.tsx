@@ -1,9 +1,29 @@
-import AuthLayoutTemplate from '@/layouts/auth/auth-simple-layout';
+import { KwdAuthLayout } from '@/Layouts/modern';
 
-export default function AuthLayout({ children, title, description, ...props }: { children: React.ReactNode; title: string; description: string }) {
+interface Props {
+    children: React.ReactNode;
+    title?: string;
+    description?: string;
+    showBackButton?: boolean;
+    backUrl?: string;
+}
+
+export default function AuthLayout({
+    children,
+    title = 'Yamsoo',
+    description,
+    showBackButton = false,
+    backUrl = '/',
+    ...props
+}: Props) {
     return (
-        <AuthLayoutTemplate title={title} description={description} {...props}>
+        <KwdAuthLayout
+            title={title}
+            showBackButton={showBackButton}
+            backUrl={backUrl}
+            {...props}
+        >
             {children}
-        </AuthLayoutTemplate>
+        </KwdAuthLayout>
     );
 }

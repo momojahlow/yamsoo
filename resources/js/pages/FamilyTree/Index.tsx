@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
-import AppSidebarLayout from '@/Layouts/app/app-sidebar-layout';
+import { KwdDashboardLayout } from '@/Layouts/modern';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -345,7 +345,7 @@ const FamilyTreeIndex: React.FC<Props> = ({ user, treeData, relationships, stati
     );
 
     return (
-        <AppSidebarLayout>
+        <KwdDashboardLayout title={t('family_tree')}>
             <Head title={t('family_tree')} />
 
             <div className="py-12">
@@ -406,7 +406,7 @@ const FamilyTreeIndex: React.FC<Props> = ({ user, treeData, relationships, stati
                     )}
                 </div>
             </div>
-        </AppSidebarLayout>
+        </KwdDashboardLayout>
     );
 };
 

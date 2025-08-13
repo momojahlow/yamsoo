@@ -8,7 +8,8 @@ import { EmptySuggestions } from '@/components/suggestions/EmptySuggestions';
 import { ModernSuggestionCard } from '@/components/suggestions/ModernSuggestionCard';
 import { FloatingLogoutButton } from '@/components/FloatingLogoutButton';
 
-import AppSidebarLayout from '@/Layouts/app/app-sidebar-layout';
+import { KwdDashboardLayout } from '@/Layouts/modern';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Suggestion {
   id: number;
@@ -34,6 +35,7 @@ interface Props {
 }
 
 export default function Suggestions({ suggestions }: Props) {
+  const { t } = useTranslation();
   const [selectedSuggestion, setSelectedSuggestion] = useState<Suggestion | null>(null);
 
   const handleSendRelationRequest = async (suggestionId: string, relationCode?: string) => {
@@ -84,18 +86,18 @@ export default function Suggestions({ suggestions }: Props) {
 
   if (suggestions.length === 0) {
     return (
-      <AppSidebarLayout>
-        <Head title="Suggestions" />
+      <KwdDashboardLayout title={t('suggestions')}>
+        <Head title={t('suggestions')} />
         <EmptySuggestions />
-      </AppSidebarLayout>
+      </KwdDashboardLayout>
     );
   }
 
   return (
-    <AppSidebarLayout>
-      <Head title="Suggestions" />
+    <KwdDashboardLayout title={t('suggestions')}>
+      <Head title={t('suggestions')} />
 
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+      <div>
         <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 lg:py-12">
           {/* Modern header - Mobile optimized */}
           <div className="mb-6 sm:mb-8 md:mb-12">
@@ -252,6 +254,6 @@ export default function Suggestions({ suggestions }: Props) {
           <FloatingLogoutButton showOnMobile={true} showOnDesktop={false} />
         </div>
       </div>
-    </AppSidebarLayout>
+    </KwdDashboardLayout>
   );
 }

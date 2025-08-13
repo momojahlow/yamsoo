@@ -4,7 +4,7 @@ import { Head } from "@inertiajs/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, Plus, TreePine, MessageSquare, UserPlus } from "lucide-react";
-import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
+import { KwdDashboardLayout } from '@/Layouts/modern';
 import { FamilyMemberCard } from "@/components/family/FamilyMemberCard";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -46,7 +46,7 @@ export default function Family({ members }: FamilyProps) {
 
   if (!safeMembers || safeMembers.length === 0) {
     return (
-      <AppSidebarLayout>
+      <KwdDashboardLayout title={t('my_family')}>
         <Head title={t('my_family')} />
 
         <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50">
@@ -81,12 +81,12 @@ export default function Family({ members }: FamilyProps) {
             </div>
           </div>
         </div>
-      </AppSidebarLayout>
+      </KwdDashboardLayout>
     );
   }
 
   return (
-    <AppSidebarLayout>
+    <KwdDashboardLayout title={t('my_family')}>
       <Head title={t('my_family')} />
 
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50">
@@ -185,6 +185,6 @@ export default function Family({ members }: FamilyProps) {
           </Card>
         </div>
       </div>
-    </AppSidebarLayout>
+    </KwdDashboardLayout>
   );
 }

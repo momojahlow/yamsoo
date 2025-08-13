@@ -255,6 +255,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('admin/messages/{message}', [AdminController::class, 'deleteMessage'])->name('admin.messages.delete');
     Route::delete('admin/families/{family}', [AdminController::class, 'deleteFamily'])->name('admin.families.delete');
 
+    // Routes pour la démo des layouts
+    Route::get('layout-demo', [App\Http\Controllers\LayoutDemoController::class, 'index'])->name('layout.demo');
+    Route::get('layout-demo/kui', [App\Http\Controllers\LayoutDemoController::class, 'kuiLayout'])->name('layout.demo.kui');
+    Route::get('layout-demo/starter', [App\Http\Controllers\LayoutDemoController::class, 'starterLayout'])->name('layout.demo.starter');
+    Route::get('layout-demo/kwd', [App\Http\Controllers\LayoutDemoController::class, 'kwdLayout'])->name('layout.demo.kwd');
+    Route::get('auth-layout-demo', function () {
+        return Inertia::render('AuthLayoutDemo');
+    })->name('auth.layout.demo');
+    Route::get('layout-features', function () {
+        return Inertia::render('LayoutFeatures');
+    })->name('layout.features');
+
     // Routes pour les relations familiales
     Route::get('family-relations', [FamilyRelationController::class, 'index'])->name('family-relations.index');
     Route::get('family-relations/suggestions', function () {

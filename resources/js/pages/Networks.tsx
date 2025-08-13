@@ -19,7 +19,7 @@ import {
   MessageSquare,
   Globe
 } from 'lucide-react';
-import AppLayout from '@/layouts/app-layout';
+import { KwdDashboardLayout } from '@/Layouts/modern';
 import {
   Select,
   SelectContent,
@@ -121,6 +121,21 @@ export default function Networks({
   const safeSentRequests = sentRequests || [];
   const safeRelationshipTypes = relationshipTypes || [];
 
+  // Fonction helper pour obtenir le nom localisé d'une relation
+  const getLocalizedRelationName = (relationshipName: string) => {
+    const relationType = safeRelationshipTypes.find(type =>
+      type.name_fr === relationshipName ||
+      type.display_name_fr === relationshipName ||
+      type.name === relationshipName
+    );
+
+    if (relationType) {
+      return isRTL ? (relationType.display_name_ar || relationType.name_ar) : (relationType.display_name_fr || relationType.name_fr);
+    }
+
+    return relationshipName; // Fallback au nom original
+  };
+
   const filteredUsers = safeUsers.filter(user =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -197,22 +212,16 @@ export default function Networks({
 
   if (safeUsers.length === 0) {
     return (
-      <AppLayout>
-        <div className="min-h-screen flex w-full bg-gradient-to-br from-orange-50 via-white to-red-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-          <main className="flex-1 p-6 md:p-8 md:ml-16 pb-20 md:pb-8">
-            <Head title="Réseaux" />
-            <EmptyProfilesState />
-          </main>
-        </div>
-      </AppLayout>
+      <KwdDashboardLayout title={t('networks')}>
+        <Head title={t('networks')} />
+        <EmptyProfilesState />
+      </KwdDashboardLayout>
     );
   }
 
   return (
-    <AppLayout>
-      <div className="min-h-screen flex w-full bg-gradient-to-br from-orange-50 via-white to-red-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <main className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8 md:ml-16 pb-20 md:pb-8">
-          <Head title="Réseaux" />
+    <KwdDashboardLayout title={t('networks')}>
+      <Head title={t('networks')} />
 
           <div className="max-w-7xl mx-auto">
             {/* Header moderne */}
@@ -355,7 +364,7 @@ export default function Networks({
                                 {relation.related_user_email}
                               </p>
                               <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 mt-2 inline-block">
-                                {relation.relationship_name}
+                                {getLocalizedRelationName(relation.relationship_name)}
                               </Badge>
                             </div>
                           </div>
@@ -394,7 +403,7 @@ export default function Networks({
                               </div>
                               <div className="ml-16">
                                 <div className="text-sm mb-2">
-                                  Vous a ajouté en tant que <Badge variant="outline" className="ml-1">{request.relationship_name}</Badge>
+                                  {t('added_you_as')} <Badge variant="outline" className={`${isRTL ? 'mr-1' : 'ml-1'}`}>{getLocalizedRelationName(request.relationship_name)}</Badge>
                                 </div>
                                 {request.message && (
                                   <p className="text-sm text-gray-600 dark:text-gray-400 italic mb-2">"{request.message}"</p>
@@ -460,10 +469,10 @@ export default function Networks({
                               </div>
                               <div className="ml-16">
                                 <div className="text-sm mb-2">
-                                  Demande de relation en tant que <Badge variant="outline" className="ml-1">{request.relationship_name}</Badge>
+                                  {t('relation_request_as')} <Badge variant="outline" className={`${isRTL ? 'mr-1' : 'ml-1'}`}>{getLocalizedRelationName(request.relationship_name)}</Badge>
                                 </div>
                                 <p className="text-xs text-gray-500 dark:text-gray-500">
-                                  Envoyée le {new Date(request.created_at).toLocaleDateString('fr-FR')}
+                                  {t('sent_on')} {new Date(request.created_at).toLocaleDateString(isRTL ? 'ar-SA' : 'fr-FR')}
                                 </p>
                               </div>
                             </div>
@@ -565,9 +574,11 @@ export default function Networks({
                             <SelectValue placeholder={t('select_family_relation')} />
                           </SelectTrigger>
                           <SelectContent>
-                            <div className="py-1.5 pl-2 text-xs font-semibold text-muted-foreground">Famille proche</div>
+                            <div className={`py-1.5 text-xs font-semibold text-muted-foreground ${isRTL ? 'pr-2' : 'pl-2'}`}>{t('close_family')}</div>
                             {safeRelationshipTypes.map((type) => (
-                              <SelectItem key={type.id} value={type.id.toString()}>{type.name_fr}</SelectItem>
+                              <SelectItem key={type.id} value={type.id.toString()}>
+                                {isRTL ? type.display_name_ar || type.name_ar : type.display_name_fr || type.name_fr}
+                              </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -608,16 +619,14 @@ export default function Networks({
               )}
             </div>
 
-            {/* Dialog pour ajouter une relation */}
-            {showAddRelation && (
-              <AddFamilyRelation
-                relationshipTypes={safeRelationshipTypes}
-                onClose={() => setShowAddRelation(false)}
-              />
-            )}
-          </div>
-        </main>
+        {/* Dialog pour ajouter une relation */}
+        {showAddRelation && (
+          <AddFamilyRelation
+            relationshipTypes={safeRelationshipTypes}
+            onClose={() => setShowAddRelation(false)}
+          />
+        )}
       </div>
-    </AppLayout>
+    </KwdDashboardLayout>
   );
 }
