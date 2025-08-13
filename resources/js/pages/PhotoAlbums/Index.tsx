@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
-import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
+import { KwdDashboardLayout } from '@/Layouts/modern';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -37,9 +38,11 @@ const privacyConfig = {
 };
 
 export default function PhotoAlbumsIndex({ albums, user, canCreateAlbum }: Props) {
+    const { t } = useTranslation();
+
     return (
-        <AppSidebarLayout>
-            <Head title="Albums Photo" />
+        <KwdDashboardLayout title={t('photo_albums')}>
+            <Head title={t('photo_albums')} />
 
             <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50">
                 <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 lg:py-12">
@@ -222,6 +225,6 @@ export default function PhotoAlbumsIndex({ albums, user, canCreateAlbum }: Props
                     )}
                 </div>
             </div>
-        </AppSidebarLayout>
+        </KwdDashboardLayout>
     );
 }

@@ -514,4 +514,31 @@ return [
     'experience_the_difference' => 'Découvrez la différence',
     'try_all_features_now' => 'Essayez toutes les fonctionnalités maintenant',
     'try_sidebar_toggle' => 'Essayez le toggle de la barre latérale',
+
+    // Messaging
+    'messaging' => 'Messagerie',
+
+    // Navigation
+    'notifications' => 'Notifications',
+    'photo_albums' => 'Albums Photo',
+    'alerts_updates' => 'Alertes et mises à jour',
+    'family_photos' => 'Photos de famille',
+
+    // Notifications
+    'unread_notifications' => 'notifications non lues',
+    'all_caught_up' => 'Tout est à jour !',
+    'filter' => 'Filtrer',
+    'mark_all_read' => 'Tout marquer comme lu',
+    'all' => 'Tout',
+    'unread' => 'Non lues',
+    'messages' => 'Messages',
+    'new_family_request' => 'Nouvelle demande familiale',
+    'new_message' => 'Nouveau message',
+    'birthday_reminder' => 'Rappel d\'anniversaire',
+    'family_milestone' => 'Étape familiale',
+    'system_update' => 'Mise à jour système',
+    'accept' => 'Accepter',
+    'decline' => 'Refuser',
+    'no_notifications' => 'Aucune notification',
+    'no_notifications_message' => 'Vous êtes à jour ! Aucune nouvelle notification.',
 ];

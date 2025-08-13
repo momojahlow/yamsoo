@@ -514,4 +514,31 @@ return [
     'experience_the_difference' => 'اختبر الفرق',
     'try_all_features_now' => 'جرب جميع الميزات الآن',
     'try_sidebar_toggle' => 'جرب تبديل الشريط الجانبي',
+
+    // Messaging
+    'messaging' => 'المراسلة',
+
+    // Navigation
+    'notifications' => 'الإشعارات',
+    'photo_albums' => 'ألبومات الصور',
+    'alerts_updates' => 'التنبيهات والتحديثات',
+    'family_photos' => 'صور العائلة',
+
+    // Notifications
+    'unread_notifications' => 'إشعارات غير مقروءة',
+    'all_caught_up' => 'كل شيء محدث!',
+    'filter' => 'تصفية',
+    'mark_all_read' => 'تحديد الكل كمقروء',
+    'all' => 'الكل',
+    'unread' => 'غير مقروء',
+    'messages' => 'الرسائل',
+    'new_family_request' => 'طلب عائلي جديد',
+    'new_message' => 'رسالة جديدة',
+    'birthday_reminder' => 'تذكير عيد ميلاد',
+    'family_milestone' => 'إنجاز عائلي',
+    'system_update' => 'تحديث النظام',
+    'accept' => 'قبول',
+    'decline' => 'رفض',
+    'no_notifications' => 'لا توجد إشعارات',
+    'no_notifications_message' => 'أنت محدث! لا توجد إشعارات جديدة.',
 ];

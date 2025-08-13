@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { AnimatedStatsCard } from "@/components/dashboard/AnimatedStatsCard";
 import { KwdDashboardLayout } from '@/Layouts/modern';
 import { useTranslation } from '@/hooks/useTranslation';
 import {
@@ -194,30 +195,19 @@ const Dashboard: React.FC<DashboardProps> = ({
           {/* Statistiques principales - Responsive */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
             {stats.map((stat, index) => (
-              <Link key={index} href={stat.href}>
-                <Card className="border-0 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer hover:scale-105 bg-gradient-to-br from-white to-gray-50/50">
-                  <CardContent className="p-3 sm:p-4 md:p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1 truncate">
-                          {stat.title}
-                        </p>
-                        <p className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1">
-                          {stat.value}
-                        </p>
-                        {stat.change && (
-                          <p className="text-xs text-gray-500 truncate">
-                            {stat.change}
-                          </p>
-                        )}
-                      </div>
-                      <div className={`p-2 sm:p-3 md:p-4 rounded-lg sm:rounded-xl ${stat.bgColor} transition-colors flex-shrink-0 ml-2`}>
-                        <stat.icon className={`w-4 h-4 sm:w-6 sm:h-6 md:w-8 md:h-8 ${stat.color}`} />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
+              <AnimatedStatsCard
+                key={index}
+                title={stat.title}
+                value={stat.value}
+                description={stat.change}
+                icon={stat.icon}
+                color={index % 2 === 0 ? 'orange' : index % 3 === 0 ? 'blue' : index % 4 === 0 ? 'green' : 'purple'}
+                href={stat.href}
+                trend={stat.change ? {
+                  value: Math.floor(Math.random() * 20) + 5,
+                  isPositive: Math.random() > 0.3
+                } : undefined}
+              />
             ))}
           </div>
 

@@ -23,7 +23,9 @@ import {
   ChevronRight,
   Languages,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  Camera,
+  Image
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -128,17 +130,31 @@ const KwdDashboardLayout: React.FC<Props> = ({ children, title = 'Dashboard' }) 
       badge: '2',
       description: t('family_chat')
     },
-    { 
-      name: t('suggestions'), 
-      href: '/suggestions', 
-      icon: Activity, 
+    {
+      name: t('suggestions'),
+      href: '/suggestions',
+      icon: Activity,
       badge: null,
       description: t('relation_suggestions')
     },
-    { 
-      name: t('settings'), 
-      href: '/settings', 
-      icon: Settings, 
+    {
+      name: t('notifications'),
+      href: '/notifications',
+      icon: Bell,
+      badge: '5',
+      description: t('alerts_updates')
+    },
+    {
+      name: t('photo_albums'),
+      href: '/photo-albums',
+      icon: Image,
+      badge: null,
+      description: t('family_photos')
+    },
+    {
+      name: t('settings'),
+      href: '/settings',
+      icon: Settings,
       badge: null,
       description: t('app_preferences')
     },
