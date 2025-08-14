@@ -569,4 +569,11 @@ return [
     'settings_help_description' => 'Consultez notre documentation ou contactez le support pour obtenir de l\'aide.',
     'contact_support' => 'Contacter le support',
     'view_documentation' => 'Voir la documentation',
+
+    // Family categories
+    'immediate_family' => 'Famille immédiate',
+    'siblings' => 'Frères et sœurs',
+    'extended_family' => 'Famille élargie',
+    'in_laws' => 'Belle-famille',
+    'other_relations' => 'Autres relations',
 ];

@@ -19,33 +19,71 @@ class FamilyController extends Controller
         $user = $request->user();
         $family = $this->familyService->getUserFamily($user);
 
-        // Récupérer toutes les relations acceptées où l'utilisateur est user_id (éviter les doublons)
-        $relations = \App\Models\FamilyRelationship::where('user_id', $user->id)
-        ->where('status', 'accepted')
-        ->with(['user.profile', 'relatedUser.profile', 'relationshipType'])
-        ->get();
+        // Récupérer toutes les relations acceptées (bidirectionnelles)
+        $relationsAsUser = \App\Models\FamilyRelationship::where('user_id', $user->id)
+            ->where('status', 'accepted')
+            ->with(['user.profile', 'relatedUser.profile', 'relationshipType'])
+            ->get();
+
+        $relationsAsRelated = \App\Models\FamilyRelationship::where('related_user_id', $user->id)
+            ->where('status', 'accepted')
+            ->with(['user.profile', 'relatedUser.profile', 'relationshipType'])
+            ->get();
 
         // Construire la liste des membres à afficher
-        $members = $relations->map(function($relation) use ($user) {
+        $members = collect();
+
+        // Relations où l'utilisateur est user_id
+        foreach ($relationsAsUser as $relation) {
             $member = $relation->relatedUser;
             $profile = $member->profile;
-            return [
+            $members->push([
                 'id' => $member->id,
                 'name' => $member->name,
                 'email' => $member->email,
                 'relation' => $relation->relationshipType->display_name_fr ?? $relation->relationshipType->name ?? 'Relation',
+                'relation_code' => $relation->relationshipType->name,
+                'category' => $relation->relationshipType->category ?? 'family',
                 'status' => $relation->status,
                 'avatar' => $profile?->avatar ?? null,
                 'bio' => $profile?->bio ?? null,
                 'birth_date' => $profile?->birth_date ?? null,
                 'gender' => $profile?->gender ?? null,
                 'phone' => $profile?->phone ?? null,
-            ];
-        })->values();
+            ]);
+        }
+
+        // Relations où l'utilisateur est related_user_id (utiliser la relation inverse)
+        foreach ($relationsAsRelated as $relation) {
+            $member = $relation->user;
+            $profile = $member->profile;
+
+            // Obtenir la relation inverse
+            $reverseRelationName = $this->getReverseRelationName($relation->relationshipType->name);
+            $reverseRelationType = \App\Models\RelationshipType::where('name', $reverseRelationName)->first();
+
+            $members->push([
+                'id' => $member->id,
+                'name' => $member->name,
+                'email' => $member->email,
+                'relation' => $reverseRelationType?->display_name_fr ?? $reverseRelationName ?? 'Relation',
+                'relation_code' => $reverseRelationName,
+                'category' => $reverseRelationType?->category ?? 'family',
+                'status' => $relation->status,
+                'avatar' => $profile?->avatar ?? null,
+                'bio' => $profile?->bio ?? null,
+                'birth_date' => $profile?->birth_date ?? null,
+                'gender' => $profile?->gender ?? null,
+                'phone' => $profile?->phone ?? null,
+            ]);
+        }
+
+        // Supprimer les doublons basés sur l'ID
+        $members = $members->unique('id')->values();
 
         return Inertia::render('Family', [
             'family' => $family,
-            'members' => $members->toArray(), // S'assurer que c'est un tableau
+            'members' => $members->toArray(),
         ]);
     }
 
@@ -92,6 +130,44 @@ class FamilyController extends Controller
         $this->familyService->createFamily($user, $validated);
 
         return redirect()->route('families.index')->with('success', 'Famille créée avec succès.');
+    }
+
+    /**
+     * Obtenir le nom de la relation inverse
+     */
+    private function getReverseRelationName(string $relationName): string
+    {
+        $reverseMap = [
+            'father' => 'son',
+            'mother' => 'daughter',
+            'son' => 'father',
+            'daughter' => 'mother',
+            'brother' => 'brother',
+            'sister' => 'sister',
+            'grandfather' => 'grandson',
+            'grandmother' => 'granddaughter',
+            'grandson' => 'grandfather',
+            'granddaughter' => 'grandmother',
+            'uncle' => 'nephew',
+            'aunt' => 'niece',
+            'nephew' => 'uncle',
+            'niece' => 'aunt',
+            'cousin' => 'cousin',
+            'husband' => 'wife',
+            'wife' => 'husband',
+            'father_in_law' => 'son_in_law',
+            'mother_in_law' => 'daughter_in_law',
+            'son_in_law' => 'father_in_law',
+            'daughter_in_law' => 'mother_in_law',
+            'brother_in_law' => 'sister_in_law',
+            'sister_in_law' => 'brother_in_law',
+            'stepfather' => 'stepson',
+            'stepmother' => 'stepdaughter',
+            'stepson' => 'stepfather',
+            'stepdaughter' => 'stepmother',
+        ];
+
+        return $reverseMap[$relationName] ?? $relationName;
     }
 
     public function addMember(Request $request, Family $family): \Illuminate\Http\RedirectResponse

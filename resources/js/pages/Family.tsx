@@ -18,6 +18,8 @@ interface Member {
   gender?: string | null;
   phone?: string | null;
   relation: string;
+  relation_code: string;
+  category: string;
   status: string;
 }
 
@@ -43,6 +45,37 @@ export default function Family({ members }: FamilyProps) {
 
   // Sécurité : s'assurer que members est un tableau
   const safeMembers = Array.isArray(members) ? members : [];
+
+  // Organiser les membres par catégories
+  const organizeByCategory = (members: Member[]) => {
+    const categories = {
+      immediate: [] as Member[], // Parents, enfants, conjoints
+      siblings: [] as Member[], // Frères et sœurs
+      extended: [] as Member[], // Grands-parents, oncles, tantes, cousins
+      inLaws: [] as Member[], // Belle-famille
+      others: [] as Member[] // Autres relations
+    };
+
+    members.forEach(member => {
+      const code = member.relation_code;
+
+      if (['father', 'mother', 'son', 'daughter', 'husband', 'wife'].includes(code)) {
+        categories.immediate.push(member);
+      } else if (['brother', 'sister'].includes(code)) {
+        categories.siblings.push(member);
+      } else if (['grandfather', 'grandmother', 'grandson', 'granddaughter', 'uncle', 'aunt', 'nephew', 'niece', 'cousin'].includes(code)) {
+        categories.extended.push(member);
+      } else if (code.includes('_in_law') || ['stepfather', 'stepmother', 'stepson', 'stepdaughter'].includes(code)) {
+        categories.inLaws.push(member);
+      } else {
+        categories.others.push(member);
+      }
+    });
+
+    return categories;
+  };
+
+  const categorizedMembers = organizeByCategory(safeMembers);
 
   if (!safeMembers || safeMembers.length === 0) {
     return (
@@ -120,19 +153,118 @@ export default function Family({ members }: FamilyProps) {
             </div>
           </div>
 
-          {/* Family Members Grid responsive */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
-          {safeMembers.map((member) => (
-            <div key={member.id} className="flex flex-col items-center">
-              <FamilyMemberCard
-                id={member.id.toString()}
-                name={member.name}
-                avatarUrl={member.avatar || undefined}
-                relation={member.relation}
-              />
-            </div>
-          ))}
-        </div>
+          {/* Family Members by Categories */}
+          <div className="space-y-8">
+            {/* Famille immédiate */}
+            {categorizedMembers.immediate.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <span className="w-2 h-2 bg-red-500 rounded-full mr-3"></span>
+                  {t('immediate_family')} ({categorizedMembers.immediate.length})
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
+                  {categorizedMembers.immediate.map((member) => (
+                    <div key={member.id} className="flex flex-col items-center">
+                      <FamilyMemberCard
+                        id={member.id.toString()}
+                        name={member.name}
+                        avatarUrl={member.avatar || undefined}
+                        relation={member.relation}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Frères et sœurs */}
+            {categorizedMembers.siblings.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
+                  {t('siblings')} ({categorizedMembers.siblings.length})
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
+                  {categorizedMembers.siblings.map((member) => (
+                    <div key={member.id} className="flex flex-col items-center">
+                      <FamilyMemberCard
+                        id={member.id.toString()}
+                        name={member.name}
+                        avatarUrl={member.avatar || undefined}
+                        relation={member.relation}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Famille élargie */}
+            {categorizedMembers.extended.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>
+                  {t('extended_family')} ({categorizedMembers.extended.length})
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
+                  {categorizedMembers.extended.map((member) => (
+                    <div key={member.id} className="flex flex-col items-center">
+                      <FamilyMemberCard
+                        id={member.id.toString()}
+                        name={member.name}
+                        avatarUrl={member.avatar || undefined}
+                        relation={member.relation}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Belle-famille */}
+            {categorizedMembers.inLaws.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <span className="w-2 h-2 bg-purple-500 rounded-full mr-3"></span>
+                  {t('in_laws')} ({categorizedMembers.inLaws.length})
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
+                  {categorizedMembers.inLaws.map((member) => (
+                    <div key={member.id} className="flex flex-col items-center">
+                      <FamilyMemberCard
+                        id={member.id.toString()}
+                        name={member.name}
+                        avatarUrl={member.avatar || undefined}
+                        relation={member.relation}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Autres relations */}
+            {categorizedMembers.others.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <span className="w-2 h-2 bg-gray-500 rounded-full mr-3"></span>
+                  {t('other_relations')} ({categorizedMembers.others.length})
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
+                  {categorizedMembers.others.map((member) => (
+                    <div key={member.id} className="flex flex-col items-center">
+                      <FamilyMemberCard
+                        id={member.id.toString()}
+                        name={member.name}
+                        avatarUrl={member.avatar || undefined}
+                        relation={member.relation}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Quick Actions Card responsive */}
           <Card className="mt-8 sm:mt-12 border-0 shadow-sm bg-gradient-to-br from-white to-gray-50/50">
