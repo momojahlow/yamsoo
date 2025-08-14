@@ -23,11 +23,9 @@ export function SuggestionHeader({ name, avatarUrl, relationLabel }: SuggestionH
       </Avatar>
       <div className="flex-1">
         <h3 className="font-medium">{name}</h3>
-        {relationLabel && (
-          <p className="text-sm text-muted-foreground">
-            {`${name} pourrait être un membre de votre famille`}
-          </p>
-        )}
+        <p className="text-sm text-muted-foreground">
+          Connaissez-vous cette personne ?
+        </p>
       </div>
     </div>
   );

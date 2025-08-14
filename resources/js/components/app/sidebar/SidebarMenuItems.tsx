@@ -20,19 +20,27 @@ import { cn } from "@/lib/utils";
 import { NotificationsBadge } from "./NotificationsBadge";
 import { Profile } from "@/types/notifications";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
+import { router } from "@inertiajs/react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface SidebarMenuItemsProps {
   profile: Profile | null;
   suggestionCount: number;
   isCollapsed?: boolean;
   handleLogout: () => Promise<void>;
+  isLoggingOut?: boolean;
+  isMobile?: boolean;
 }
 
-export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false, handleLogout }: SidebarMenuItemsProps) {
+export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false, handleLogout, isLoggingOut = false, isMobile = false }: SidebarMenuItemsProps) {
   const { unreadCount } = useUnreadMessages();
+  const { t, isRTL } = useTranslation();
 
   return (
-    <SidebarMenu className="flex flex-col h-full space-y-3 px-1">
+    <SidebarMenu className={cn(
+      "flex flex-col h-full space-y-2 px-1",
+      isMobile ? "space-y-1 px-2" : "space-y-3 px-1"
+    )}>
       {/* Yamsoo menu item - Commenté car la fonctionnalité est accessible via le menu Réseaux */}
       {/*
       <SidebarMenuItem>
@@ -52,85 +60,85 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
 
       <SidebarMenuItem>
         <SidebarMenuButton
-          tooltip="Accueil"
-          onClick={() => window.location.href = "/dashboard"}
+          tooltip={t('dashboard')}
+          onClick={() => router.visit("/dashboard")}
           className={cn(
             "w-full justify-start transition-transform duration-200 hover:scale-110",
             window.location.pathname === "/dashboard" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
           )}
         >
-          <Calendar className="h-6 w-6" />
-          {!isCollapsed && <span className="ml-2">Accueil</span>}
+          <Calendar className="h-5 w-5 sm:h-6 sm:w-6" />
+          {(!isCollapsed || isMobile) && <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm sm:text-base`}>{t('dashboard')}</span>}
         </SidebarMenuButton>
       </SidebarMenuItem>
 
       <SidebarMenuItem>
         <SidebarMenuButton
-          tooltip="Mon Profil"
-          onClick={() => window.location.href = "/profil"}
+          tooltip={t('profile')}
+          onClick={() => router.visit("/profil")}
           className={cn(
             "w-full justify-start transition-transform duration-200 hover:scale-110",
             window.location.pathname === "/profil" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
           )}
         >
-          <User className="h-6 w-6" />
-          {!isCollapsed && <span className="ml-2">Mon Profil</span>}
+          <User className="h-5 w-5 sm:h-6 sm:w-6" />
+          {(!isCollapsed || isMobile) && <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm sm:text-base`}>{t('profile')}</span>}
         </SidebarMenuButton>
       </SidebarMenuItem>
 
       <SidebarMenuItem>
         <SidebarMenuButton
-          tooltip="Famille"
-          onClick={() => window.location.href = "/famille"}
+          tooltip={t('family')}
+          onClick={() => router.visit("/famille")}
           className={cn(
             "w-full justify-start transition-transform duration-200 hover:scale-110",
             window.location.pathname === "/famille" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
           )}
         >
-          <Trees className="h-6 w-6" />
-          {!isCollapsed && <span className="ml-2">Famille</span>}
+          <Trees className="h-5 w-5 sm:h-6 sm:w-6" />
+          {(!isCollapsed || isMobile) && <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm sm:text-base`}>{t('family')}</span>}
         </SidebarMenuButton>
       </SidebarMenuItem>
 
       <SidebarMenuItem>
         <SidebarMenuButton
-          tooltip="Albums Photo"
-          onClick={() => window.location.href = "/photo-albums"}
+          tooltip={t('photo_albums')}
+          onClick={() => router.visit("/photo-albums")}
           className={cn(
             "w-full justify-start transition-transform duration-200 hover:scale-110",
             window.location.pathname.startsWith("/photo-albums") ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
           )}
         >
-          <Camera className="h-6 w-6" />
-          {!isCollapsed && <span className="ml-2">Albums Photo</span>}
+          <Camera className="h-5 w-5 sm:h-6 sm:w-6" />
+          {(!isCollapsed || isMobile) && <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm sm:text-base`}>{t('photo_albums')}</span>}
         </SidebarMenuButton>
       </SidebarMenuItem>
 
       <SidebarMenuItem>
         <SidebarMenuButton
-          tooltip="Réseaux"
-          onClick={() => window.location.href = "/reseaux"}
+          tooltip={t('networks')}
+          onClick={() => router.visit("/reseaux")}
           className={cn(
             "w-full justify-start transition-transform duration-200 hover:scale-110",
             window.location.pathname === "/reseaux" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
           )}
         >
-          <Network className="h-6 w-6" />
-          {!isCollapsed && <span className="ml-2">Réseaux</span>}
+          <Network className="h-5 w-5 sm:h-6 sm:w-6" />
+          {(!isCollapsed || isMobile) && <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm sm:text-base`}>{t('networks')}</span>}
         </SidebarMenuButton>
       </SidebarMenuItem>
 
       <SidebarMenuItem className="relative">
         <SidebarMenuButton
-          tooltip="Messages"
-          onClick={() => window.location.href = "/messages"}
+          tooltip={t('messages')}
+          onClick={() => router.visit("/messages")}
           className={cn(
             "w-full justify-start transition-transform duration-200 hover:scale-110",
             window.location.pathname === "/messages" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
           )}
         >
-          <MessageSquare className="h-6 w-6" />
-          {!isCollapsed && <span className="ml-2">Messages</span>}
+          <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6" />
+          {(!isCollapsed || isMobile) && <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm sm:text-base`}>{t('messages')}</span>}
         </SidebarMenuButton>
         {/* Badge pour messages non lus - Version ultra-simple */}
         {unreadCount > 0 && (
@@ -155,33 +163,33 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
 
       <SidebarMenuItem>
         <SidebarMenuButton
-          tooltip="Notifications"
-          onClick={() => window.location.href = "/notifications"}
+          tooltip={t('notifications')}
+          onClick={() => router.visit("/notifications")}
           className={cn(
             "w-full justify-start transition-transform duration-200 hover:scale-110 relative",
             window.location.pathname === "/notifications" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
           )}
         >
-          <Bell className="h-6 w-6" />
-          {!isCollapsed && <span className="ml-2">Notifications</span>}
-          <NotificationsBadge profile={profile} isCollapsed={isCollapsed} hideWhenCollapsed={true} />
+          <Bell className="h-5 w-5 sm:h-6 sm:w-6" />
+          {(!isCollapsed || isMobile) && <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm sm:text-base`}>{t('notifications')}</span>}
+          <NotificationsBadge profile={profile} isCollapsed={isCollapsed && !isMobile} hideWhenCollapsed={true} />
         </SidebarMenuButton>
       </SidebarMenuItem>
 
       <SidebarMenuItem>
         <SidebarMenuButton
-          tooltip="Suggestions"
-          onClick={() => window.location.href = "/suggestions"}
+          tooltip={t('suggestions')}
+          onClick={() => router.visit("/suggestions")}
           className={cn(
             "w-full justify-start transition-transform duration-200 hover:scale-110 relative",
             "bg-amber-50 text-amber-600 mt-2",
             window.location.pathname === "/suggestions" ? "bg-sidebar-accent text-sidebar-accent-foreground" : ""
           )}
         >
-          <Sparkles className="h-6 w-6" />
-          {!isCollapsed && <span className="ml-2">Suggestions</span>}
-          {suggestionCount > 0 && !isCollapsed && (
-            <span className="absolute min-w-5 h-5 flex items-center justify-center rounded-full bg-red-500 text-[11px] font-medium text-white top-1 right-2">
+          <Sparkles className="h-5 w-5 sm:h-6 sm:w-6" />
+          {(!isCollapsed || isMobile) && <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm sm:text-base`}>{t('suggestions')}</span>}
+          {suggestionCount > 0 && (!isCollapsed || isMobile) && (
+            <span className={`absolute min-w-5 h-5 flex items-center justify-center rounded-full bg-red-500 text-[11px] font-medium text-white top-1 ${isRTL ? 'left-2' : 'right-2'}`}>
             {suggestionCount}
             </span>
           )}
@@ -192,12 +200,12 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
       {profile?.user?.role && ['admin', 'super_admin'].includes(profile.user.role) && (
         <SidebarMenuItem className="mt-3">
           <SidebarMenuButton
-            tooltip="Administration"
-            onClick={() => window.location.href = "/admin"}
+            tooltip={t('settings')}
+            onClick={() => router.visit("/admin")}
             className="w-full justify-start transition-all duration-200 hover:scale-105 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 font-medium border border-purple-200 dark:border-purple-800 hover:border-purple-300 dark:hover:border-purple-700 rounded-lg"
           >
-            <Shield className="h-6 w-6" />
-            {!isCollapsed && <span className="ml-2">Administration</span>}
+            <Shield className="h-5 w-5 sm:h-6 sm:w-6" />
+            {(!isCollapsed || isMobile) && <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm sm:text-base`}>{t('settings')}</span>}
           </SidebarMenuButton>
         </SidebarMenuItem>
       )}
@@ -205,12 +213,20 @@ export function SidebarMenuItems({ profile, suggestionCount, isCollapsed = false
       {/* Bouton de déconnexion juste après Suggestions */}
       <SidebarMenuItem className="mt-3">
         <SidebarMenuButton
-          tooltip="Déconnexion"
+          tooltip={isLoggingOut ? t('loading') : t('logout')}
           onClick={handleLogout}
-          className="w-full justify-start transition-all duration-200 hover:scale-105 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 font-medium border border-red-200 dark:border-red-800 hover:border-red-300 dark:hover:border-red-700 rounded-lg"
+          disabled={isLoggingOut}
+          className={cn(
+            "w-full justify-start transition-all duration-200 hover:scale-105 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 font-medium border border-red-200 dark:border-red-800 hover:border-red-300 dark:hover:border-red-700 rounded-lg",
+            isLoggingOut && "opacity-50 cursor-not-allowed hover:scale-100"
+          )}
         >
-          <LogOut className="h-6 w-6" />
-          {!isCollapsed && <span className="ml-2">Déconnexion</span>}
+          <LogOut className={cn("h-5 w-5 sm:h-6 sm:w-6", isLoggingOut && "animate-spin")} />
+          {(!isCollapsed || isMobile) && (
+            <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm sm:text-base`}>
+              {isLoggingOut ? t('loading') : t('logout')}
+            </span>
+          )}
         </SidebarMenuButton>
       </SidebarMenuItem>
 

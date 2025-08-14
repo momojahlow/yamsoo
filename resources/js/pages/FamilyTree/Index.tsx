@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
-import AppSidebarLayout from '@/Layouts/app/app-sidebar-layout';
+import { KwdDashboardLayout } from '@/Layouts/modern';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,8 @@ import { Users, Heart, Baby, Crown, TreePine, ArrowLeft, ZoomIn, ZoomOut, Rotate
 import { Link } from '@inertiajs/react';
 import TreeNode from '@/components/FamilyTree/TreeNode';
 import TreeConnections from '@/components/FamilyTree/TreeConnections';
+import { getRelationLabel } from '@/utils/familyUtils';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface User {
     id: number;
@@ -62,6 +64,7 @@ interface Props {
 }
 
 const FamilyTreeIndex: React.FC<Props> = ({ user, treeData, relationships, statistics }) => {
+    const { t, isRTL } = useTranslation();
     const [zoom, setZoom] = useState(1);
     const [pan, setPan] = useState({ x: 0, y: 0 });
     const [isDragging, setIsDragging] = useState(false);
@@ -108,7 +111,7 @@ const FamilyTreeIndex: React.FC<Props> = ({ user, treeData, relationships, stati
                     x: parentX,
                     y: parentY,
                     level: -1,
-                    relationshipType: parent.relationship_type,
+                    relationshipType: getRelationLabel(parent.relationship_code || ''),
                     relationshipCode: parent.relationship_code,
                 });
             });
@@ -121,7 +124,7 @@ const FamilyTreeIndex: React.FC<Props> = ({ user, treeData, relationships, stati
                 x: centerX + siblingSpacing,
                 y: centerY,
                 level: 0,
-                relationshipType: treeData.spouse.relationship_type,
+                relationshipType: getRelationLabel(treeData.spouse.relationship_code || ''),
                 relationshipCode: treeData.spouse.relationship_code,
             });
         }
@@ -135,7 +138,7 @@ const FamilyTreeIndex: React.FC<Props> = ({ user, treeData, relationships, stati
                     x: siblingX,
                     y: centerY,
                     level: 0,
-                    relationshipType: sibling.relationship_type,
+                    relationshipType: getRelationLabel(sibling.relationship_code || ''),
                     relationshipCode: sibling.relationship_code,
                 });
             });
@@ -151,7 +154,7 @@ const FamilyTreeIndex: React.FC<Props> = ({ user, treeData, relationships, stati
                     x: childX,
                     y: childY,
                     level: 1,
-                    relationshipType: child.relationship_type,
+                    relationshipType: getRelationLabel(child.relationship_code || ''),
                     relationshipCode: child.relationship_code,
                 });
             });
@@ -168,7 +171,7 @@ const FamilyTreeIndex: React.FC<Props> = ({ user, treeData, relationships, stati
                     x: grandparentX,
                     y: grandparentY,
                     level: -2,
-                    relationshipType: grandparent.relationship_type,
+                    relationshipType: getRelationLabel(grandparent.relationship_code || ''),
                     relationshipCode: grandparent.relationship_code,
                 });
             });
@@ -342,29 +345,29 @@ const FamilyTreeIndex: React.FC<Props> = ({ user, treeData, relationships, stati
     );
 
     return (
-        <AppSidebarLayout>
-            <Head title="Arbre Familial" />
+        <KwdDashboardLayout title={t('family_tree')}>
+            <Head title={t('family_tree')} />
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     {/* Statistiques */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                         <Card>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Total des Relations</CardTitle>
+                            <CardHeader className={`flex flex-row items-center justify-between space-y-0 pb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                <CardTitle className="text-sm font-medium">{t('total_relations')}</CardTitle>
                                 <Users className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold">{statistics.total_relatives}</div>
                                 <p className="text-xs text-muted-foreground">
-                                    membres de la famille
+                                    {t('family_members')}
                                 </p>
                             </CardContent>
                         </Card>
 
                         <Card>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Générations</CardTitle>
+                            <CardHeader className={`flex flex-row items-center justify-between space-y-0 pb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                <CardTitle className="text-sm font-medium">{t('generations')}</CardTitle>
                                 <TreePine className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
@@ -376,22 +379,7 @@ const FamilyTreeIndex: React.FC<Props> = ({ user, treeData, relationships, stati
                                      (treeData.grandchildren.length > 0 ? 1 : 0)}
                                 </div>
                                 <p className="text-xs text-muted-foreground">
-                                    générations représentées
-                                </p>
-                            </CardContent>
-                        </Card>
-
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Relations Automatiques</CardTitle>
-                                <Crown className="h-4 w-4 text-muted-foreground" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">
-                                    {Array.isArray(relationships) ? relationships.filter(r => r.created_automatically).length : 0}
-                                </div>
-                                <p className="text-xs text-muted-foreground">
-                                    déduites intelligemment
+                                    {t('generations_represented')}
                                 </p>
                             </CardContent>
                         </Card>
@@ -404,13 +392,13 @@ const FamilyTreeIndex: React.FC<Props> = ({ user, treeData, relationships, stati
                         <Card className="text-center py-12">
                             <CardContent>
                                 <TreePine className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                                <h3 className="text-lg font-semibold mb-2">Aucune relation familiale</h3>
+                                <h3 className="text-lg font-semibold mb-2">{t('no_family_relations')}</h3>
                                 <p className="text-muted-foreground mb-4">
-                                    Commencez à construire votre arbre familial en ajoutant des relations.
+                                    {t('start_building_family_tree')}
                                 </p>
                                 <Link href="/family-relations">
                                     <Button>
-                                        Ajouter des relations
+                                        {t('add_relations')}
                                     </Button>
                                 </Link>
                             </CardContent>
@@ -418,7 +406,7 @@ const FamilyTreeIndex: React.FC<Props> = ({ user, treeData, relationships, stati
                     )}
                 </div>
             </div>
-        </AppSidebarLayout>
+        </KwdDashboardLayout>
     );
 };
 

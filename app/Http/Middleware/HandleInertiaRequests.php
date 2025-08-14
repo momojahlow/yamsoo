@@ -6,6 +6,7 @@ use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
+use App\Services\NotificationService;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -39,18 +40,54 @@ class HandleInertiaRequests extends Middleware
     {
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
 
+        $user = $request->user();
+        $unreadNotifications = 0;
+
+        if ($user) {
+            $notificationService = app(NotificationService::class);
+            $unreadNotifications = $notificationService->getUnreadCount($user);
+        }
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user ? array_merge($user->toArray(), [
+                    'unreadNotifications' => $unreadNotifications
+                ]) : null,
             ],
             'ziggy' => fn (): array => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+
+            // Données de traduction
+            'locale' => app()->getLocale(),
+            'available_locales' => config('app.available_locales', ['fr' => 'Français', 'ar' => 'العربية']),
+            'translations' => $this->getTranslations(),
         ];
+    }
+
+    /**
+     * Charger les traductions pour la langue actuelle
+     */
+    private function getTranslations(): array
+    {
+        $locale = app()->getLocale();
+        $translationPath = lang_path("{$locale}/common.php");
+
+        if (file_exists($translationPath)) {
+            return require $translationPath;
+        }
+
+        // Fallback vers le français si le fichier n'existe pas
+        $fallbackPath = lang_path("fr/common.php");
+        if (file_exists($fallbackPath)) {
+            return require $fallbackPath;
+        }
+
+        return [];
     }
 }

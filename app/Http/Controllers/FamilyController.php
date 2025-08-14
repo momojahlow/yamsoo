@@ -33,7 +33,7 @@ class FamilyController extends Controller
                 'id' => $member->id,
                 'name' => $member->name,
                 'email' => $member->email,
-                'relation' => $relation->relationshipType->name_fr ?? $relation->relationshipType->name ?? 'Relation',
+                'relation' => $relation->relationshipType->display_name_fr ?? $relation->relationshipType->name ?? 'Relation',
                 'status' => $relation->status,
                 'avatar' => $profile?->avatar ?? null,
                 'bio' => $profile?->bio ?? null,

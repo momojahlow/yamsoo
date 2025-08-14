@@ -7,7 +7,6 @@ use App\Models\PhotoAlbum;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Intervention\Image\Facades\Image;
 
 class PhotoController extends Controller
 {
@@ -184,6 +183,12 @@ class PhotoController extends Controller
     private function generateThumbnail($file, string $originalPath): ?string
     {
         try {
+            // For now, return null until Intervention Image is installed
+            // TODO: Install intervention/image package with: composer require intervention/image
+            return null;
+
+            // Uncomment below when intervention/image is installed:
+            /*
             $thumbnailPath = str_replace('.', '_thumb.', $originalPath);
 
             // Créer une miniature de 300x300 pixels
@@ -195,6 +200,7 @@ class PhotoController extends Controller
             Storage::disk('public')->put($thumbnailPath, $image->encode());
 
             return 'public/' . $thumbnailPath;
+            */
         } catch (\Exception $e) {
             // En cas d'erreur, retourner null (pas de miniature)
             return null;

@@ -27,14 +27,15 @@ export function SuggestionItem({ suggestion, onAccept, onReject }: SuggestionIte
   const correctedSuggestion = correctSuggestedRelation(suggestion);
   
   const [showRelationSelect, setShowRelationSelect] = useState(false);
-  const [selectedRelationType, setSelectedRelationType] = useState<string>(correctedSuggestion.suggested_relation_type || '');
+  const [selectedRelationType, setSelectedRelationType] = useState<string>(correctedSuggestion.suggested_relation_code || '');
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Determine if this is a family-derived suggestion
   const isFamilySuggestion = correctedSuggestion.id?.startsWith('family-suggestion-');
-  
-  // Use type assertion to convert string to FamilyRelationType
-  const relationLabel = getRelationLabel(correctedSuggestion.suggested_relation_type as FamilyRelationType);
+
+  // Use the French name if available, otherwise use the relation label from code
+  const relationLabel = correctedSuggestion.suggested_relation_name ||
+                       getRelationLabel(correctedSuggestion.suggested_relation_code as FamilyRelationType);
   
   const targetName = getTargetName(correctedSuggestion);
   
@@ -54,27 +55,90 @@ export function SuggestionItem({ suggestion, onAccept, onReject }: SuggestionIte
     }
   };
 
-  // Function to get simplified relation categories for dropdown
+  // Function to get complete relation categories for dropdown (like RelationSelector)
   const getRelationOptions = () => {
     const targetGender = correctedSuggestion.profiles?.gender;
-    
-    // Simple categories with most common relations
-    const options = [
-      { value: targetGender === 'F' ? 'sister' : 'brother', label: targetGender === 'F' ? 'Sœur' : 'Frère' },
-      { value: targetGender === 'F' ? 'niece' : 'nephew', label: targetGender === 'F' ? 'Nièce' : 'Neveu' },
-      { value: targetGender === 'F' ? 'cousin_paternal_f' : 'cousin_paternal_m', label: 'Cousin(e)' },
-      { value: targetGender === 'F' ? 'aunt' : 'uncle', label: targetGender === 'F' ? 'Tante' : 'Oncle' },
-      { value: 'other', label: 'Autre...' }
-    ];
-    
+
+    // Complete list of relations organized by category
+    const relationCategories = {
+      family: [
+        "father", "mother", "son", "daughter",
+        "brother", "sister",
+        "grandfather", "grandmother", "grandson", "granddaughter",
+        "uncle", "aunt", "nephew", "niece",
+        "cousin", "cousin_paternal_m", "cousin_maternal_m",
+        "cousin_paternal_f", "cousin_maternal_f",
+        "half_brother", "half_sister"
+      ],
+      spouse: ["husband", "wife"],
+      inlaws: [
+        "father_in_law", "mother_in_law", "son_in_law", "daughter_in_law",
+        "brother_in_law", "sister_in_law",
+        "stepfather", "stepmother", "stepson", "stepdaughter"
+      ]
+    };
+
+    // Filter by gender
+    const filterByGender = (types: string[]) => {
+      if (!targetGender) return types;
+
+      const maleSpecific = [
+        "father", "son", "brother", "grandfather", "grandson", "uncle", "nephew",
+        "husband", "father_in_law", "son_in_law", "brother_in_law", "stepfather",
+        "stepson", "half_brother", "cousin_paternal_m", "cousin_maternal_m"
+      ];
+
+      const femaleSpecific = [
+        "mother", "daughter", "sister", "grandmother", "granddaughter", "aunt", "niece",
+        "wife", "mother_in_law", "daughter_in_law", "sister_in_law", "stepmother",
+        "stepdaughter", "half_sister", "cousin_paternal_f", "cousin_maternal_f"
+      ];
+
+      if (targetGender === 'M') {
+        return types.filter(type => !femaleSpecific.includes(type));
+      } else if (targetGender === 'F') {
+        return types.filter(type => !maleSpecific.includes(type));
+      }
+
+      return types;
+    };
+
+    // Create grouped options
+    const options: Array<{value: string, label: string, group?: string}> = [];
+
+    // Add family relations
+    filterByGender(relationCategories.family).forEach(type => {
+      options.push({
+        value: type,
+        label: getRelationLabel(type as FamilyRelationType),
+        group: 'Famille'
+      });
+    });
+
+    // Add spouse relations
+    filterByGender(relationCategories.spouse).forEach(type => {
+      options.push({
+        value: type,
+        label: getRelationLabel(type as FamilyRelationType),
+        group: 'Époux/Épouse'
+      });
+    });
+
+    // Add in-law relations
+    filterByGender(relationCategories.inlaws).forEach(type => {
+      options.push({
+        value: type,
+        label: getRelationLabel(type as FamilyRelationType),
+        group: 'Belle-famille'
+      });
+    });
+
     return options;
   };
 
   const handleRelationSelect = (value: string) => {
     setSelectedRelationType(value);
-    if (value === 'other') {
-      setShowRelationSelect(true);
-    }
+    // Plus besoin de logique "other" car on a toutes les relations dans le dropdown principal
   };
 
   return (
@@ -93,50 +157,79 @@ export function SuggestionItem({ suggestion, onAccept, onReject }: SuggestionIte
         </div>
       )}
       
-      {/* Quick relation selector dropdown directly in the suggestion card */}
-      {!showRelationSelect && (
+      {/* Afficher "Demande en cours" ou le sélecteur de relation */}
+      {correctedSuggestion.has_pending_request ? (
+        <div className="mb-3 mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+            <span className="text-sm font-medium text-blue-700">Demande en cours</span>
+          </div>
+          <p className="text-xs text-blue-600 mt-1">
+            Une demande de relation a déjà été envoyée à cette personne
+          </p>
+        </div>
+      ) : (
         <div className="mb-3 mt-2">
-          <Select 
-            value={selectedRelationType} 
+          <Select
+            value={selectedRelationType}
             onValueChange={handleRelationSelect}
           >
-            <SelectTrigger className="w-full bg-white border-amber-300">
+            <SelectTrigger className="w-full h-9 bg-white border-gray-300 text-sm">
               <SelectValue placeholder="Sélectionner une relation" />
             </SelectTrigger>
-            <SelectContent className="bg-white">
-              {getRelationOptions().map(option => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
+            <SelectContent className="bg-white max-h-60 overflow-y-auto">
+              {/* Group by categories */}
+              <div className="py-1.5 pl-2 text-xs font-semibold text-gray-500">Famille</div>
+              {getRelationOptions()
+                .filter(option => option.group === 'Famille')
+                .map(option => (
+                  <SelectItem key={option.value} value={option.value} className="text-sm">
+                    {option.label}
+                  </SelectItem>
+                ))}
+
+              <div className="py-1.5 pl-2 text-xs font-semibold text-gray-500">Époux/Épouse</div>
+              {getRelationOptions()
+                .filter(option => option.group === 'Époux/Épouse')
+                .map(option => (
+                  <SelectItem key={option.value} value={option.value} className="text-sm">
+                    {option.label}
+                  </SelectItem>
+                ))}
+
+              <div className="py-1.5 pl-2 text-xs font-semibold text-gray-500">Belle-famille</div>
+              {getRelationOptions()
+                .filter(option => option.group === 'Belle-famille')
+                .map(option => (
+                  <SelectItem key={option.value} value={option.value} className="text-sm">
+                    {option.label}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
-          {selectedRelationType && selectedRelationType !== 'other' && (
-            <div className="mt-2 text-xs text-amber-700">
-              {targetName} pourrait être votre "{getRelationLabel(selectedRelationType as FamilyRelationType)}"
+          {selectedRelationType && (
+            <div className="mt-1 text-xs text-gray-600">
+              {targetName} sera votre "{getRelationLabel(selectedRelationType as FamilyRelationType)}"
             </div>
           )}
         </div>
       )}
       
-      {showRelationSelect && (
-        <RelationSelector
-          selectedRelationType={selectedRelationType === 'other' ? '' : selectedRelationType}
-          setSelectedRelationType={setSelectedRelationType}
-          targetGender={correctedSuggestion.profiles?.gender}
+      {/* Plus besoin du RelationSelector étendu car tout est dans le dropdown principal */}
+      
+      {/* Afficher les actions seulement si aucune demande n'est en cours */}
+      {!correctedSuggestion.has_pending_request && (
+        <SuggestionActions
+          showRelationSelect={showRelationSelect}
+          setShowRelationSelect={setShowRelationSelect}
+          onReject={() => onReject(correctedSuggestion.id)}
+          onSendRequest={handleSendRequest}
+          isLoading={isLoading}
+          hasSelectedRelation={!!selectedRelationType && selectedRelationType !== 'other'}
+          suggestionId={correctedSuggestion.id}
+          isFamilySuggestion={isFamilySuggestion}
         />
       )}
-      
-      <SuggestionActions 
-        showRelationSelect={showRelationSelect}
-        setShowRelationSelect={setShowRelationSelect}
-        onReject={() => onReject(correctedSuggestion.id)}
-        onSendRequest={handleSendRequest}
-        isLoading={isLoading}
-        hasSelectedRelation={!!selectedRelationType && selectedRelationType !== 'other'}
-        suggestionId={correctedSuggestion.id}
-        isFamilySuggestion={isFamilySuggestion}
-      />
     </div>
   );
 }

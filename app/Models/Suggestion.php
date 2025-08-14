@@ -14,6 +14,8 @@ class Suggestion extends Model
         'status',
         'message',
         'suggested_relation_code',
+        'suggested_relation_name',
+        'reason',
     ];
 
     public function user(): BelongsTo

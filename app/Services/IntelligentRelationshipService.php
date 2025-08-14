@@ -11,102 +11,69 @@ use Illuminate\Support\Facades\Log;
 class IntelligentRelationshipService
 {
     /**
-     * Règles de déduction automatique des relations familiales COMPLÈTES
+     * Règles de déduction automatique des relations familiales CORRECTES
      * Format: [relation_existante => [relation_intermediaire => nouvelle_relation]]
+     * IMPORTANT: Utilise uniquement les relations qui existent dans la nouvelle structure
      */
     private array $relationshipRules = [
         // Relations via le PÈRE
         'father' => [
-            'brother' => 'uncle_paternal',              // Frère du père = Oncle paternel
-            'sister' => 'aunt_paternal',                // Sœur du père = Tante paternelle
-            'father' => 'grandfather_paternal',         // Père du père = Grand-père paternel
-            'mother' => 'grandmother_paternal',         // Mère du père = Grand-mère paternelle
+            'brother' => 'uncle',                       // Frère du père = Oncle
+            'sister' => 'aunt',                         // Sœur du père = Tante
+            'father' => 'grandfather',                  // Père du père = Grand-père
+            'mother' => 'grandmother',                  // Mère du père = Grand-mère
             'son' => 'brother',                         // Fils du père = Frère
             'daughter' => 'sister',                     // Fille du père = Sœur
             'wife' => 'mother',                         // Épouse du père = Mère
-            'husband' => 'father',                      // Mari du père = Père (cas rare)
-            'grandfather_paternal' => 'great_grandfather_paternal', // Grand-père paternel du père = Arrière-grand-père paternel
-            'grandmother_paternal' => 'great_grandmother_paternal', // Grand-mère paternelle du père = Arrière-grand-mère paternelle
-            'grandfather_maternal' => 'great_grandfather_maternal', // Grand-père maternel du père = Arrière-grand-père maternel
-            'grandmother_maternal' => 'great_grandmother_maternal', // Grand-mère maternelle du père = Arrière-grand-mère maternelle
-            'uncle_paternal' => 'grandfather_paternal', // Oncle paternel du père = Grand-père paternel
-            'aunt_paternal' => 'grandmother_paternal',  // Tante paternelle du père = Grand-mère paternelle
-            'uncle_maternal' => 'grandfather_maternal', // Oncle maternel du père = Grand-père maternel
-            'aunt_maternal' => 'grandmother_maternal',  // Tante maternelle du père = Grand-mère maternelle
         ],
 
         // Relations via la MÈRE
         'mother' => [
-            'brother' => 'uncle_maternal',              // Frère de la mère = Oncle maternel
-            'sister' => 'aunt_maternal',                // Sœur de la mère = Tante maternelle
-            'father' => 'grandfather_maternal',         // Père de la mère = Grand-père maternel
-            'mother' => 'grandmother_maternal',         // Mère de la mère = Grand-mère maternelle
+            'brother' => 'uncle',                       // Frère de la mère = Oncle
+            'sister' => 'aunt',                         // Sœur de la mère = Tante
+            'father' => 'grandfather',                  // Père de la mère = Grand-père
+            'mother' => 'grandmother',                  // Mère de la mère = Grand-mère
             'son' => 'brother',                         // Fils de la mère = Frère
             'daughter' => 'sister',                     // Fille de la mère = Sœur
             'husband' => 'father',                      // Mari de la mère = Père
-            'wife' => 'mother',                         // Épouse de la mère = Mère (cas rare)
-            'grandfather_paternal' => 'great_grandfather_paternal', // Grand-père paternel de la mère = Arrière-grand-père paternel
-            'grandmother_paternal' => 'great_grandmother_paternal', // Grand-mère paternelle de la mère = Arrière-grand-mère paternelle
-            'grandfather_maternal' => 'great_grandfather_maternal', // Grand-père maternel de la mère = Arrière-grand-père maternel
-            'grandmother_maternal' => 'great_grandmother_maternal', // Grand-mère maternelle de la mère = Arrière-grand-mère maternelle
-            'uncle_paternal' => 'grandfather_paternal', // Oncle paternel de la mère = Grand-père paternel
-            'aunt_paternal' => 'grandmother_paternal',  // Tante paternelle de la mère = Grand-mère paternelle
-            'uncle_maternal' => 'grandfather_maternal', // Oncle maternel de la mère = Grand-père maternel
-            'aunt_maternal' => 'grandmother_maternal',  // Tante maternelle de la mère = Grand-mère maternelle
         ],
 
         // Relations via le FILS
         'son' => [
             'brother' => 'son',                         // Frère du fils = Fils
             'sister' => 'daughter',                     // Sœur du fils = Fille
-            'father' => 'self',                         // Père du fils = Moi
-            'mother' => 'wife',                         // Mère du fils = Épouse
             'son' => 'grandson',                        // Fils du fils = Petit-fils
             'daughter' => 'granddaughter',              // Fille du fils = Petite-fille
             'wife' => 'daughter_in_law',                // Épouse du fils = Belle-fille
-            'husband' => 'son_in_law',                  // Mari du fils = Gendre (cas rare)
-            'grandson' => 'great_grandson',             // Petit-fils du fils = Arrière-petit-fils
-            'granddaughter' => 'great_granddaughter',   // Petite-fille du fils = Arrière-petite-fille
         ],
 
         // Relations via la FILLE
         'daughter' => [
             'brother' => 'son',                         // Frère de la fille = Fils
             'sister' => 'daughter',                     // Sœur de la fille = Fille
-            'father' => 'self',                         // Père de la fille = Moi
-            'mother' => 'wife',                         // Mère de la fille = Épouse
             'son' => 'grandson',                        // Fils de la fille = Petit-fils
             'daughter' => 'granddaughter',              // Fille de la fille = Petite-fille
             'husband' => 'son_in_law',                  // Mari de la fille = Gendre
-            'wife' => 'daughter_in_law',                // Épouse de la fille = Belle-fille (cas rare)
-            'grandson' => 'great_grandson',             // Petit-fils de la fille = Arrière-petit-fils
-            'granddaughter' => 'great_granddaughter',   // Petite-fille de la fille = Arrière-petite-fille
         ],
 
         // Relations via le FRÈRE
         'brother' => [
             'son' => 'nephew',                          // Fils du frère = Neveu
             'daughter' => 'niece',                      // Fille du frère = Nièce
-            'wife' => 'sister_in_law',                  // Épouse du frère = Belle-sœur
-            'father' => 'uncle_paternal',               // Si je suis frère de quelqu'un, je suis oncle paternel de ses enfants
-            'mother' => 'uncle_paternal',               // Si je suis frère de quelqu'un, je suis oncle paternel de ses enfants
+            'father' => 'father',                       // Père du frère = Père
+            'mother' => 'mother',                       // Mère du frère = Mère
             'brother' => 'brother',                     // Frère du frère = Frère
             'sister' => 'sister',                       // Sœur du frère = Sœur
-            'grandson' => 'nephew',                     // Petit-fils du frère = Neveu
-            'granddaughter' => 'niece',                 // Petite-fille du frère = Nièce
         ],
 
         // Relations via la SŒUR
         'sister' => [
             'son' => 'nephew',                          // Fils de la sœur = Neveu
             'daughter' => 'niece',                      // Fille de la sœur = Nièce
-            'husband' => 'brother_in_law',              // Mari de la sœur = Beau-frère
             'father' => 'father',                       // Père de la sœur = Père
             'mother' => 'mother',                       // Mère de la sœur = Mère
             'brother' => 'brother',                     // Frère de la sœur = Frère
             'sister' => 'sister',                       // Sœur de la sœur = Sœur
-            'grandson' => 'nephew',                     // Petit-fils de la sœur = Neveu
-            'granddaughter' => 'niece',                 // Petite-fille de la sœur = Nièce
         ],
 
         // Relations via le GRAND-PÈRE PATERNEL
@@ -236,12 +203,12 @@ class IntelligentRelationshipService
             if ($existingRelation->user_id === $relatedUser->id) {
                 // relatedUser → otherUser
                 $otherUser = $existingRelation->relatedUser;
-                $relationFromRelatedUserToOther = $existingRelation->relationshipType->code;
+                $relationFromRelatedUserToOther = $existingRelation->relationshipType->name;
             } else {
                 // otherUser → relatedUser, donc on inverse pour avoir relatedUser → otherUser
                 $otherUser = $existingRelation->user;
                 $relationFromRelatedUserToOther = $this->getInverseRelationCode(
-                    $existingRelation->relationshipType->code,
+                    $existingRelation->relationshipType->name,
                     $otherUser,
                     $relatedUser
                 );
@@ -252,16 +219,18 @@ class IntelligentRelationshipService
                 continue;
             }
 
-            // Appliquer les règles de déduction
-            $deducedRelationCode = $this->getDeducedRelation($relationshipCode, $relationFromRelatedUserToOther, $user, $otherUser);
+            // Appliquer les règles de déduction seulement si on a les deux relations
+            if ($relationFromRelatedUserToOther) {
+                $deducedRelationCode = $this->getDeducedRelation($relationshipCode, $relationFromRelatedUserToOther, $user, $otherUser);
 
-            if ($deducedRelationCode) {
-                $deducedRelations->push([
-                    'user_id' => $user->id,
-                    'related_user_id' => $otherUser->id,
-                    'relationship_code' => $deducedRelationCode,
-                    'deduction_path' => "{$user->name} → {$relatedUser->name} ({$relationshipCode}) + {$relatedUser->name} → {$otherUser->name} ({$relationFromRelatedUserToOther}) = {$deducedRelationCode}"
-                ]);
+                if ($deducedRelationCode) {
+                    $deducedRelations->push([
+                        'user_id' => $user->id,
+                        'related_user_id' => $otherUser->id,
+                        'relationship_code' => $deducedRelationCode,
+                        'deduction_path' => "{$user->name} → {$relatedUser->name} ({$relationshipCode}) + {$relatedUser->name} → {$otherUser->name} ({$relationFromRelatedUserToOther}) = {$deducedRelationCode}"
+                    ]);
+                }
             }
         }
 
@@ -419,7 +388,7 @@ class IntelligentRelationshipService
                 ->exists();
 
             if (!$exists) {
-                $relationshipType = RelationshipType::where('code', $relation['relationship_code'])->first();
+                $relationshipType = RelationshipType::where('name', $relation['relationship_code'])->first();
 
                 if ($relationshipType) {
                     FamilyRelationship::create([

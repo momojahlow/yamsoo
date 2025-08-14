@@ -20,12 +20,15 @@ class RelationshipTypeFactory extends Factory
     public function definition(): array
     {
         return [
-            'code' => $this->faker->unique()->word(),
-            'name_fr' => $this->faker->word(),
-            'name_ar' => $this->faker->word(),
-            'name_en' => $this->faker->word(),
-            'gender' => $this->faker->randomElement(['male', 'female', 'both']),
-            'requires_mother_name' => false,
+            'name' => $this->faker->unique()->word(),
+            'display_name_fr' => $this->faker->word(),
+            'display_name_ar' => $this->faker->word(),
+            'display_name_en' => $this->faker->word(),
+            'description' => $this->faker->sentence(),
+            'reverse_relationship' => $this->faker->word(),
+            'category' => $this->faker->randomElement(['direct', 'extended', 'marriage', 'adoption']),
+            'generation_level' => $this->faker->numberBetween(-2, 2),
+            'sort_order' => $this->faker->numberBetween(1, 100),
         ];
     }
 }

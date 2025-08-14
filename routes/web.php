@@ -13,6 +13,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PhotoAlbumController;
 use App\Http\Controllers\PhotoController;
+use App\Http\Controllers\LanguageController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -37,6 +38,166 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
+// Route pour récupérer le token CSRF
+Route::get('/csrf-token', function () {
+    return response()->json(['csrf_token' => csrf_token()]);
+});
+
+// Route temporaire pour debug
+Route::get('/debug-relations', function () {
+    $output = [];
+
+    try {
+        // 1. Lister tous les utilisateurs
+        $output[] = "=== TOUS LES UTILISATEURS ===";
+        $users = \App\Models\User::all();
+        $amina_id = null;
+        $fatima_id = null;
+        $ahmed_id = null;
+        $mohamed_id = null;
+
+        foreach ($users as $user) {
+            $output[] = "{$user->name} (ID: {$user->id}) - {$user->email}";
+
+            if (stripos($user->name, 'Amina') !== false) $amina_id = $user->id;
+            if (stripos($user->name, 'Fatima') !== false) $fatima_id = $user->id;
+            if (stripos($user->name, 'Ahmed') !== false) $ahmed_id = $user->id;
+            if (stripos($user->name, 'Mohammed') !== false) $mohamed_id = $user->id;
+        }
+
+        $output[] = "";
+        $output[] = "=== UTILISATEURS CLÉS ===";
+        $output[] = "Amina ID: " . ($amina_id ?? "NON TROUVÉ");
+        $output[] = "Fatima ID: " . ($fatima_id ?? "NON TROUVÉ");
+        $output[] = "Ahmed ID: " . ($ahmed_id ?? "NON TROUVÉ");
+        $output[] = "Mohamed ID: " . ($mohamed_id ?? "NON TROUVÉ");
+
+        // 2. Lister tous les types de relations
+        $output[] = "";
+        $output[] = "=== TYPES DE RELATIONS ===";
+        $relationTypes = \App\Models\RelationshipType::all();
+        foreach ($relationTypes as $type) {
+            $output[] = "{$type->code} - {$type->name} ({$type->name_fr})";
+        }
+
+        // 3. Lister TOUTES les relations existantes
+        $output[] = "";
+        $output[] = "=== TOUTES LES RELATIONS EXISTANTES ===";
+        $relations = \App\Models\FamilyRelationship::with(['user', 'relatedUser', 'relationshipType'])->get();
+
+        if ($relations->isEmpty()) {
+            $output[] = "❌ AUCUNE RELATION TROUVÉE!";
+        } else {
+            foreach ($relations as $rel) {
+                $output[] = "{$rel->user->name} → {$rel->relatedUser->name} : {$rel->relationshipType->code} ({$rel->relationshipType->name}) [{$rel->status}]";
+            }
+        }
+
+        // 4. Relations spécifiques d'Amina
+        if ($amina_id) {
+            $output[] = "";
+            $output[] = "=== RELATIONS D'AMINA ===";
+            $aminaRelations = \App\Models\FamilyRelationship::where('user_id', $amina_id)
+                ->orWhere('related_user_id', $amina_id)
+                ->with(['user', 'relatedUser', 'relationshipType'])->get();
+
+            if ($aminaRelations->isEmpty()) {
+                $output[] = "❌ AUCUNE RELATION POUR AMINA!";
+            } else {
+                foreach ($aminaRelations as $rel) {
+                    if ($rel->user_id === $amina_id) {
+                        $output[] = "Amina → {$rel->relatedUser->name} : {$rel->relationshipType->code}";
+                    } else {
+                        $output[] = "{$rel->user->name} → Amina : {$rel->relationshipType->code}";
+                    }
+                }
+            }
+        }
+
+        // 5. Relation Ahmed ↔ Fatima
+        if ($ahmed_id && $fatima_id) {
+            $output[] = "";
+            $output[] = "=== RELATION AHMED ↔ FATIMA ===";
+            $ahmedFatimaRelation = \App\Models\FamilyRelationship::where(function($query) use ($ahmed_id, $fatima_id) {
+                $query->where('user_id', $ahmed_id)->where('related_user_id', $fatima_id);
+            })->orWhere(function($query) use ($ahmed_id, $fatima_id) {
+                $query->where('user_id', $fatima_id)->where('related_user_id', $ahmed_id);
+            })->with(['user', 'relatedUser', 'relationshipType'])->get();
+
+            if ($ahmedFatimaRelation->isEmpty()) {
+                $output[] = "❌ AUCUNE RELATION AHMED ↔ FATIMA TROUVÉE!";
+            } else {
+                foreach ($ahmedFatimaRelation as $rel) {
+                    $output[] = "✅ {$rel->user->name} → {$rel->relatedUser->name} : {$rel->relationshipType->code}";
+                }
+            }
+        }
+
+        // 6. Relation Amina ↔ Ahmed
+        if ($amina_id && $ahmed_id) {
+            $output[] = "";
+            $output[] = "=== RELATION AMINA ↔ AHMED ===";
+            $aminaAhmedRelation = \App\Models\FamilyRelationship::where(function($query) use ($amina_id, $ahmed_id) {
+                $query->where('user_id', $amina_id)->where('related_user_id', $ahmed_id);
+            })->orWhere(function($query) use ($amina_id, $ahmed_id) {
+                $query->where('user_id', $ahmed_id)->where('related_user_id', $amina_id);
+            })->with(['user', 'relatedUser', 'relationshipType'])->get();
+
+            if ($aminaAhmedRelation->isEmpty()) {
+                $output[] = "❌ AUCUNE RELATION AMINA ↔ AHMED TROUVÉE!";
+            } else {
+                foreach ($aminaAhmedRelation as $rel) {
+                    $output[] = "✅ {$rel->user->name} → {$rel->relatedUser->name} : {$rel->relationshipType->code}";
+                }
+            }
+        }
+
+        // 7. Suggestions actuelles pour Amina
+        if ($amina_id) {
+            $output[] = "";
+            $output[] = "=== SUGGESTIONS ACTUELLES POUR AMINA ===";
+            $suggestions = \App\Models\Suggestion::where('user_id', $amina_id)
+                ->with('suggestedUser')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            if ($suggestions->isEmpty()) {
+                $output[] = "❌ AUCUNE SUGGESTION POUR AMINA!";
+            } else {
+                foreach ($suggestions as $suggestion) {
+                    $output[] = "- {$suggestion->suggestedUser->name} : {$suggestion->suggested_relation_code}";
+                    $output[] = "  Raison: {$suggestion->reason}";
+                    $output[] = "  Type: {$suggestion->type}";
+
+                    if (stripos($suggestion->suggestedUser->name, 'Fatima') !== false) {
+                        $output[] = "  🎯 FATIMA TROUVÉE: {$suggestion->suggested_relation_code}";
+                        if ($suggestion->suggested_relation_code === 'mother') {
+                            $output[] = "  ✅ CORRECT!";
+                        } else {
+                            $output[] = "  ❌ INCORRECT! Devrait être 'mother'";
+                        }
+                    }
+                }
+            }
+        }
+
+        $output[] = "";
+        $output[] = "=== ANALYSE ===";
+        $output[] = "Pour que Fatima soit suggérée comme 'mother' à Amina, il faut:";
+        $output[] = "1. ✓ Amina → Ahmed : daughter (fille)";
+        $output[] = "2. ✓ Ahmed → Fatima : husband (mari)";
+        $output[] = "3. ✓ DÉDUCTION: Amina (enfant) + Fatima (conjoint) = Fatima est mère";
+        $output[] = "4. ✓ CAS 1 dans SuggestionService: enfant + conjoint → parent";
+        $output[] = "5. ✓ RÉSULTAT ATTENDU: mother";
+
+    } catch (\Exception $e) {
+        $output[] = "❌ ERREUR: " . $e->getMessage();
+        $output[] = "Trace: " . $e->getTraceAsString();
+    }
+
+    return response('<pre>' . implode("\n", $output) . '</pre>');
+});
+
 // Routes d'authentification - utilisation de Laravel Breeze
 // Les routes d'authentification sont définies dans routes/auth.php
 
@@ -51,11 +212,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('profil', [ProfileController::class, 'index'])->name('profile.index');
     Route::patch('profil', [ProfileController::class, 'update'])->name('profile.update');
     Route::get('profil/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::post('profil/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
 
     // Routes pour les familles
     Route::get('famille', [FamilyController::class, 'index'])->name('family');
     Route::get('famille/arbre', [FamilyTreeController::class, 'index'])->name('family.tree');
     Route::post('families/{family}/members', [FamilyController::class, 'addMember'])->name('families.add-member');
+
+    // API pour l'arbre familial
+    Route::get('api/family-relations', [FamilyTreeController::class, 'getFamilyRelations'])->name('api.family.relations');
 
     // Routes pour les messages
     Route::get('messagerie', [MessageController::class, 'index'])->name('messages');
@@ -69,7 +234,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Routes pour les suggestions
     Route::get('suggestions', [SuggestionController::class, 'index'])->name('suggestions');
     Route::post('suggestions', [SuggestionController::class, 'store'])->name('suggestions.store');
+    Route::post('suggestions/refresh', [SuggestionController::class, 'refresh'])->name('suggestions.refresh');
     Route::patch('suggestions/{suggestion}', [SuggestionController::class, 'update'])->name('suggestions.update');
+    Route::post('suggestions/{suggestion}/send-request', [SuggestionController::class, 'sendRelationRequest'])->name('suggestions.send-request');
     Route::patch('suggestions/{suggestion}/accept-with-correction', [SuggestionController::class, 'acceptWithCorrection'])->name('suggestions.accept-with-correction');
     Route::delete('suggestions/{suggestion}', [SuggestionController::class, 'destroy'])->name('suggestions.destroy');
 
@@ -87,6 +254,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('admin/users/{user}', [AdminController::class, 'deleteUser'])->name('admin.users.delete');
     Route::delete('admin/messages/{message}', [AdminController::class, 'deleteMessage'])->name('admin.messages.delete');
     Route::delete('admin/families/{family}', [AdminController::class, 'deleteFamily'])->name('admin.families.delete');
+
+    // Routes pour la démo des layouts
+    Route::get('layout-demo', [App\Http\Controllers\LayoutDemoController::class, 'index'])->name('layout.demo');
+    Route::get('layout-demo/kui', [App\Http\Controllers\LayoutDemoController::class, 'kuiLayout'])->name('layout.demo.kui');
+    Route::get('layout-demo/starter', [App\Http\Controllers\LayoutDemoController::class, 'starterLayout'])->name('layout.demo.starter');
+    Route::get('layout-demo/kwd', [App\Http\Controllers\LayoutDemoController::class, 'kwdLayout'])->name('layout.demo.kwd');
+    Route::get('auth-layout-demo', function () {
+        return Inertia::render('AuthLayoutDemo');
+    })->name('auth.layout.demo');
+    Route::get('layout-features', function () {
+        return Inertia::render('LayoutFeatures');
+    })->name('layout.features');
+    Route::get('settings', function () {
+        return Inertia::render('settings/index');
+    })->name('settings');
 
     // Routes pour les relations familiales
     Route::get('family-relations', [FamilyRelationController::class, 'index'])->name('family-relations.index');
@@ -125,7 +307,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('profiles', ProfileController::class);
     Route::resource('messages', MessageController::class);
     Route::resource('families', FamilyController::class);
-    Route::resource('notifications', NotificationController::class);
+    // Route::resource('notifications', NotificationController::class); // Supprimé - routes définies individuellement ci-dessus
     // Route::resource('suggestions', SuggestionController::class); // Supprimé - routes définies individuellement ci-dessus
 
     Route::resource('networks', NetworkController::class)->except(['index']);
@@ -181,3 +363,24 @@ Route::middleware('auth')->group(function () {
         Route::get('/conversations/family-suggestions', [App\Http\Controllers\MessagingController::class, 'getFamilySuggestions']);
     });
 });
+
+// Routes de langue (sans préfixe pour la compatibilité)
+Route::get('/language/{locale}', [LanguageController::class, 'switch'])->name('language.switch');
+Route::get('/api/languages', [LanguageController::class, 'getAvailableLanguages'])->name('language.available');
+
+// Routes localisées
+Route::group(['prefix' => '{locale}', 'where' => ['locale' => 'fr|ar'], 'middleware' => 'setlocale'], function () {
+    // Page d'accueil localisée
+    Route::get('/', function () {
+        return redirect('/');
+    });
+});
+
+// Routes publiques
+Route::get('/conditions-generales', function () {
+    return Inertia::render('TermsOfService');
+})->name('terms-of-service');
+
+Route::get('/terms', function () {
+    return redirect()->route('terms-of-service');
+})->name('terms');

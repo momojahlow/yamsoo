@@ -14,12 +14,12 @@ export const getRelationLabel = (relationType: string): string => {
     'child': 'Enfant',
     'baby': 'Bébé',
     'boy': 'Garçon',
-    
+
     // Conjoints
     'husband': 'Mari',
     'wife': 'Épouse',
     'spouse': 'Conjoint(e)',
-    
+
     // Fratrie
     'brother': 'Frère',
     'sister': 'Sœur',
@@ -29,51 +29,53 @@ export const getRelationLabel = (relationType: string): string => {
     'half_brother_maternal': 'Demi-frère maternel',
     'half_sister_paternal': 'Demi-sœur paternelle',
     'half_sister_maternal': 'Demi-sœur maternelle',
-    
+
     // Grands-parents/Petits-enfants
     'grandfather': 'Grand-père',
     'grandmother': 'Grand-mère',
     'grandson': 'Petit-fils',
     'granddaughter': 'Petite-fille',
-    
-    // Oncles/Tantes
+    'grandparent': 'Grand-parent',
+    'grandchild': 'Petit-enfant',
+
+    // Oncles/Tantes/Neveux/Nièces
     'uncle': 'Oncle',
-    'uncle_paternal': 'Oncle paternel',
-    'uncle_maternal': 'Oncle maternel',
     'aunt': 'Tante',
-    'aunt_paternal': 'Tante paternelle',
-    'aunt_maternal': 'Tante maternelle',
-    
-    // Neveux/Nièces
     'nephew': 'Neveu',
     'niece': 'Nièce',
-    'nephew_brother': 'Neveu (frère)',
-    'niece_brother': 'Nièce (frère)',
-    'nephew_sister': 'Neveu (sœur)',
-    'niece_sister': 'Nièce (sœur)',
-    
-    // Cousins
-    'cousin': 'Cousin(e)',
-    'cousin_paternal_m': 'Cousin paternel',
-    'cousin_maternal_m': 'Cousin maternel',
-    'cousin_paternal_f': 'Cousine paternelle',
-    'cousin_maternal_f': 'Cousine maternelle',
-    
-    // Belle-famille
+
+    // Relations par alliance
     'father_in_law': 'Beau-père',
     'mother_in_law': 'Belle-mère',
     'son_in_law': 'Gendre',
     'daughter_in_law': 'Belle-fille',
     'brother_in_law': 'Beau-frère',
     'sister_in_law': 'Belle-sœur',
+
+    // Relations étendues
+    'uncle_paternal': 'Oncle paternel',
+    'uncle_maternal': 'Oncle maternel',
+    'aunt_paternal': 'Tante paternelle',
+    'aunt_maternal': 'Tante maternelle',
+    'nephew_brother': 'Neveu (frère)',
+    'niece_brother': 'Nièce (frère)',
+    'nephew_sister': 'Neveu (sœur)',
+    'niece_sister': 'Nièce (sœur)',
+    'cousin_paternal_m': 'Cousin paternel',
+    'cousin_maternal_m': 'Cousin maternel',
+    'cousin_paternal_f': 'Cousine paternelle',
+    'cousin_maternal_f': 'Cousine maternelle',
+
+    // Relations par remariage
     'stepfather': 'Beau-père',
     'stepmother': 'Belle-mère',
     'stepson': 'Beau-fils',
     'stepdaughter': 'Belle-fille',
     'stepbrother': 'Demi-frère',
     'stepsister': 'Demi-sœur',
-    
-    // Autres
+
+    // Autres relations
+    'family_member': 'Membre de la famille',
     'friend_m': 'Ami',
     'friend_f': 'Amie',
     'colleague': 'Collègue',

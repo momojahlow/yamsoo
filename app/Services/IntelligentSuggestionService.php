@@ -25,7 +25,7 @@ class IntelligentSuggestionService
 
         foreach ($userRelations as $relation) {
             $relatedUser = $relation->user_id === $user->id ? $relation->relatedUser : $relation->user;
-            $relationCode = $relation->relationshipType->code;
+            $relationCode = $relation->relationshipType->name;
 
             // Générer des suggestions basées sur cette relation
             $newSuggestions = $this->generateSuggestionsFromRelation($user, $relatedUser, $relationCode);
@@ -136,10 +136,22 @@ class IntelligentSuggestionService
                     continue;
                 }
 
-                // Déterminer le type de relation (frère/sœur)
+                // AMÉLIORATION: Être plus prudent avec les suggestions de fratrie
+                // Vérifier d'abord s'il y a des indices supplémentaires de relation familiale
                 $siblingGender = $potentialSibling->profile?->gender;
-                $relationCode = $siblingGender === 'female' ? 'sister' : 'brother';
-                $relationName = $siblingGender === 'female' ? 'Sœur' : 'Frère';
+
+                // Vérifier l'âge pour confirmer la plausibilité de la relation de fratrie
+                $userAge = $user->profile?->birth_date ? now()->diffInYears($user->profile->birth_date) : null;
+                $siblingAge = $potentialSibling->profile?->birth_date ? now()->diffInYears($potentialSibling->profile->birth_date) : null;
+
+                // Si la différence d'âge est trop importante (>20 ans), suggérer cousin(e) plutôt que frère/sœur
+                if ($userAge && $siblingAge && abs($userAge - $siblingAge) > 20) {
+                    $relationCode = $siblingGender === 'female' ? 'cousin' : 'cousin';
+                    $relationName = $siblingGender === 'female' ? 'Cousine' : 'Cousin';
+                } else {
+                    $relationCode = $siblingGender === 'female' ? 'sister' : 'brother';
+                    $relationName = $siblingGender === 'female' ? 'Sœur' : 'Frère';
+                }
 
                 $suggestedRelation = [
                     'relation_code' => $relationCode,

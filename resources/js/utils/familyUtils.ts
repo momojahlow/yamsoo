@@ -24,6 +24,13 @@ export const getRelationLabel = (relationType: string): string => {
     'niece': 'Nièce',
     'cousin': 'Cousin(e)',
     'spouse': 'Conjoint(e)',
+    // Relations par alliance
+    'father_in_law': 'Beau-père',
+    'mother_in_law': 'Belle-mère',
+    'brother_in_law': 'Beau-frère',
+    'sister_in_law': 'Belle-sœur',
+    'stepson': 'Beau-fils',
+    'stepdaughter': 'Belle-fille',
   };
   
   return relationLabels[relationType] || relationType;

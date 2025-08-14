@@ -18,6 +18,10 @@ class SuggestionController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
+
+        // Générer de nouvelles suggestions si nécessaire
+        $this->suggestionService->generateSuggestions($user);
+
         $suggestions = $this->suggestionService->getUserSuggestions($user);
         $pendingSuggestions = $this->suggestionService->getPendingSuggestions($user);
         $acceptedSuggestions = $this->suggestionService->getAcceptedSuggestions($user);
@@ -27,6 +31,22 @@ class SuggestionController extends Controller
             'pendingSuggestions' => $pendingSuggestions,
             'acceptedSuggestions' => $acceptedSuggestions,
         ]);
+    }
+
+    /**
+     * Rafraîchir les suggestions pour l'utilisateur actuel
+     */
+    public function refresh(Request $request): \Illuminate\Http\RedirectResponse
+    {
+        $user = $request->user();
+
+        // Supprimer les anciennes suggestions
+        $this->suggestionService->clearOldSuggestions($user);
+
+        // Générer de nouvelles suggestions
+        $this->suggestionService->generateSuggestions($user);
+
+        return back()->with('success', 'Suggestions mises à jour avec succès.');
     }
 
     public function store(Request $request): \Illuminate\Http\RedirectResponse
@@ -59,7 +79,7 @@ class SuggestionController extends Controller
     {
         $validated = $request->validate([
             'status' => 'required|in:accepted,rejected',
-            'corrected_relation_code' => 'nullable|string|in:father,mother,son,daughter,brother,sister,husband,wife,father_in_law,mother_in_law,brother_in_law,sister_in_law,stepson,stepdaughter',
+            'corrected_relation_code' => 'nullable|string|in:father,mother,son,daughter,brother,sister,husband,wife,grandfather,grandmother,grandson,granddaughter,uncle,aunt,nephew,niece,father_in_law,mother_in_law,brother_in_law,sister_in_law,stepson,stepdaughter',
         ]);
 
         if ($validated['status'] === 'accepted') {
@@ -76,12 +96,30 @@ class SuggestionController extends Controller
     }
 
     /**
-     * Accepter une suggestion avec une relation corrigée
+     * Envoyer une demande de relation basée sur une suggestion
+     */
+    public function sendRelationRequest(Request $request, Suggestion $suggestion): \Illuminate\Http\RedirectResponse
+    {
+        $validated = $request->validate([
+            'relation_code' => 'required|string|in:father,mother,son,daughter,brother,sister,husband,wife,grandfather,grandmother,grandson,granddaughter,uncle,aunt,nephew,niece,father_in_law,mother_in_law,brother_in_law,sister_in_law,stepson,stepdaughter',
+        ]);
+
+        // Envoyer une demande de relation au lieu d'accepter directement
+        $this->suggestionService->sendRelationRequestFromSuggestion(
+            $suggestion,
+            $validated['relation_code']
+        );
+
+        return back()->with('success', 'Demande de relation envoyée avec succès.');
+    }
+
+    /**
+     * Accepter une suggestion avec une relation corrigée (méthode legacy)
      */
     public function acceptWithCorrection(Request $request, Suggestion $suggestion): \Illuminate\Http\RedirectResponse
     {
         $validated = $request->validate([
-            'relation_code' => 'required|string|in:father,mother,son,daughter,brother,sister,husband,wife,father_in_law,mother_in_law,brother_in_law,sister_in_law,stepson,stepdaughter',
+            'relation_code' => 'required|string|in:father,mother,son,daughter,brother,sister,husband,wife,grandfather,grandmother,grandson,granddaughter,uncle,aunt,nephew,niece,father_in_law,mother_in_law,brother_in_law,sister_in_law,stepson,stepdaughter',
         ]);
 
         $this->suggestionService->acceptSuggestion(

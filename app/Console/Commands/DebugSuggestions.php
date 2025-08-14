@@ -12,7 +12,7 @@ class DebugSuggestions extends Command
     /**
      * The name and signature of the console command.
      */
-    protected $signature = 'debug:suggestions {user-id : ID de l\'utilisateur à déboguer}';
+    protected $signature = 'debug:suggestions {user-name? : Nom de l\'utilisateur à déboguer}';
 
     /**
      * The console command description.
@@ -32,33 +32,98 @@ class DebugSuggestions extends Command
      */
     public function handle()
     {
-        $userId = $this->argument('user-id');
-        
-        $user = User::with('profile')->find($userId);
-        
+        $userName = $this->argument('user-name') ?? 'Amina';
+
+        $user = User::where('name', 'like', "%{$userName}%")->first();
+
         if (!$user) {
-            $this->error("❌ Utilisateur avec ID {$userId} non trouvé");
+            $this->error("❌ Utilisateur '{$userName}' non trouvé");
             return;
         }
-        
-        $this->info("🔍 Debug des suggestions pour : {$user->name}");
-        $this->newLine();
-        
+
+        $this->info("🔍 DEBUG COMPLET POUR : {$user->name}");
+        $this->info(str_repeat("=", 60));
+
+        // Debug spécifique pour le problème parent/enfant
+        $this->debugParentChildProblem($user);
+
         // 1. Afficher les relations existantes
         $this->debugExistingRelations($user);
-        
+
         // 2. Afficher les utilisateurs exclus
         $this->debugExcludedUsers($user);
-        
+
         // 3. Tester chaque type de suggestion
         $this->debugFamilySuggestions($user);
-        $this->debugNameSuggestions($user);
-        $this->debugRegionSuggestions($user);
-        
+
         // 4. Générer les suggestions finales
         $this->debugFinalSuggestions($user);
     }
-    
+
+    private function debugParentChildProblem(User $user)
+    {
+        $this->info("🎯 DEBUG SPÉCIFIQUE PROBLÈME PARENT/ENFANT:");
+
+        // Charger tous les utilisateurs clés
+        $amina = User::where('name', 'like', '%Amina%')->first();
+        $fatima = User::where('name', 'like', '%Fatima%')->first();
+        $ahmed = User::where('name', 'like', '%Ahmed%')->first();
+        $mohamed = User::where('name', 'like', '%Mohammed%')->first();
+
+        $this->info("Utilisateurs trouvés:");
+        if ($amina) $this->info("   ✅ Amina: {$amina->name} (ID: {$amina->id})");
+        if ($fatima) $this->info("   ✅ Fatima: {$fatima->name} (ID: {$fatima->id})");
+        if ($ahmed) $this->info("   ✅ Ahmed: {$ahmed->name} (ID: {$ahmed->id})");
+        if ($mohamed) $this->info("   ✅ Mohamed: {$mohamed->name} (ID: {$mohamed->id})");
+
+        // Analyser TOUTES les relations
+        $this->info("\n🔗 TOUTES LES RELATIONS EXISTANTES:");
+        $allRelations = FamilyRelationship::with(['user', 'relatedUser', 'relationshipType'])->get();
+        foreach ($allRelations as $rel) {
+            $this->info("   {$rel->user->name} → {$rel->relatedUser->name} : {$rel->relationshipType->name} ({$rel->relationshipType->code})");
+        }
+
+        // Vérifications spécifiques si c'est Amina
+        if (stripos($user->name, 'Amina') !== false && $ahmed && $fatima) {
+            $this->info("\n🔍 VÉRIFICATIONS SPÉCIFIQUES AMINA:");
+
+            // Relation Ahmed ↔ Fatima
+            $ahmedFatimaRelation = FamilyRelationship::where(function($query) use ($ahmed, $fatima) {
+                $query->where('user_id', $ahmed->id)->where('related_user_id', $fatima->id);
+            })->orWhere(function($query) use ($ahmed, $fatima) {
+                $query->where('user_id', $fatima->id)->where('related_user_id', $ahmed->id);
+            })->with('relationshipType')->first();
+
+            if ($ahmedFatimaRelation) {
+                $this->info("   ✅ Ahmed ↔ Fatima: {$ahmedFatimaRelation->user->name} → {$ahmedFatimaRelation->relatedUser->name} : {$ahmedFatimaRelation->relationshipType->code}");
+            } else {
+                $this->error("   ❌ AUCUNE RELATION AHMED ↔ FATIMA TROUVÉE!");
+            }
+
+            // Relation Amina ↔ Ahmed
+            $aminaAhmedRelation = FamilyRelationship::where(function($query) use ($user, $ahmed) {
+                $query->where('user_id', $user->id)->where('related_user_id', $ahmed->id);
+            })->orWhere(function($query) use ($user, $ahmed) {
+                $query->where('user_id', $ahmed->id)->where('related_user_id', $user->id);
+            })->with('relationshipType')->first();
+
+            if ($aminaAhmedRelation) {
+                $this->info("   ✅ Amina ↔ Ahmed: {$aminaAhmedRelation->user->name} → {$aminaAhmedRelation->relatedUser->name} : {$aminaAhmedRelation->relationshipType->code}");
+            } else {
+                $this->error("   ❌ AUCUNE RELATION AMINA ↔ AHMED TROUVÉE!");
+            }
+
+            $this->info("\n🧠 LOGIQUE ATTENDUE:");
+            $this->info("   1. Amina → Ahmed : daughter (fille)");
+            $this->info("   2. Ahmed → Fatima : husband (mari)");
+            $this->info("   3. DÉDUCTION: Amina (enfant) + Fatima (conjoint d'Ahmed) = Fatima est mère");
+            $this->info("   4. CAS 1: enfant + conjoint → parent");
+            $this->info("   5. RÉSULTAT ATTENDU: mother");
+        }
+
+        $this->newLine();
+    }
+
     private function debugExistingRelations(User $user)
     {
         $this->info("1️⃣ Relations existantes :");

@@ -47,7 +47,7 @@ class EventService
         $this->notificationService->createNotification(
             $request->targetUser,
             'relationship_request',
-            "Nouvelle demande de relation de {$request->requester->name}",
+            "{$request->requester->name} souhaite être votre {$request->relationshipType->name}",
             [
                 'request_id' => $request->id,
                 'requester_id' => $request->requester->id,
@@ -95,7 +95,7 @@ class EventService
         }
 
         // Déclencher un événement
-        event(new \App\Events\RelationshipAccepted($request));
+        event(new \App\Events\RelationshipAccepted($request->requester, $request->targetUser, $request));
     }
 
     public function handleFamilyInvitation(User $inviter, User $invitee, Family $family): void

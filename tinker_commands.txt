@@ -1,0 +1,58 @@
+// COMMANDES POUR ARTISAN TINKER - COPIEZ-COLLEZ UNE PAR UNE
+
+// 1. Charger les utilisateurs
+$mohamed = App\Models\User::where('name', 'like', '%Mohammed%')->first();
+$fatima = App\Models\User::where('name', 'like', '%Fatima%')->first();
+$ahmed = App\Models\User::where('name', 'like', '%Ahmed%')->first();
+
+// 2. Vérifier qu'ils existent
+echo "Mohamed: " . ($mohamed ? $mohamed->name . " (ID: {$mohamed->id})" : "NON TROUVÉ") . "\n";
+echo "Fatima: " . ($fatima ? $fatima->name . " (ID: {$fatima->id})" : "NON TROUVÉ") . "\n";
+echo "Ahmed: " . ($ahmed ? $ahmed->name . " (ID: {$ahmed->id})" : "NON TROUVÉ") . "\n";
+
+// 3. Vérifier les relations de Mohamed
+echo "\n🔗 Relations de Mohamed:\n";
+$mohamedRelations = App\Models\FamilyRelationship::where('user_id', $mohamed->id)->orWhere('related_user_id', $mohamed->id)->with(['user', 'relatedUser', 'relationshipType'])->get();
+foreach ($mohamedRelations as $rel) {
+    echo "   {$rel->user->name} → {$rel->relatedUser->name} : {$rel->relationshipType->name}\n";
+}
+
+// 4. Vérifier les relations d'Ahmed
+echo "\n🔗 Relations d'Ahmed:\n";
+$ahmedRelations = App\Models\FamilyRelationship::where('user_id', $ahmed->id)->orWhere('related_user_id', $ahmed->id)->with(['user', 'relatedUser', 'relationshipType'])->get();
+foreach ($ahmedRelations as $rel) {
+    echo "   {$rel->user->name} → {$rel->relatedUser->name} : {$rel->relationshipType->name}\n";
+}
+
+// 5. Supprimer les anciennes suggestions de Mohamed
+App\Models\Suggestion::where('user_id', $mohamed->id)->delete();
+
+// 6. Générer les nouvelles suggestions avec debug
+echo "\n🧪 GÉNÉRATION DES SUGGESTIONS POUR MOHAMED:\n";
+$suggestionService = app(App\Services\SuggestionService::class);
+$suggestions = $suggestionService->generateSuggestions($mohamed);
+
+// 7. Analyser les résultats
+echo "\n💡 Suggestions générées:\n";
+foreach ($suggestions as $suggestion) {
+    echo "   - {$suggestion->suggestedUser->name} : {$suggestion->suggested_relation_code}\n";
+    echo "     Raison: {$suggestion->reason}\n";
+    if ($suggestion->suggested_user_id === $fatima->id) {
+        echo "     🎯 FATIMA: {$suggestion->suggested_relation_code} (attendu: mother)\n";
+        if ($suggestion->suggested_relation_code === 'mother') {
+            echo "     ✅ CORRECT!\n";
+        } else {
+            echo "     ❌ INCORRECT!\n";
+        }
+    }
+}
+
+// 8. Test inverse - Suggestions pour Fatima
+echo "\n🔄 TEST INVERSE - Suggestions pour Fatima:\n";
+App\Models\Suggestion::where('user_id', $fatima->id)->delete();
+$fatimasuggestions = $suggestionService->generateSuggestions($fatima);
+foreach ($fatimasuggestions as $suggestion) {
+    if ($suggestion->suggested_user_id === $mohamed->id) {
+        echo "   🎯 FATIMA → MOHAMED: {$suggestion->suggested_relation_code} (attendu: son)\n";
+    }
+}

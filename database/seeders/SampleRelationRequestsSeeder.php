@@ -18,10 +18,10 @@ class SampleRelationRequestsSeeder extends Seeder
     public function run(): void
     {
         // Récupérer les types de relations
-        $brotherType = RelationshipType::where('code', 'brother')->first();
-        $sisterType = RelationshipType::where('code', 'sister')->first();
-        $husbandType = RelationshipType::where('code', 'husband')->first();
-        $wifeType = RelationshipType::where('code', 'wife')->first();
+        $brotherType = RelationshipType::where('name', 'brother')->first();
+        $sisterType = RelationshipType::where('name', 'sister')->first();
+        $husbandType = RelationshipType::where('name', 'husband')->first();
+        $wifeType = RelationshipType::where('name', 'wife')->first();
 
         // Récupérer les utilisateurs
         $users = User::all();
@@ -69,7 +69,7 @@ class SampleRelationRequestsSeeder extends Seeder
                         'status' => 'pending',
                     ]);
 
-                    $this->command->info("Demande créée : {$requester->name} → {$target->name} ({$requestData['relationship_type']->display_name})");
+                    $this->command->info("Demande créée : {$requester->name} → {$target->name} ({$requestData['relationship_type']->display_name_fr})");
                 }
             }
         }

@@ -32,8 +32,8 @@ class FamilyTreeController extends Controller
             'relationships' => $relationships->map(function ($relationship) {
                 return [
                     'id' => $relationship->id,
-                    'type' => $relationship->relationshipType->name_fr,
-                    'type_code' => $relationship->relationshipType->code,
+                    'type' => $relationship->relationshipType->display_name_fr,
+                    'type_code' => $relationship->relationshipType->name,
                     'related_user' => [
                         'id' => $relationship->relatedUser->id,
                         'name' => $relationship->relatedUser->name,
@@ -77,12 +77,12 @@ class FamilyTreeController extends Controller
                 'id' => $relationship->relatedUser->id,
                 'name' => $relationship->relatedUser->name,
                 'profile' => $relationship->relatedUser->profile,
-                'relationship_type' => $relationship->relationshipType->name_fr,
-                'relationship_code' => $relationship->relationshipType->code,
+                'relationship_type' => $relationship->relationshipType->display_name_fr,
+                'relationship_code' => $relationship->relationshipType->name,
                 'created_automatically' => $relationship->created_automatically,
             ];
 
-            $relationCode = $relationship->relationshipType->code;
+            $relationCode = $relationship->relationshipType->name;
 
             // Classer les relations par catégorie
             switch ($relationCode) {
@@ -106,24 +106,14 @@ class FamilyTreeController extends Controller
                     $treeData['siblings'][] = $relatedUser;
                     break;
 
-                case 'grandfather_paternal':
-                case 'grandmother_paternal':
+                case 'grandfather':
+                case 'grandmother':
                     $treeData['grandparents']['paternal'][] = $relatedUser;
                     break;
 
-                case 'grandfather_maternal':
-                case 'grandmother_maternal':
-                    $treeData['grandparents']['maternal'][] = $relatedUser;
-                    break;
-
-                case 'uncle_paternal':
-                case 'aunt_paternal':
+                case 'uncle':
+                case 'aunt':
                     $treeData['uncles_aunts']['paternal'][] = $relatedUser;
-                    break;
-
-                case 'uncle_maternal':
-                case 'aunt_maternal':
-                    $treeData['uncles_aunts']['maternal'][] = $relatedUser;
                     break;
 
                 case 'grandson':
@@ -131,10 +121,7 @@ class FamilyTreeController extends Controller
                     $treeData['grandchildren'][] = $relatedUser;
                     break;
 
-                case 'cousin_paternal_m':
-                case 'cousin_paternal_f':
-                case 'cousin_maternal_m':
-                case 'cousin_maternal_f':
+                case 'cousin':
                     $treeData['cousins'][] = $relatedUser;
                     break;
 
@@ -153,9 +140,59 @@ class FamilyTreeController extends Controller
                 case 'stepdaughter':
                     $treeData['children'][] = $relatedUser;
                     break;
+
+                case 'nephew':
+                case 'niece':
+                    $treeData['uncles_aunts']['paternal'][] = $relatedUser;
+                    break;
             }
         }
 
         return $treeData;
+    }
+
+    /**
+     * API endpoint pour récupérer les relations familiales
+     */
+    public function getFamilyRelations(Request $request)
+    {
+        $user = $request->user();
+
+        // Récupérer toutes les relations de l'utilisateur
+        $relationships = $this->familyRelationService->getUserRelationships($user);
+
+        // Formater les données pour le frontend
+        $relations = $relationships->map(function ($relationship) use ($user) {
+            $relatedUser = $relationship->relatedUser;
+            $relationType = $relationship->relationshipType;
+
+            return [
+                'id' => $relationship->id,
+                'user_id' => $user->id,
+                'related_user_id' => $relatedUser->id,
+                'relation_type' => $relationType->name, // Code de la relation
+                'status' => $relationship->status,
+                'created_at' => $relationship->created_at,
+                'updated_at' => $relationship->updated_at,
+                'related_user' => [
+                    'id' => $relatedUser->id,
+                    'name' => $relatedUser->name,
+                    'email' => $relatedUser->email,
+                    'profile' => $relatedUser->profile ? [
+                        'id' => $relatedUser->profile->id,
+                        'first_name' => $relatedUser->profile->first_name,
+                        'last_name' => $relatedUser->profile->last_name,
+                        'gender' => $relatedUser->profile->gender,
+                        'birth_date' => $relatedUser->profile->birth_date,
+                        'avatar_url' => $relatedUser->profile->avatar,
+                    ] : null,
+                ],
+            ];
+        });
+
+        return response()->json([
+            'relations' => $relations,
+            'userId' => $user->id,
+        ]);
     }
 }

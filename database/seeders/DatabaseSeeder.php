@@ -15,7 +15,7 @@ class DatabaseSeeder extends Seeder
     {
         // Seed les types de relations en premier
         $this->call([
-            RelationshipTypesSeeder::class,
+            ComprehensiveRelationshipTypesSeeder::class,
         ]);
 
         // Seed les utilisateurs avec leurs profils
@@ -33,10 +33,10 @@ class DatabaseSeeder extends Seeder
             NotificationsSeeder::class,
         ]);
 
-        // Seed les suggestions
-        $this->call([
-            SuggestionsSeeder::class,
-        ]);
+        // Seed les suggestions - DÉSACTIVÉ pour éviter les suggestions automatiques
+        // $this->call([
+        //     SuggestionsSeeder::class,
+        // ]);
 
         // Créer un utilisateur de test pour le développement
         User::factory()->create([

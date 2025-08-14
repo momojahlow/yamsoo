@@ -12,10 +12,13 @@ import { useToast } from '@/hooks/use-toast';
 
 interface RelationshipType {
   id: number;
-  code: string;
   name: string;
-  name_fr: string;
-  gender: string;
+  display_name_fr: string;
+  display_name_ar: string;
+  display_name_en: string;
+  name_fr: string; // Compatibilité
+  category: string;
+  generation_level: number;
   requires_mother_name: boolean;
 }
 

@@ -77,12 +77,7 @@
             <span class="relationship-badge">{{ $relationshipType ?? 'Relation familiale' }}</span>
         </p>
 
-        @if(isset($message) && $message)
-        <div style="background: #e3f2fd; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #2196f3;">
-            <strong>Message :</strong><br>
-            {{ $message }}
-        </div>
-        @endif
+
 
         <p>
             Vous pouvez maintenant :

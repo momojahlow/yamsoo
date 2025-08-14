@@ -53,17 +53,19 @@ export function FamilyTreeContent({
     return <FamilyTreeEmpty />;
   }
 
-  // Use appropriate height based on device
-  const viewportHeight = isMobile ? '70vh' : '75vh';
-  
+  // Use appropriate height and dimensions based on device
+  const viewportHeight = isMobile ? '60vh' : '75vh';
+  const treeWidth = isMobile ? '1500px' : '2000px';
+  const treeHeight = isMobile ? '1500px' : '2000px';
+
   return (
-    <div className="relative border rounded-md overflow-hidden" style={{ height: viewportHeight }} ref={printAreaRef}>
+    <div className="relative border rounded-md overflow-hidden bg-gradient-to-br from-orange-50 to-red-50" style={{ height: viewportHeight }} ref={printAreaRef}>
       <ScrollArea className="h-full w-full">
-        <div 
-          className="relative p-4 mx-auto"
-          style={{ 
-            width: '2000px', // Increased width to accommodate larger trees
-            height: '2000px', // Increased height for more generations
+        <div
+          className="relative p-2 sm:p-4 mx-auto"
+          style={{
+            width: treeWidth,
+            height: treeHeight,
             transformOrigin: "center center",
             transform: `scale(${zoom})`,
             transition: "transform 0.2s ease-out"

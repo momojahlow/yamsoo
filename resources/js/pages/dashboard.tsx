@@ -4,7 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import AppSidebarLayout from '@/Layouts/app/app-sidebar-layout';
+import { AnimatedStatsCard } from "@/components/dashboard/AnimatedStatsCard";
+import { KwdDashboardLayout } from '@/Layouts/modern';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
   Users,
   Heart,
@@ -12,7 +14,7 @@ import {
   ArrowRight,
   TreePine,
   UserPlus,
-  Gift,
+  Bell,
   Activity,
   Sparkles,
   Clock,
@@ -83,6 +85,9 @@ interface DashboardProps {
   recentFamilyMembers: any[];
   upcomingBirthdays: Birthday[];
   familyStatistics: any;
+  notifications: any[];
+  unreadNotifications: number;
+  pendingRequests: any[];
 }
 
 const Dashboard: React.FC<DashboardProps> = ({
@@ -93,8 +98,13 @@ const Dashboard: React.FC<DashboardProps> = ({
   prioritySuggestions,
   recentFamilyMembers,
   upcomingBirthdays,
-  familyStatistics
+  familyStatistics,
+  notifications,
+  unreadNotifications,
+  pendingRequests
 }) => {
+  const { t, isRTL } = useTranslation();
+
   const getGenderIcon = (gender?: string) => {
     return gender === 'female' ? '👩' : '👨';
   };
@@ -105,118 +115,111 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   const stats = [
     {
-      title: "Membres de famille",
+      title: t('total_members'),
       value: dashboardStats.total_family_members.toString(),
       icon: Users,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
-      change: `+${dashboardStats.new_members_this_month} ce mois`,
+      change: "",
       href: "/famille"
     },
     {
-      title: "Suggestions",
+      title: t('pending_suggestions'),
       value: dashboardStats.pending_suggestions.toString(),
       icon: Heart,
       color: "text-pink-600",
       bgColor: "bg-pink-50",
-      change: `+${dashboardStats.new_suggestions_this_week} cette semaine`,
+      change: "",
       href: "/suggestions"
     },
     {
-      title: "Relations automatiques",
-      value: dashboardStats.automatic_relations.toString(),
-      icon: Sparkles,
-      color: "text-purple-600",
-      bgColor: "bg-purple-50",
-      change: "Déduites intelligemment",
-      href: "/famille/arbre"
+      title: t('notifications'),
+      value: unreadNotifications.toString(),
+      icon: Bell,
+      color: "text-orange-600",
+      bgColor: "bg-orange-50",
+      change: "",
+      href: "/notifications"
     },
     {
-      title: "Anniversaires",
-      value: upcomingBirthdays.length.toString(),
-      icon: Gift,
-      color: "text-green-600",
-      bgColor: "bg-green-50",
-      change: "À venir ce mois",
-      href: "#birthdays"
+      title: t('pending_requests'),
+      value: pendingRequests.length.toString(),
+      icon: UserPlus,
+      color: "text-purple-600",
+      bgColor: "bg-purple-50",
+      change: "",
+      href: "/reseaux"
     }
   ];
 
   return (
-    <AppSidebarLayout>
-      <Head title="Tableau de bord" />
+    <KwdDashboardLayout title={t('dashboard')}>
+      <Head title={t('dashboard')} />
 
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-        <div className="max-w-7xl mx-auto p-6 space-y-8">
-          {/* Header avec salutation personnalisée */}
-          <div className="text-center py-8">
-            <div className="flex items-center justify-center mb-4">
-              <div className="text-6xl mr-4">
+      <div className={`min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50 ${isRTL ? 'rtl' : 'ltr'}`}>
+        <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 space-y-6 sm:space-y-8">
+          {/* Header principal - Responsive */}
+          <div className="text-center py-4 sm:py-6 md:py-8">
+            <div className="flex flex-col items-center justify-center mb-4 sm:mb-6 gap-3 sm:gap-4">
+              <div className="text-4xl sm:text-5xl md:text-6xl">
                 {getGenderIcon(profile?.gender)}
               </div>
-              <div>
-                <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                  Bonjour, {profile?.first_name || user.name} !
+              <div className="text-center">
+                <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent mb-2 leading-tight">
+                  {t('dashboard')}
                 </h1>
-                <p className="text-xl text-gray-600">
-                  Bienvenue sur votre réseau familial
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-600">
+                  {t('welcome')}
                 </p>
               </div>
             </div>
-            
-            <div className="flex items-center justify-center space-x-4 mt-6">
-              <Link href="/famille/arbre">
-                <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                  <TreePine className="w-5 h-5 mr-2" />
-                  Voir l'arbre familial
+
+            <div className={`flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mt-4 sm:mt-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <Link href="/famille/arbre" className="w-full sm:w-auto">
+                <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg hover:scale-105 transition-all duration-200 text-white font-medium">
+                  <TreePine className={`w-4 h-4 sm:w-5 sm:h-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  <span className="hidden sm:inline">{t('view_family_tree')}</span>
+                  <span className="sm:hidden">{t('family_tree')}</span>
                 </Button>
               </Link>
-              <Link href="/suggestions">
-                <Button variant="outline" size="lg">
-                  <UserPlus className="w-5 h-5 mr-2" />
-                  Découvrir des relations
+              <Link href="/suggestions" className="w-full sm:w-auto">
+                <Button variant="outline" size="lg" className="w-full sm:w-auto border-gray-200 hover:border-orange-300 hover:bg-orange-50 transition-all duration-200">
+                  <UserPlus className={`w-4 h-4 sm:w-5 sm:h-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  <span className="hidden sm:inline">{t('discover_people')}</span>
+                  <span className="sm:hidden">{t('suggestions')}</span>
                 </Button>
               </Link>
             </div>
           </div>
 
-          {/* Statistiques principales */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Statistiques principales - Responsive */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
             {stats.map((stat, index) => (
-              <Link key={index} href={stat.href}>
-                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105 bg-white/80 backdrop-blur-sm">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-600 mb-1">
-                          {stat.title}
-                        </p>
-                        <p className="text-3xl font-bold text-gray-900 mb-1">
-                          {stat.value}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {stat.change}
-                        </p>
-                      </div>
-                      <div className={`p-4 rounded-xl ${stat.bgColor} transition-colors`}>
-                        <stat.icon className={`w-8 h-8 ${stat.color}`} />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
+              <AnimatedStatsCard
+                key={index}
+                title={stat.title}
+                value={stat.value}
+                description={stat.change}
+                icon={stat.icon}
+                color={index % 2 === 0 ? 'orange' : index % 3 === 0 ? 'blue' : index % 4 === 0 ? 'green' : 'purple'}
+                href={stat.href}
+                trend={stat.change ? {
+                  value: Math.floor(Math.random() * 20) + 5,
+                  isPositive: Math.random() > 0.3
+                } : undefined}
+              />
             ))}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
             {/* Activité récente */}
             <div className="lg:col-span-2">
               <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Activity className="w-6 h-6 text-blue-600 mr-3" />
-                      Activité récente
+                    <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <Activity className={`w-6 h-6 text-blue-600 ${isRTL ? 'ml-3' : 'mr-3'}`} />
+                      {t('recent_activity')}
                     </div>
                     <Badge variant="secondary">{recentActivities.length}</Badge>
                   </CardTitle>
@@ -253,15 +256,67 @@ const Dashboard: React.FC<DashboardProps> = ({
               </Card>
             </div>
 
-            {/* Sidebar avec suggestions et anniversaires */}
+            {/* Sidebar avec demandes, suggestions et anniversaires */}
             <div className="space-y-6">
+              {/* Demandes reçues */}
+              {pendingRequests.length > 0 && (
+                <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <UserPlus className={`w-6 h-6 text-purple-600 ${isRTL ? 'ml-3' : 'mr-3'}`} />
+                        {t('pending_requests')}
+                      </div>
+                      <Link href="/reseaux">
+                        <Button variant="ghost" size="sm">
+                          <ArrowRight className="w-4 h-4" />
+                        </Button>
+                      </Link>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {pendingRequests.map((request) => (
+                        <div key={request.id} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                          <Avatar className="w-10 h-10">
+                            <AvatarFallback className="bg-purple-100 text-purple-600">
+                              {getInitials(request.requester?.name || request.requester_name || 'U')}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {request.requester?.name || request.requester_name}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {t('request_relationship')} {request.relationship_type?.display_name_fr || request.relationship_name}
+                            </p>
+                          </div>
+                          <Badge variant="outline" className="text-xs">
+                            {t('new')}
+                          </Badge>
+                        </div>
+                      ))}
+                      {pendingRequests.length > 3 && (
+                        <div className="text-center pt-2">
+                          <Link href="/reseaux">
+                            <Button variant="ghost" size="sm" className="text-purple-600">
+                              Voir toutes les demandes
+                            </Button>
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Suggestions prioritaires */}
               <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Heart className="w-6 h-6 text-pink-600 mr-3" />
-                      Suggestions
+                    <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <Heart className={`w-6 h-6 text-pink-600 ${isRTL ? 'ml-3' : 'mr-3'}`} />
+                      {t('suggestions')}
                     </div>
                     <Link href="/suggestions">
                       <Button variant="ghost" size="sm">
@@ -293,7 +348,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     ) : (
                       <div className="text-center py-4 text-gray-500">
                         <Heart className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                        <p className="text-sm">Aucune suggestion</p>
+                        <p className="text-sm">{t('no_suggestions')}</p>
                       </div>
                     )}
                   </div>
@@ -303,29 +358,29 @@ const Dashboard: React.FC<DashboardProps> = ({
               {/* Actions rapides */}
               <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Plus className="w-6 h-6 text-green-600 mr-3" />
-                    Actions rapides
+                  <CardTitle className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <Plus className={`w-6 h-6 text-green-600 ${isRTL ? 'ml-3' : 'mr-3'}`} />
+                    {t('quick_actions')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     <Link href="/family-relations">
-                      <Button variant="outline" className="w-full justify-start">
-                        <UserPlus className="w-4 h-4 mr-2" />
-                        Ajouter une relation
+                      <Button variant="outline" className={`w-full ${isRTL ? 'justify-end' : 'justify-start'}`}>
+                        <UserPlus className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                        {t('add_relationship')}
                       </Button>
                     </Link>
                     <Link href="/famille/arbre">
-                      <Button variant="outline" className="w-full justify-start">
-                        <TreePine className="w-4 h-4 mr-2" />
-                        Explorer l'arbre
+                      <Button variant="outline" className={`w-full ${isRTL ? 'justify-end' : 'justify-start'}`}>
+                        <TreePine className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                        {t('explore_tree')}
                       </Button>
                     </Link>
                     <Link href="/profile">
-                      <Button variant="outline" className="w-full justify-start">
-                        <Crown className="w-4 h-4 mr-2" />
-                        Modifier mon profil
+                      <Button variant="outline" className={`w-full ${isRTL ? 'justify-end' : 'justify-start'}`}>
+                        <Crown className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                        {t('edit_my_profile')}
                       </Button>
                     </Link>
                   </div>
@@ -335,7 +390,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>
         </div>
       </div>
-    </AppSidebarLayout>
+    </KwdDashboardLayout>
   );
 };
 
