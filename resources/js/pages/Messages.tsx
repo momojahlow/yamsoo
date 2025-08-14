@@ -1,5 +1,6 @@
 
-import AppLayout from '@/layouts/app-layout';
+import { KwdDashboardLayout } from '@/Layouts/modern';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MobileNavBar } from "@/components/mobile/MobileNavBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +25,7 @@ interface MessagesProps {
 }
 
 export default function Messages({ messages }: MessagesProps) {
+  const { t } = useTranslation();
   const isMobile = useIsMobile();
 
   const handleSendMessage = (recipientId: number) => {
@@ -31,10 +33,9 @@ export default function Messages({ messages }: MessagesProps) {
   };
 
   return (
-    <AppLayout>
-      <main className="flex-1 p-4 md:p-8 md:ml-16 pb-20 md:pb-8">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold mb-8">Messages</h1>
+    <KwdDashboardLayout title={t('messages')}>
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold mb-8">{t('messages')}</h1>
 
           {messages.length === 0 ? (
             <div className="text-center py-12">
@@ -73,9 +74,7 @@ export default function Messages({ messages }: MessagesProps) {
               ))}
             </div>
           )}
-        </div>
-      </main>
-      {isMobile && <MobileNavBar />}
-    </AppLayout>
+      </div>
+    </KwdDashboardLayout>
   );
 }

@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import { useTranslation } from '@/hooks/useTranslation';
-import { 
-  Heart,
+import {
   Moon,
   Sun,
   Globe,
@@ -87,7 +86,7 @@ const KwdAuthLayout: React.FC<Props> = ({
           {/* Logo */}
           <Link href="/" className="flex items-center group">
             <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
-              <Heart className="w-6 h-6 text-white" />
+              <span className="text-white font-bold text-xl">Y</span>
             </div>
             <span className={`${isRTL ? 'mr-3' : 'ml-3'} text-2xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent`}>
               Yamsoo

@@ -266,6 +266,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('layout-features', function () {
         return Inertia::render('LayoutFeatures');
     })->name('layout.features');
+    Route::get('settings', function () {
+        return Inertia::render('settings/index');
+    })->name('settings');
 
     // Routes pour les relations familiales
     Route::get('family-relations', [FamilyRelationController::class, 'index'])->name('family-relations.index');

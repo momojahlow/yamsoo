@@ -177,14 +177,14 @@ const KwdDashboardLayout: React.FC<Props> = ({ children, title = 'Dashboard' }) 
         onMouseEnter={() => sidebarCollapsed && setSidebarHovered(true)}
         onMouseLeave={() => sidebarCollapsed && setSidebarHovered(false)}
       >
-        <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-r border-gray-200/50 dark:border-gray-700/50 shadow-2xl">
+        <div className="flex grow flex-col h-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-r border-gray-200/50 dark:border-gray-700/50 shadow-2xl">
           {/* Logo */}
           <div className="flex h-16 shrink-0 items-center justify-between px-6 border-b border-gray-200/50 dark:border-gray-700/50">
             <Link href="/dashboard" className="flex items-center group">
               {sidebarExpanded ? (
                 <>
                   <div className="w-10 h-10 bg-gradient-to-br from-orange-500 via-red-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
-                    <Heart className="w-6 h-6 text-white group-hover:scale-110 transition-transform duration-300" />
+                    <span className="text-white font-bold text-xl group-hover:scale-110 transition-transform duration-300">Y</span>
                   </div>
                   <div className={`${isRTL ? 'mr-3' : 'ml-3'}`}>
                     <h1 className="text-xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent group-hover:from-orange-600 group-hover:to-red-600 transition-all duration-300">
@@ -197,7 +197,7 @@ const KwdDashboardLayout: React.FC<Props> = ({ children, title = 'Dashboard' }) 
                 </>
               ) : (
                 <div className="w-10 h-10 bg-gradient-to-br from-orange-500 via-red-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
-                  <Heart className="w-6 h-6 text-white group-hover:scale-110 transition-transform duration-300" />
+                  <span className="text-white font-bold text-xl group-hover:scale-110 transition-transform duration-300">Y</span>
                 </div>
               )}
             </Link>
@@ -221,8 +221,9 @@ const KwdDashboardLayout: React.FC<Props> = ({ children, title = 'Dashboard' }) 
           </div>
 
           {/* Navigation */}
-          <nav className="flex flex-1 flex-col px-4">
-            <ul role="list" className="flex flex-1 flex-col gap-y-2">
+          <div className="flex flex-1 flex-col px-4 py-4">
+            <nav className="flex-1">
+              <ul role="list" className="flex flex-col gap-y-2">
               {navigation.map((item) => {
                 const isActive = window.location.pathname === item.href;
                 return (
@@ -271,8 +272,31 @@ const KwdDashboardLayout: React.FC<Props> = ({ children, title = 'Dashboard' }) 
                   </li>
                 );
               })}
-            </ul>
-          </nav>
+              </ul>
+            </nav>
+
+            {/* Logout Button */}
+            <div className="mt-auto pt-4 border-t border-gray-200/50 dark:border-gray-700/50">
+            <Link
+              href="/logout"
+              method="post"
+              className={`group flex items-center gap-x-3 rounded-lg p-3 text-sm font-semibold leading-6 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 ${
+                isRTL ? 'flex-row-reverse' : ''
+              } ${!sidebarExpanded ? 'justify-center' : ''}`}
+              title={!sidebarExpanded ? t('logout') : ''}
+            >
+              <LogOut
+                className={`h-6 w-6 shrink-0 transition-transform duration-200 group-hover:scale-110`}
+                aria-hidden="true"
+              />
+              {sidebarExpanded && (
+                <span className="transition-colors duration-200">
+                  {t('logout')}
+                </span>
+              )}
+            </Link>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -340,10 +364,12 @@ const KwdDashboardLayout: React.FC<Props> = ({ children, title = 'Dashboard' }) 
               {/* Language toggle */}
               <Link
                 href={isRTL ? '/language/fr' : '/language/ar'}
-                className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors flex items-center justify-center"
                 title={isRTL ? 'Français' : 'العربية'}
               >
-                <Languages className="h-5 w-5" />
+                <span className="text-sm font-semibold">
+                  {isRTL ? 'FR' : 'عر'}
+                </span>
               </Link>
 
               {/* Separator */}
