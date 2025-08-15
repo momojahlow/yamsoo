@@ -41,4 +41,34 @@ class UserFactory extends Factory
             'email_verified_at' => null,
         ]);
     }
+
+    /**
+     * Create a user with a profile and gender
+     */
+    public function withProfile(?string $gender = null): static
+    {
+        return $this->afterCreating(function ($user) use ($gender) {
+            // Déterminer le genre basé sur le nom si non fourni
+            if (!$gender) {
+                $maleNames = ['Ahmed', 'Youssef', 'Mohammed', 'Hassan', 'Omar', 'Karim', 'Adil', 'Rachid'];
+                $femaleNames = ['Fatima', 'Amina', 'Leila', 'Nadia', 'Sara', 'Zineb', 'Hanae'];
+
+                $firstName = explode(' ', $user->name)[0];
+                if (in_array($firstName, $maleNames)) {
+                    $gender = 'male';
+                } elseif (in_array($firstName, $femaleNames)) {
+                    $gender = 'female';
+                } else {
+                    $gender = fake()->randomElement(['male', 'female']);
+                }
+            }
+
+            $user->profile()->create([
+                'gender' => $gender,
+                'bio' => fake()->sentence(),
+                'birth_date' => fake()->dateTimeBetween('-60 years', '-18 years'),
+                'language' => 'fr',
+            ]);
+        });
+    }
 }

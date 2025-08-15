@@ -14,97 +14,12 @@ class SimpleRelationshipInferenceService
      * Règles de déduction simplifiées et CORRECTES
      * Basées sur la logique : Si A → B (relation1) et B → C (relation2), alors A → C (relation déduite)
      */
-    private array $relationshipRules = [
-        // ===== RELATIONS VIA CONJOINT =====
+    private array $relationshipRules;
 
-        // Relations via le MARI
-        'husband' => [
-            'father' => 'father_in_law',                // Père du mari = Beau-père
-            'mother' => 'mother_in_law',                // Mère du mari = Belle-mère
-            'brother' => 'brother_in_law',              // Frère du mari = Beau-frère
-            'sister' => 'sister_in_law',                // Sœur du mari = Belle-sœur
-            'son' => 'son',                             // Fils du mari = Fils (beau-fils devient fils)
-            'daughter' => 'daughter',                   // Fille du mari = Fille (belle-fille devient fille)
-        ],
-
-        // Relations via l'ÉPOUSE
-        'wife' => [
-            'father' => 'father_in_law',                // Père de l'épouse = Beau-père
-            'mother' => 'mother_in_law',                // Mère de l'épouse = Belle-mère
-            'brother' => 'brother_in_law',              // Frère de l'épouse = Beau-frère
-            'sister' => 'sister_in_law',                // Sœur de l'épouse = Belle-sœur
-            'son' => 'son',                             // Fils de l'épouse = Fils (beau-fils devient fils)
-            'daughter' => 'daughter',                   // Fille de l'épouse = Fille (belle-fille devient fille)
-        ],
-
-        // ===== RELATIONS VIA FRÈRES/SŒURS =====
-
-        // Relations via le FRÈRE
-        'brother' => [
-            'wife' => 'sister_in_law',                  // Épouse du frère = Belle-sœur
-            'son' => 'nephew',                          // Fils du frère = Neveu
-            'daughter' => 'niece',                      // Fille du frère = Nièce
-        ],
-
-        // Relations via la SŒUR
-        'sister' => [
-            'husband' => 'brother_in_law',              // Mari de la sœur = Beau-frère
-            'son' => 'nephew',                          // Fils de la sœur = Neveu
-            'daughter' => 'niece',                      // Fille de la sœur = Nièce
-        ],
-
-        // ===== RELATIONS VIA PARENTS =====
-
-        // Relations via le PÈRE
-        'father' => [
-            'son' => 'brother',                         // Fils du père = Frère
-            'daughter' => 'sister',                     // Fille du père = Sœur
-            'wife' => 'mother',                         // Épouse du père = Mère
-            'brother' => 'uncle',                       // Frère du père = Oncle
-            'sister' => 'aunt',                         // Sœur du père = Tante
-        ],
-
-        // Relations via la MÈRE
-        'mother' => [
-            'son' => 'brother',                         // Fils de la mère = Frère
-            'daughter' => 'sister',                     // Fille de la mère = Sœur
-            'husband' => 'father',                      // Mari de la mère = Père
-            'brother' => 'uncle',                       // Frère de la mère = Oncle
-            'sister' => 'aunt',                         // Sœur de la mère = Tante
-        ],
-
-        // ===== RELATIONS VIA ENFANTS =====
-
-        // Relations via le FILS
-        'son' => [
-            'father' => 'husband',                      // Père du fils = Mari (de la mère)
-            'mother' => 'wife',                         // Mère du fils = Épouse (du père)
-            'brother' => 'son',                         // Frère du fils = Fils
-            'sister' => 'daughter',                     // Sœur du fils = Fille
-        ],
-
-        // Relations via la FILLE
-        'daughter' => [
-            'father' => 'husband',                      // Père de la fille = Mari (de la mère)
-            'mother' => 'wife',                         // Mère de la fille = Épouse (du père)
-            'brother' => 'son',                         // Frère de la fille = Fils
-            'sister' => 'daughter',                     // Sœur de la fille = Fille
-        ],
-
-        // ===== RELATIONS VIA ONCLES/TANTES =====
-
-        // Relations via l'ONCLE
-        'uncle' => [
-            'son' => 'cousin',                          // Fils de l'oncle = Cousin
-            'daughter' => 'cousin',                     // Fille de l'oncle = Cousine
-        ],
-
-        // Relations via la TANTE
-        'aunt' => [
-            'son' => 'cousin',                          // Fils de la tante = Cousin
-            'daughter' => 'cousin',                     // Fille de la tante = Cousine
-        ],
-    ];
+    public function __construct()
+    {
+        $this->relationshipRules = RelationshipRulesService::getRelationshipRules();
+    }
 
     /**
      * Déduire automatiquement les nouvelles relations basées sur une relation existante
@@ -193,14 +108,16 @@ class SimpleRelationshipInferenceService
                         echo "   Relation adaptée au genre : {$deducedRelation} → {$adaptedRelation}\n";
                     }
 
-                    // Vérifier que cette relation n'existe pas déjà
+                    // Vérifier que cette relation spécifique n'existe pas déjà
                     $existingDirectRelation = FamilyRelationship::where([
                         ['user_id', $user->id],
-                        ['related_user_id', $otherUser->id]
-                    ])->orWhere([
-                        ['user_id', $otherUser->id],
-                        ['related_user_id', $user->id]
+                        ['related_user_id', $otherUser->id],
+                        ['relationship_type_id', RelationshipType::where('name', $adaptedRelation)->first()?->id]
                     ])->exists();
+
+                    if (app()->runningInConsole()) {
+                        echo "   Relation {$adaptedRelation} existante trouvée : " . ($existingDirectRelation ? 'OUI' : 'NON') . "\n";
+                    }
 
                     if (!$existingDirectRelation) {
                         $relationshipType = RelationshipType::where('name', $adaptedRelation)->first();

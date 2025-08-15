@@ -42,14 +42,9 @@ class InLawDiagnosticTest extends TestCase
     public function test_diagnostic_in_law_relationships(): void
     {
         // Créer les utilisateurs avec leurs profils et genres
-        $ahmed = User::factory()->create(['name' => 'Ahmed', 'email' => 'ahmed@test.com']);
-        $ahmed->profile()->create(['gender' => 'male']);
-
-        $fatima = User::factory()->create(['name' => 'Fatima', 'email' => 'fatima@test.com']);
-        $fatima->profile()->create(['gender' => 'female']);
-
-        $youssef = User::factory()->create(['name' => 'Youssef', 'email' => 'youssef@test.com']);
-        $youssef->profile()->create(['gender' => 'male']);
+        $ahmed = User::factory()->withProfile('male')->create(['name' => 'Ahmed', 'email' => 'ahmed@test.com']);
+        $fatima = User::factory()->withProfile('female')->create(['name' => 'Fatima', 'email' => 'fatima@test.com']);
+        $youssef = User::factory()->withProfile('male')->create(['name' => 'Youssef', 'email' => 'youssef@test.com']);
 
         echo "\n=== DIAGNOSTIC DES RELATIONS DE BELLE-FAMILLE ===\n";
 

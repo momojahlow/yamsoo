@@ -331,18 +331,6 @@ const KwdDashboardLayout: React.FC<Props> = ({ children, title = 'Dashboard' }) 
             <div className="flex-1"></div>
 
             <div className={`flex items-center gap-x-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              {/* Notifications */}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="relative text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-              >
-                <Bell className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
-                  3
-                </span>
-              </Button>
-
               {/* Dark mode toggle */}
               <Button
                 variant="ghost"
