@@ -19,6 +19,32 @@ window.Echo = new Echo({
     enabledTransports: ['ws', 'wss'],
 });
 
+// Enregistrement du Service Worker
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+    window.addEventListener('load', async () => {
+        try {
+            const registration = await navigator.serviceWorker.register('/sw.js');
+            console.log('Service Worker enregistré avec succès:', registration.scope);
+
+            // Écouter les mises à jour du Service Worker
+            registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+                if (newWorker) {
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            // Nouvelle version disponible
+                            console.log('Nouvelle version de l\'application disponible');
+                            // Ici on pourrait afficher une notification à l'utilisateur
+                        }
+                    });
+                }
+            });
+        } catch (error) {
+            console.error('Erreur lors de l\'enregistrement du Service Worker:', error);
+        }
+    });
+}
+
 createInertiaApp({
   resolve: (name) => resolvePageComponent(`./pages/${name}.tsx`, import.meta.glob('./pages/**/*.tsx')),
   setup({ el, App, props }) {
