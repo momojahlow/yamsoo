@@ -80,14 +80,19 @@ interface PendingRequest {
   message?: string;
   mother_name?: string;
   created_at: string;
+  requester?: User;
+  relationshipType?: RelationshipType;
 }
 
 interface SentRequest {
   id: number;
   target_user_id: number;
+  target_user_name: string;
   target_user_email: string;
   relationship_name: string;
   created_at: string;
+  targetUser?: User;
+  relationshipType?: RelationshipType;
 }
 
 interface Props {
@@ -410,13 +415,20 @@ export default function Networks({
                                 <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
                                   {requesterEmail}
                                 </p>
-                              <Badge
-                                className="mt-2 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
-                                variant="secondary"
-                              >
-                                {request.relationshipType?.display_name_fr || request.relationshipType?.display_name || 'Relation'}
-                              </Badge>
-                            </div>
+                                <div className="mt-2 flex flex-col gap-1">
+                                  <Badge
+                                    className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 w-fit"
+                                    variant="secondary"
+                                  >
+                                    Demande reçue: {request.relationshipType?.display_name_fr || request.relationship_name || 'Relation'}
+                                  </Badge>
+                                  {request.message && (
+                                    <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
+                                      "{request.message}"
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
                           </div>
 
                           {request.message && (
@@ -488,12 +500,17 @@ export default function Networks({
                                 <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
                                   {targetEmail}
                                 </p>
-                                <Badge
-                                  className="mt-2 bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
-                                  variant="secondary"
-                                >
-                                  {request.relationshipType?.display_name_fr || request.relationshipType?.display_name || 'Relation'}
-                                </Badge>
+                                <div className="mt-2">
+                                  <Badge
+                                    className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 w-fit"
+                                    variant="secondary"
+                                  >
+                                    Demande envoyée: {request.relationshipType?.display_name_fr || request.relationship_name || 'Relation'}
+                                  </Badge>
+                                  <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
+                                    {targetName} sera votre {request.relationshipType?.display_name_fr || request.relationship_name || 'relation'}
+                                  </p>
+                                </div>
                               </div>
                             </div>
 

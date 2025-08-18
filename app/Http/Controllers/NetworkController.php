@@ -70,6 +70,7 @@ class NetworkController extends Controller
                 return [
                     'id' => $request->id,
                     'target_user_id' => $request->target_user_id,
+                    'target_user_name' => $request->targetUser->name,
                     'target_user_email' => $request->targetUser->email,
                     'relationship_name' => $request->relationshipType->display_name_fr,
                     'created_at' => $request->created_at->toISOString(),
