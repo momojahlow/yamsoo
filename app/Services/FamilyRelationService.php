@@ -345,13 +345,37 @@ class FamilyRelationService
 
             // Relations par alliance
             case 'father_in_law':
-                return $target ? $this->getChildInLawRelationByGender($target) : null;
+                return $requester ? $this->getChildInLawRelationByGender($requester) : null;
             case 'mother_in_law':
-                return $target ? $this->getChildInLawRelationByGender($target) : null;
+                return $requester ? $this->getChildInLawRelationByGender($requester) : null;
             case 'son_in_law':
-                return $target ? $this->getParentInLawRelationByGender($target) : null;
+                return $requester ? $this->getParentInLawRelationByGender($requester) : null;
             case 'daughter_in_law':
-                return $target ? $this->getParentInLawRelationByGender($target) : null;
+                return $requester ? $this->getParentInLawRelationByGender($requester) : null;
+            case 'brother_in_law':
+                return $requester ? $this->getSiblingInLawRelationByGender($requester) : null;
+            case 'sister_in_law':
+                return $requester ? $this->getSiblingInLawRelationByGender($requester) : null;
+
+            // Relations oncle/tante - neveu/nièce
+            case 'uncle':
+                return $requester ? $this->getNephewNieceRelationByGender($requester) : null;
+            case 'aunt':
+                return $requester ? $this->getNephewNieceRelationByGender($requester) : null;
+            case 'nephew':
+                return $requester ? $this->getUncleAuntRelationByGender($requester) : null;
+            case 'niece':
+                return $requester ? $this->getUncleAuntRelationByGender($requester) : null;
+
+            // Relations grand-parent - petit-enfant
+            case 'grandfather':
+                return $requester ? $this->getGrandchildRelationByGender($requester) : null;
+            case 'grandmother':
+                return $requester ? $this->getGrandchildRelationByGender($requester) : null;
+            case 'grandson':
+                return $requester ? $this->getGrandparentRelationByGender($requester) : null;
+            case 'granddaughter':
+                return $requester ? $this->getGrandparentRelationByGender($requester) : null;
 
             default:
                 return null;
@@ -424,22 +448,37 @@ class FamilyRelationService
     }
 
     /**
+     * Retourne la relation beau-frère/belle-sœur appropriée selon le genre
+     */
+    private function getSiblingInLawRelationByGender(User $sibling): ?RelationshipType
+    {
+        $siblingGender = $sibling->profile?->gender;
+
+        if (!$siblingGender) {
+            $siblingGender = $this->guessGenderFromName($sibling->name);
+        }
+
+        if ($siblingGender === 'male') {
+            return RelationshipType::where('name', 'brother_in_law')->first();
+        } elseif ($siblingGender === 'female') {
+            return RelationshipType::where('name', 'sister_in_law')->first();
+        }
+
+        return RelationshipType::where('name', 'brother_in_law')->first();
+    }
+
+    /**
      * Retourne la relation beau-fils/belle-fille appropriée selon le genre
      */
     private function getChildInLawRelationByGender(User $child): ?RelationshipType
     {
-        $childGender = $child->profile?->gender;
+        // Logique simple et directe basée sur le nom
+        $firstName = strtolower(explode(' ', trim($child->name))[0]);
+        $femaleNames = ['fatima', 'amina', 'leila', 'nadia', 'sara', 'zineb', 'hanae', 'zahra'];
 
-        if (!$childGender) {
-            $childGender = $this->guessGenderFromName($child->name);
-        }
-
-        if ($childGender === 'male') {
-            return RelationshipType::where('name', 'son_in_law')->first();
-        } elseif ($childGender === 'female') {
+        if (in_array($firstName, $femaleNames)) {
             return RelationshipType::where('name', 'daughter_in_law')->first();
         }
-
         return RelationshipType::where('name', 'son_in_law')->first();
     }
 
@@ -461,6 +500,81 @@ class FamilyRelationService
         }
 
         return RelationshipType::where('name', 'father_in_law')->first();
+    }
+
+    /**
+     * Retourne la relation neveu/nièce appropriée selon le genre
+     */
+    private function getNephewNieceRelationByGender(User $person): ?RelationshipType
+    {
+        $gender = $person->profile?->gender;
+
+        if (!$gender) {
+            $gender = $this->guessGenderFromName($person->name);
+        }
+
+        if ($gender === 'male') {
+            return RelationshipType::where('name', 'nephew')->first();
+        } elseif ($gender === 'female') {
+            return RelationshipType::where('name', 'niece')->first();
+        }
+
+        return RelationshipType::where('name', 'nephew')->first();
+    }
+
+    /**
+     * Retourne la relation oncle/tante appropriée selon le genre
+     */
+    private function getUncleAuntRelationByGender(User $person): ?RelationshipType
+    {
+        $gender = $person->profile?->gender;
+
+        if (!$gender) {
+            $gender = $this->guessGenderFromName($person->name);
+        }
+
+        if ($gender === 'male') {
+            return RelationshipType::where('name', 'uncle')->first();
+        } elseif ($gender === 'female') {
+            return RelationshipType::where('name', 'aunt')->first();
+        }
+
+        return RelationshipType::where('name', 'uncle')->first();
+    }
+
+    /**
+     * Retourne la relation petit-enfant appropriée selon le genre
+     */
+    private function getGrandchildRelationByGender(User $person): ?RelationshipType
+    {
+        // Logique simple et directe basée sur le nom
+        $firstName = strtolower(explode(' ', trim($person->name))[0]);
+        $femaleNames = ['fatima', 'amina', 'leila', 'nadia', 'sara', 'zineb', 'hanae', 'zahra'];
+
+        if (in_array($firstName, $femaleNames)) {
+            return RelationshipType::where('name', 'granddaughter')->first();
+        }
+        return RelationshipType::where('name', 'grandson')->first();
+    }
+
+    /**
+     * Retourne la relation grand-parent appropriée selon le genre
+     */
+    private function getGrandparentRelationByGender(User $person): ?RelationshipType
+    {
+        $gender = $person->profile?->gender;
+
+        if (!$gender) {
+            $gender = $this->guessGenderFromName($person->name);
+        }
+
+        if ($gender === 'male') {
+            return RelationshipType::where('name', 'grandfather')->first();
+        } elseif ($gender === 'female') {
+            return RelationshipType::where('name', 'grandmother')->first();
+        }
+
+        return RelationshipType::where('name', 'grandfather')->first();
     }
 
     /**

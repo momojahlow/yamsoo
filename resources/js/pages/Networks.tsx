@@ -386,24 +386,30 @@ export default function Networks({
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Demandes reçues</h3>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {safePendingRequests.map((request) => (
-                      <Card key={request.id} className="border-0 shadow-sm hover:shadow-md transition-all duration-200">
-                        <CardContent className="p-6">
-                          <div className="flex items-center space-x-4">
-                            <Avatar className="w-12 h-12">
-                              <AvatarImage src={request.requester.profile?.avatar_url || ''} />
-                              <AvatarFallback className="bg-slate-100 text-slate-500">
-                                {request.requester.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
+                    {safePendingRequests.map((request) => {
+                      // Vérification de sécurité pour éviter les erreurs
+                      const requester = request.requester || {};
+                      const requesterName = requester.name || request.requester_name || 'Utilisateur inconnu';
+                      const requesterEmail = requester.email || request.requester_email || '';
 
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-medium text-gray-900 dark:text-white truncate">
-                                {request.requester.name}
-                              </h3>
-                              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                                {request.requester.email}
-                              </p>
+                      return (
+                        <Card key={request.id} className="border-0 shadow-sm hover:shadow-md transition-all duration-200">
+                          <CardContent className="p-6">
+                            <div className="flex items-center space-x-4">
+                              <Avatar className="w-12 h-12">
+                                <AvatarImage src={requester.profile?.avatar_url || ''} />
+                                <AvatarFallback className="bg-slate-100 text-slate-500">
+                                  {requesterName.split(' ').map(n => n[0]).join('').toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-medium text-gray-900 dark:text-white truncate">
+                                  {requesterName}
+                                </h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                                  {requesterEmail}
+                                </p>
                               <Badge
                                 className="mt-2 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
                                 variant="secondary"
@@ -442,7 +448,8 @@ export default function Networks({
                             </div>
                         </CardContent>
                       </Card>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -457,32 +464,38 @@ export default function Networks({
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Demandes envoyées</h3>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {safeSentRequests.map((request) => (
-                      <Card key={request.id} className="border-0 shadow-sm hover:shadow-md transition-all duration-200">
-                        <CardContent className="p-6">
-                          <div className="flex items-center space-x-4">
-                            <Avatar className="w-12 h-12">
-                              <AvatarImage src={request.targetUser.profile?.avatar_url || ''} />
-                              <AvatarFallback className="bg-slate-100 text-slate-500">
-                                {request.targetUser.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
+                    {safeSentRequests.map((request) => {
+                      // Vérification de sécurité pour éviter les erreurs
+                      const targetUser = request.targetUser || request.target_user || {};
+                      const targetName = targetUser.name || request.target_user_name || 'Utilisateur inconnu';
+                      const targetEmail = targetUser.email || request.target_user_email || '';
 
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-medium text-gray-900 dark:text-white truncate">
-                                {request.targetUser.name}
-                              </h3>
-                              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                                {request.targetUser.email}
-                              </p>
-                              <Badge
-                                className="mt-2 bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
-                                variant="secondary"
-                              >
-                                {request.relationshipType?.display_name_fr || request.relationshipType?.display_name || 'Relation'}
-                              </Badge>
+                      return (
+                        <Card key={request.id} className="border-0 shadow-sm hover:shadow-md transition-all duration-200">
+                          <CardContent className="p-6">
+                            <div className="flex items-center space-x-4">
+                              <Avatar className="w-12 h-12">
+                                <AvatarImage src={targetUser.profile?.avatar_url || ''} />
+                                <AvatarFallback className="bg-slate-100 text-slate-500">
+                                  {targetName.split(' ').map(n => n[0]).join('').toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-medium text-gray-900 dark:text-white truncate">
+                                  {targetName}
+                                </h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                                  {targetEmail}
+                                </p>
+                                <Badge
+                                  className="mt-2 bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
+                                  variant="secondary"
+                                >
+                                  {request.relationshipType?.display_name_fr || request.relationshipType?.display_name || 'Relation'}
+                                </Badge>
+                              </div>
                             </div>
-                          </div>
 
                           {request.message && (
                             <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -491,33 +504,14 @@ export default function Networks({
                           )}
 
                           <div className="flex justify-center mt-4">
-                                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mr-4">
-                                  <span className="text-white font-semibold">
-                                    {request.target_user_email.charAt(0).toUpperCase()}
-                                  </span>
-                                </div>
-                                <div>
-                                  <p className="font-semibold text-gray-900 dark:text-white">{request.target_user_email}</p>
-                                </div>
-                              </div>
-                              <div className="ml-16">
-                                <div className="text-sm mb-2">
-                                  {t('relation_request_as')} <Badge variant="outline" className={`${isRTL ? 'mr-1' : 'ml-1'}`}>{getLocalizedRelationName(request.relationship_name)}</Badge>
-                                </div>
-                                <p className="text-xs text-gray-500 dark:text-gray-500">
-                                  {t('sent_on')} {new Date(request.created_at).toLocaleDateString(isRTL ? 'ar-SA' : 'fr-FR')}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center ml-6">
-                              <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                                En attente
-                              </Badge>
-                            </div>
+                            <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                              En attente
+                            </Badge>
                           </div>
                         </CardContent>
                       </Card>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}

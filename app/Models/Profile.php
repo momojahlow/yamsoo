@@ -20,6 +20,7 @@ class Profile extends Model
         'gender',
         'avatar',
         'bio',
+        'language',
     ];
 
     /**

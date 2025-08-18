@@ -315,6 +315,28 @@ class ComprehensiveRelationshipTypesSeeder extends Seeder
                 'generation_level' => 1,
                 'sort_order' => 26
             ],
+            [
+                'name' => 'brother_in_law',
+                'display_name_fr' => 'Beau-frère',
+                'display_name_ar' => 'صهر',
+                'display_name_en' => 'Brother-in-law',
+                'description' => 'Frère du conjoint ou mari de la sœur',
+                'reverse_relationship' => 'sister_in_law',
+                'category' => 'marriage',
+                'generation_level' => 0,
+                'sort_order' => 27
+            ],
+            [
+                'name' => 'sister_in_law',
+                'display_name_fr' => 'Belle-sœur',
+                'display_name_ar' => 'سلفة',
+                'display_name_en' => 'Sister-in-law',
+                'description' => 'Sœur du conjoint ou épouse du frère',
+                'reverse_relationship' => 'brother_in_law',
+                'category' => 'marriage',
+                'generation_level' => 0,
+                'sort_order' => 28
+            ],
 
             // Cousins
             [
