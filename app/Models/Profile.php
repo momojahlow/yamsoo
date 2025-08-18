@@ -21,6 +21,37 @@ class Profile extends Model
         'avatar',
         'bio',
         'language',
+        'timezone',
+        'notifications_email',
+        'notifications_push',
+        'notifications_sms',
+        'privacy_profile',
+        'privacy_family',
+        'theme',
+    ];
+
+    /**
+     * The attributes that should be cast.
+     */
+    protected $casts = [
+        'birth_date' => 'date',
+        'notifications_email' => 'boolean',
+        'notifications_push' => 'boolean',
+        'notifications_sms' => 'boolean',
+    ];
+
+    /**
+     * The attributes that have default values.
+     */
+    protected $attributes = [
+        'language' => 'fr',
+        'timezone' => 'UTC',
+        'notifications_email' => true,
+        'notifications_push' => true,
+        'notifications_sms' => false,
+        'privacy_profile' => 'friends',
+        'privacy_family' => 'public',
+        'theme' => 'light',
     ];
 
     /**
@@ -59,10 +90,6 @@ class Profile extends Model
     {
         return in_array($this->gender, ['male', 'female']);
     }
-
-    protected $casts = [
-        'birth_date' => 'date',
-    ];
 
     public function user(): BelongsTo
     {

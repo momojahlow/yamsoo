@@ -34,25 +34,49 @@ class SetLocale
      */
     private function getLocale(Request $request): string
     {
-        $availableLocales = array_keys(config('app.available_locales', ['fr', 'ar']));
+        // Configuration des langues disponibles avec fallback sécurisé
+        $availableLocalesConfig = config('app.available_locales');
+
+        // Si la config n'existe pas ou est null, utiliser les langues par défaut
+        if (!is_array($availableLocalesConfig)) {
+            $availableLocales = ['fr', 'ar'];
+        } else {
+            $availableLocales = array_keys($availableLocalesConfig);
+        }
+
+        // S'assurer qu'on a au moins une langue disponible
+        if (empty($availableLocales)) {
+            $availableLocales = ['fr'];
+        }
 
         // 1. Vérifier si une langue est demandée via paramètre
-        if ($request->has('lang') && in_array($request->get('lang'), $availableLocales)) {
-            return $request->get('lang');
+        $requestLang = $request->get('lang');
+        if ($requestLang && in_array($requestLang, $availableLocales)) {
+            return $requestLang;
         }
 
         // 2. Vérifier la session
-        if (Session::has('locale') && in_array(Session::get('locale'), $availableLocales)) {
-            return Session::get('locale');
+        $sessionLocale = Session::get('locale');
+        if ($sessionLocale && in_array($sessionLocale, $availableLocales)) {
+            return $sessionLocale;
         }
 
         // 3. Vérifier les préférences utilisateur (si connecté)
-        if ($request->user() && $request->user()->profile &&
-            in_array($request->user()->profile->language ?? 'fr', $availableLocales)) {
-            return $request->user()->profile->language;
+        $user = $request->user();
+        if ($user && $user->profile) {
+            $userLanguage = $user->profile->language;
+            if ($userLanguage && in_array($userLanguage, $availableLocales)) {
+                return $userLanguage;
+            }
         }
 
-        // 4. Langue par défaut
-        return config('app.locale', 'fr');
+        // 4. Langue par défaut de l'application
+        $defaultLocale = config('app.locale');
+        if ($defaultLocale && in_array($defaultLocale, $availableLocales)) {
+            return $defaultLocale;
+        }
+
+        // 5. Fallback ultime - toujours retourner une string valide
+        return $availableLocales[0] ?? 'fr';
     }
 }

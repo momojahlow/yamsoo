@@ -52,18 +52,20 @@ class DashboardController extends Controller
         // Obtenir les demandes de relation reçues
         $pendingRequests = $this->familyRelationService->getPendingRequests($user);
 
-        return Inertia::render('dashboard', [
-            'user' => $user->load('profile'),
-            'profile' => $user->profile,
-            'dashboardStats' => $dashboardStats,
-            'recentActivities' => $recentActivities,
-            'prioritySuggestions' => $prioritySuggestions,
-            'recentFamilyMembers' => $recentFamilyMembers,
-            'upcomingBirthdays' => $upcomingBirthdays,
-            'familyStatistics' => $statistics,
+        // Calculer les badges dynamiques
+        $badges = $this->calculateDynamicBadges($user);
+
+        return Inertia::render('ModernDashboard', [
+            'auth' => ['user' => $user->load('profile')],
+            'stats' => $dashboardStats,
+            'recent_activities' => $recentActivities,
+            'family_members' => $recentFamilyMembers,
+            'pending_suggestions' => $prioritySuggestions,
+            'upcoming_birthdays' => $upcomingBirthdays,
             'notifications' => $notifications->take(5),
-            'unreadNotifications' => $unreadNotifications,
-            'pendingRequests' => $pendingRequests->take(3), // Limiter à 3 demandes pour le dashboard
+            'unread_notifications' => $unreadNotifications,
+            'pending_requests' => $pendingRequests->take(3),
+            'badges' => $badges,
         ]);
     }
 
@@ -92,6 +94,20 @@ class DashboardController extends Controller
             ->where('created_at', '>=', Carbon::now()->startOfWeek())
             ->count();
 
+        // Statistiques des photos et albums
+        $totalPhotos = \App\Models\Photo::where('user_id', $user->id)->count();
+        $totalAlbums = \App\Models\PhotoAlbum::where('user_id', $user->id)->count();
+
+        // Statistiques des messages (si le modèle existe)
+        $totalMessages = 0;
+        $activeConversations = 0;
+        if (class_exists('\App\Models\Message')) {
+            $totalMessages = \App\Models\Message::where('user_id', $user->id)->count();
+            $activeConversations = \App\Models\Message::where('user_id', $user->id)
+                ->distinct('conversation_id')
+                ->count('conversation_id');
+        }
+
         return [
             'total_family_members' => $relationships->count(),
             'new_members_this_month' => $thisMonth,
@@ -101,6 +117,71 @@ class DashboardController extends Controller
             'total_suggestions' => $suggestions->count(),
             'automatic_relations' => $relationships->where('created_automatically', true)->count(),
             'manual_relations' => $relationships->where('created_automatically', false)->count(),
+            'total_photos' => $totalPhotos,
+            'total_albums' => $totalAlbums,
+            'total_messages' => $totalMessages,
+            'active_conversations' => $activeConversations,
+        ];
+    }
+
+    private function calculateDynamicBadges(User $user): array
+    {
+        // Badge pour les notifications
+        $totalNotifications = $this->notificationService->getUnreadCount($user);
+
+        // Badge pour les suggestions en attente
+        $pendingSuggestions = Suggestion::where('user_id', $user->id)
+            ->where('status', 'pending')
+            ->count();
+
+        // Badge pour les nouvelles suggestions cette semaine
+        $newSuggestionsThisWeek = Suggestion::where('user_id', $user->id)
+            ->where('created_at', '>=', Carbon::now()->startOfWeek())
+            ->count();
+
+        // Badge pour les demandes de relation en attente
+        $pendingRequests = \App\Models\RelationshipRequest::where('target_user_id', $user->id)
+            ->where('status', 'pending')
+            ->count();
+
+        // Badge pour les albums photo
+        $totalAlbums = \App\Models\PhotoAlbum::where('user_id', $user->id)->count();
+
+        // Badge pour les conversations actives (messages non lus)
+        $unreadMessages = 0;
+        $activeConversations = 0;
+        if (class_exists('\App\Models\Message')) {
+            $unreadMessages = \App\Models\Message::where('recipient_id', $user->id)
+                ->where('read_at', null)
+                ->count();
+
+            $activeConversations = \App\Models\Message::where(function($query) use ($user) {
+                $query->where('sender_id', $user->id)
+                      ->orWhere('recipient_id', $user->id);
+            })
+            ->distinct('conversation_id')
+            ->count('conversation_id');
+        }
+
+        // Badge pour les événements à venir
+        $upcomingEvents = 0;
+        if (class_exists('\App\Models\Event')) {
+            $upcomingEvents = \App\Models\Event::where('user_id', $user->id)
+                ->where('date', '>=', Carbon::now())
+                ->where('date', '<=', Carbon::now()->addDays(7))
+                ->count();
+        }
+
+        return [
+            'notifications' => $totalNotifications,
+            'suggestions' => $pendingSuggestions,
+            'new_suggestions' => $newSuggestionsThisWeek,
+            'pending_requests' => $pendingRequests,
+            'albums' => $totalAlbums,
+            'unread_messages' => $unreadMessages,
+            'active_conversations' => $activeConversations,
+            'upcoming_events' => $upcomingEvents,
+            'total_badges' => $totalNotifications + $pendingSuggestions + $pendingRequests + $unreadMessages,
         ];
     }
 
