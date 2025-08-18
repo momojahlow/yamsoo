@@ -8,19 +8,12 @@ use App\Models\FamilyRelationship;
 use App\Models\RelationshipRequest;
 use App\Models\RelationshipType;
 use App\Models\Conversation;
-use App\Services\SimpleRelationshipInferenceService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class FamilyRelationService
 {
-    protected SimpleRelationshipInferenceService $simpleRelationshipInferenceService;
-
-    public function __construct(SimpleRelationshipInferenceService $simpleRelationshipInferenceService)
-    {
-        $this->simpleRelationshipInferenceService = $simpleRelationshipInferenceService;
-    }
     public function getUserRelationships(User $user): Collection
     {
         // Récupérer TOUTES les relations où l'utilisateur est impliqué
@@ -52,7 +45,7 @@ class FamilyRelationService
         int $targetUserId,
         int $relationshipTypeId,
         string $message = '',
-        string $motherName = null
+        ?string $motherName = null
     ): RelationshipRequest {
 
         // Vérifications préalables
@@ -148,31 +141,9 @@ class FamilyRelationService
             // Les déductions se feront après la transaction pour avoir toutes les relations de base
         });
 
-        // Maintenant que toutes les relations de base sont créées, déduire les relations automatiques
+        // Relations automatiques désactivées - seules les relations directes sont créées
         $requester = User::find($request->requester_id);
         $target = User::find($request->target_user_id);
-        $relationshipType = RelationshipType::find($request->relationship_type_id);
-
-        if ($relationshipType && $requester && $target) {
-            // Déduire les relations pour le demandeur
-            $deducedForRequester = $this->simpleRelationshipInferenceService->deduceRelationships(
-                $requester,
-                $target,
-                $relationshipType->name
-            );
-            $this->createDeducedRelationships($deducedForRequester);
-
-            // Déduire les relations pour la cible (relation inverse)
-            $inverseType = $this->getInverseRelationshipType($request->relationship_type_id, $requester, $target);
-            if ($inverseType && $inverseType->name) {
-                $deducedForTarget = $this->simpleRelationshipInferenceService->deduceRelationships(
-                    $target,
-                    $requester,
-                    $inverseType->name
-                );
-                $this->createDeducedRelationships($deducedForTarget);
-            }
-        }
 
         // Déclencher l'événement pour générer des suggestions familiales
         if ($requester && $target && $createdRelationship) {
@@ -221,27 +192,7 @@ class FamilyRelationService
             }
         });
 
-        // Déduire les relations automatiques
-        if ($createdRelationship) {
-            // Déduire les relations pour le demandeur
-            $deducedForRequester = $this->simpleRelationshipInferenceService->deduceRelationships(
-                $requester,
-                $target,
-                $relationshipType->name
-            );
-            $this->createDeducedRelationships($deducedForRequester);
-
-            // Déduire les relations pour la cible (relation inverse)
-            $inverseType = $this->getInverseRelationshipType($relationshipType->id, $requester, $target);
-            if ($inverseType) {
-                $deducedForTarget = $this->simpleRelationshipInferenceService->deduceRelationships(
-                    $target,
-                    $requester,
-                    $inverseType->name
-                );
-                $this->createDeducedRelationships($deducedForTarget);
-            }
-        }
+        // Relations automatiques désactivées - seules les relations directes sont créées
 
         Log::info("Relation familiale créée directement", [
             'requester' => $requester->name,
@@ -253,165 +204,11 @@ class FamilyRelationService
         return $createdRelationship;
     }
 
-    /**
-     * Créer les relations déduites automatiquement
-     */
-    private function createDeducedRelationships(Collection $deducedRelations): int
-    {
-        $created = 0;
 
-        foreach ($deducedRelations as $relation) {
-            try {
-                // Vérifier que la relation n'existe pas déjà
-                $exists = FamilyRelationship::where('user_id', $relation['user_id'])
-                    ->where('related_user_id', $relation['related_user_id'])
-                    ->exists();
 
-                if (!$exists) {
-                    // AMÉLIORATION: Validation supplémentaire avant création automatique
-                    if ($this->validateAutomaticRelation($relation)) {
-                        FamilyRelationship::create([
-                            'user_id' => $relation['user_id'],
-                            'related_user_id' => $relation['related_user_id'],
-                            'relationship_type_id' => $relation['relationship_type_id'],
-                            'status' => 'accepted',
-                            'created_automatically' => true
-                        ]);
 
-                        $created++;
-                        Log::info("Relation automatique créée : " . ($relation['reason'] ?? 'Déduction automatique'));
-                    } else {
-                        Log::warning("Relation automatique rejetée lors de la validation", [
-                            'relation' => $relation,
-                            'reason' => 'Validation échouée'
-                        ]);
-                    }
-                }
-            } catch (\Exception $e) {
-                Log::error('Erreur lors de la création d\'une relation déduite', [
-                    'relation' => $relation,
-                    'error' => $e->getMessage()
-                ]);
-            }
-        }
 
-        return $created;
-    }
 
-    /**
-     * Valide une relation automatique avant sa création
-     * AMÉLIORATION: Prévient la création de relations incorrectes
-     */
-    private function validateAutomaticRelation(array $relation): bool
-    {
-        try {
-            $user1 = User::find($relation['user_id']);
-            $user2 = User::find($relation['related_user_id']);
-            $relationshipType = RelationshipType::find($relation['relationship_type_id']);
-
-            if (!$user1 || !$user2 || !$relationshipType) {
-                return false;
-            }
-
-            // Validation spécifique pour les relations de fratrie
-            if (in_array($relationshipType->name, ['brother', 'sister'])) {
-                return $this->validateSiblingRelation($user1, $user2);
-            }
-
-            // Validation pour les relations parent-enfant
-            if (in_array($relationshipType->name, ['father', 'mother', 'son', 'daughter'])) {
-                return $this->validateParentChildRelation($user1, $user2, $relationshipType->name);
-            }
-
-            // Pour les autres types de relations, accepter par défaut
-            return true;
-
-        } catch (\Exception $e) {
-            Log::error('Erreur lors de la validation d\'une relation automatique', [
-                'relation' => $relation,
-                'error' => $e->getMessage()
-            ]);
-            return false;
-        }
-    }
-
-    /**
-     * Valide une relation de fratrie
-     */
-    private function validateSiblingRelation(User $user1, User $user2): bool
-    {
-        // Vérifier l'âge - une différence de plus de 25 ans est suspecte pour des frères/sœurs
-        $age1 = $user1->profile?->birth_date ? now()->diffInYears($user1->profile->birth_date) : null;
-        $age2 = $user2->profile?->birth_date ? now()->diffInYears($user2->profile->birth_date) : null;
-
-        if ($age1 && $age2 && abs($age1 - $age2) > 25) {
-            Log::info("Relation de fratrie rejetée : différence d'âge trop importante", [
-                'user1' => $user1->name,
-                'user2' => $user2->name,
-                'age_diff' => abs($age1 - $age2)
-            ]);
-            return false;
-        }
-
-        // Vérifier qu'ils ont au moins un parent en commun
-        $user1Parents = $this->getUserParents($user1);
-        $user2Parents = $this->getUserParents($user2);
-
-        $commonParents = $user1Parents->intersect($user2Parents);
-
-        if ($commonParents->isEmpty()) {
-            Log::info("Relation de fratrie rejetée : aucun parent en commun trouvé", [
-                'user1' => $user1->name,
-                'user2' => $user2->name
-            ]);
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Valide une relation parent-enfant
-     */
-    private function validateParentChildRelation(User $user1, User $user2, string $relationType): bool
-    {
-        // Déterminer qui est le parent et qui est l'enfant
-        $isUser1Parent = in_array($relationType, ['father', 'mother']);
-        $parent = $isUser1Parent ? $user1 : $user2;
-        $child = $isUser1Parent ? $user2 : $user1;
-
-        // Vérifier l'âge - un parent doit avoir au moins 15 ans de plus que l'enfant
-        $parentAge = $parent->profile?->birth_date ? now()->diffInYears($parent->profile->birth_date) : null;
-        $childAge = $child->profile?->birth_date ? now()->diffInYears($child->profile->birth_date) : null;
-
-        if ($parentAge && $childAge) {
-            $ageDiff = $parentAge - $childAge;
-            if ($ageDiff < 15 || $ageDiff > 60) {
-                Log::info("Relation parent-enfant rejetée : différence d'âge inappropriée", [
-                    'parent' => $parent->name,
-                    'child' => $child->name,
-                    'age_diff' => $ageDiff
-                ]);
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * Obtient les parents d'un utilisateur
-     */
-    private function getUserParents(User $user): Collection
-    {
-        return FamilyRelationship::where('user_id', $user->id)
-            ->whereHas('relationshipType', function($query) {
-                $query->whereIn('name', ['father', 'mother']);
-            })
-            ->with('relatedUser')
-            ->get()
-            ->pluck('relatedUser');
-    }
 
     /**
      * Obtenir les statistiques familiales d'un utilisateur

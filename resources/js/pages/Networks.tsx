@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { EmptyProfilesState } from '@/components/networks/EmptyProfilesState';
 import { AddFamilyRelation } from '@/components/networks/AddFamilyRelation';
 import YamsooButton from '@/components/YamsooButton';
@@ -384,36 +385,41 @@ export default function Networks({
                     </div>
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Demandes reçues</h3>
                   </div>
-                  <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {safePendingRequests.map((request) => (
-                      <Card key={request.id} className="border-0 shadow-lg bg-white dark:bg-gray-800">
+                      <Card key={request.id} className="border-0 shadow-sm hover:shadow-md transition-all duration-200">
                         <CardContent className="p-6">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center mb-3">
-                                <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center mr-4">
-                                  <span className="text-white font-semibold">
-                                    {request.requester_name.charAt(0).toUpperCase()}
-                                  </span>
-                                </div>
-                                <div>
-                                  <p className="font-semibold text-gray-900 dark:text-white">{request.requester_name}</p>
-                                  <p className="text-sm text-gray-600 dark:text-gray-400">{request.requester_email}</p>
-                                </div>
-                              </div>
-                              <div className="ml-16">
-                                <div className="text-sm mb-2">
-                                  {t('added_you_as')} <Badge variant="outline" className={`${isRTL ? 'mr-1' : 'ml-1'}`}>{getLocalizedRelationName(request.relationship_name)}</Badge>
-                                </div>
-                                {request.message && (
-                                  <p className="text-sm text-gray-600 dark:text-gray-400 italic mb-2">"{request.message}"</p>
-                                )}
-                                {request.mother_name && (
-                                  <p className="text-sm text-gray-500 dark:text-gray-500">Nom de la mère : {request.mother_name}</p>
-                                )}
-                              </div>
+                          <div className="flex items-center space-x-4">
+                            <Avatar className="w-12 h-12">
+                              <AvatarImage src={request.requester.profile?.avatar_url || ''} />
+                              <AvatarFallback className="bg-slate-100 text-slate-500">
+                                {request.requester.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-medium text-gray-900 dark:text-white truncate">
+                                {request.requester.name}
+                              </h3>
+                              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                                {request.requester.email}
+                              </p>
+                              <Badge
+                                className="mt-2 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+                                variant="secondary"
+                              >
+                                {request.relationshipType?.display_name_fr || request.relationshipType?.display_name || 'Relation'}
+                              </Badge>
                             </div>
-                            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 ml-0 sm:ml-6 mt-3 sm:mt-0">
+                          </div>
+
+                          {request.message && (
+                            <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                              <p className="text-sm text-gray-600 dark:text-gray-300">{request.message}</p>
+                            </div>
+                          )}
+
+                          <div className="flex space-x-2 mt-4">
                               <Button
                                 size="sm"
                                 variant="outline"
@@ -434,7 +440,6 @@ export default function Networks({
                                 <span className="sm:hidden">Oui</span>
                               </Button>
                             </div>
-                          </div>
                         </CardContent>
                       </Card>
                     ))}
@@ -451,13 +456,41 @@ export default function Networks({
                     </div>
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Demandes envoyées</h3>
                   </div>
-                  <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {safeSentRequests.map((request) => (
-                      <Card key={request.id} className="border-0 shadow-lg bg-white dark:bg-gray-800">
+                      <Card key={request.id} className="border-0 shadow-sm hover:shadow-md transition-all duration-200">
                         <CardContent className="p-6">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center mb-3">
+                          <div className="flex items-center space-x-4">
+                            <Avatar className="w-12 h-12">
+                              <AvatarImage src={request.targetUser.profile?.avatar_url || ''} />
+                              <AvatarFallback className="bg-slate-100 text-slate-500">
+                                {request.targetUser.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-medium text-gray-900 dark:text-white truncate">
+                                {request.targetUser.name}
+                              </h3>
+                              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                                {request.targetUser.email}
+                              </p>
+                              <Badge
+                                className="mt-2 bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
+                                variant="secondary"
+                              >
+                                {request.relationshipType?.display_name_fr || request.relationshipType?.display_name || 'Relation'}
+                              </Badge>
+                            </div>
+                          </div>
+
+                          {request.message && (
+                            <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                              <p className="text-sm text-gray-600 dark:text-gray-300">{request.message}</p>
+                            </div>
+                          )}
+
+                          <div className="flex justify-center mt-4">
                                 <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mr-4">
                                   <span className="text-white font-semibold">
                                     {request.target_user_email.charAt(0).toUpperCase()}

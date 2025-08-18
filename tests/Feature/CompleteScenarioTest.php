@@ -25,30 +25,32 @@ class CompleteScenarioTest extends TestCase
     }
 
     /**
-     * Test du scénario complet demandé :
-     * 
-     * Ahmed crée les demandes :
-     * - Vers Fatima en tant que "Épouse"
-     * - Vers Mohammed en tant que "Fils"
-     * - Vers Amina en tant que "Fille"
-     * 
-     * Fatima crée une demande vers Youssef en tant que "Frère"
-     * 
-     * Youssef crée les demandes :
-     * - Vers Ahmed en tant que "Beau-frère"
-     * - Vers Mohammed en tant que "Neveu"
-     * - Vers Amina en tant que "Nièce"
-     * 
-     * Chaque acceptation crée deux entrées réciproques dans la table des relations.
+     * Test du nouveau scénario sans relations automatiques :
+     *
+     * Ahmed crée une demande vers Fatima avec relation "Mari".
+     * Fatima accepte → Fatima devient épouse d'Ahmed et Ahmed devient mari de Fatima.
+     * Fatima crée une demande vers Youssef Bennani avec relation "Frère".
+     * Youssef accepte → Youssef devient frère de Fatima et Fatima devient sœur de Youssef.
+     * Youssef crée une demande vers Ahmed avec relation "Beau-frère".
+     * Ahmed accepte → Ahmed devient beau-frère de Youssef et Youssef devient beau-frère d'Ahmed.
+     * Ahmed crée une demande vers Leila Mansouri avec relation "Sœur".
+     * Leila accepte → Leila devient sœur d'Ahmed et Ahmed devient frère de Leila.
+     * Leila crée deux demandes :
+     * - Vers Youssef avec relation "Beau-frère".
+     * - Vers Fatima avec relation "Belle-sœur".
+     * Fatima accepte la demande de Leila → Fatima devient belle-sœur de Leila et Leila devient belle-sœur de Fatima.
+     * Youssef accepte la demande de Leila → Youssef devient beau-frère de Leila et Leila devient belle-sœur de Youssef.
+     *
+     * Chaque acceptation crée UNIQUEMENT deux entrées réciproques dans la table des relations.
+     * AUCUNE relation automatique ne doit être créée.
      */
     public function test_complete_family_scenario(): void
     {
         // Créer les utilisateurs pour le test
         $ahmed = User::factory()->withProfile('male')->create(['name' => 'Ahmed Benali', 'email' => 'ahmed@test.com']);
         $fatima = User::factory()->withProfile('female')->create(['name' => 'Fatima Zahra', 'email' => 'fatima@test.com']);
-        $mohammed = User::factory()->withProfile('male')->create(['name' => 'Mohammed Alami', 'email' => 'mohammed@test.com']);
-        $amina = User::factory()->withProfile('female')->create(['name' => 'Amina Tazi', 'email' => 'amina@test.com']);
         $youssef = User::factory()->withProfile('male')->create(['name' => 'Youssef Bennani', 'email' => 'youssef@test.com']);
+        $leila = User::factory()->withProfile('female')->create(['name' => 'Leila Mansouri', 'email' => 'leila@test.com']);
 
         echo "\n=== SCÉNARIO COMPLET DE RELATIONS FAMILIALES ===\n";
 
@@ -56,95 +58,76 @@ class CompleteScenarioTest extends TestCase
         $allTypes = RelationshipType::pluck('name')->toArray();
         echo "Types disponibles : " . implode(', ', $allTypes) . "\n";
 
-        // Récupérer les types de relations qui existent
+        // Récupérer les types de relations nécessaires
         $husbandType = RelationshipType::where('name', 'husband')->first();
-        $wifeType = RelationshipType::where('name', 'wife')->first();
-        $sonType = RelationshipType::where('name', 'son')->first();
-        $daughterType = RelationshipType::where('name', 'daughter')->first();
         $brotherType = RelationshipType::where('name', 'brother')->first();
-        $sisterType = RelationshipType::where('name', 'sister')->first();
         $brotherInLawType = RelationshipType::where('name', 'brother_in_law')->first();
-        $nephewType = RelationshipType::where('name', 'nephew')->first();
-        $nieceType = RelationshipType::where('name', 'niece')->first();
+        $sisterType = RelationshipType::where('name', 'sister')->first();
+        $sisterInLawType = RelationshipType::where('name', 'sister_in_law')->first();
 
-        // Utiliser les types génériques s'ils existent
-        if (!$husbandType) $husbandType = RelationshipType::where('name', 'spouse')->first();
-        if (!$sonType) $sonType = RelationshipType::where('name', 'child')->first();
-        if (!$daughterType) $daughterType = RelationshipType::where('name', 'child')->first();
-        if (!$brotherType) $brotherType = RelationshipType::where('name', 'sibling')->first();
+        $this->assertNotNull($husbandType, 'Type husband doit exister');
+        $this->assertNotNull($brotherType, 'Type brother doit exister');
 
-        echo "\n=== ÉTAPE 1: Ahmed crée ses demandes ===\n";
+        echo "\n=== NOUVEAU SCÉNARIO SANS RELATIONS AUTOMATIQUES ===\n";
 
-        // 1. Ahmed → Fatima (Épouse)
-        echo "1. Ahmed demande à Fatima d'être son épouse...\n";
+        // 1. Ahmed → Fatima (Mari)
+        echo "1. Ahmed demande à Fatima d'être son mari...\n";
         $request1 = $this->familyRelationService->createRelationshipRequest(
             $ahmed, $fatima->id, $husbandType->id, 'Demande de mariage'
         );
         $this->familyRelationService->acceptRelationshipRequest($request1);
-        echo "✅ Ahmed et Fatima sont maintenant époux\n";
+        echo "✅ Ahmed et Fatima sont maintenant mari et épouse\n";
 
-        // 2. Ahmed → Mohammed (Fils)
-        echo "2. Ahmed déclare Mohammed comme son fils...\n";
+        // 2. Fatima → Youssef (Frère)
+        echo "2. Fatima demande à Youssef d'être son frère...\n";
         $request2 = $this->familyRelationService->createRelationshipRequest(
-            $ahmed, $mohammed->id, $sonType->id, 'Tu es mon fils'
-        );
-        $this->familyRelationService->acceptRelationshipRequest($request2);
-        echo "✅ Ahmed et Mohammed sont maintenant père et fils\n";
-
-        // 3. Ahmed → Amina (Fille)
-        echo "3. Ahmed déclare Amina comme sa fille...\n";
-        $request3 = $this->familyRelationService->createRelationshipRequest(
-            $ahmed, $amina->id, $daughterType->id, 'Tu es ma fille'
-        );
-        $this->familyRelationService->acceptRelationshipRequest($request3);
-        echo "✅ Ahmed et Amina sont maintenant père et fille\n";
-
-        echo "\n=== ÉTAPE 2: Fatima crée sa demande ===\n";
-
-        // 4. Fatima → Youssef (Frère)
-        echo "4. Fatima déclare Youssef comme son frère...\n";
-        $request4 = $this->familyRelationService->createRelationshipRequest(
             $fatima, $youssef->id, $brotherType->id, 'Tu es mon frère'
         );
-        $this->familyRelationService->acceptRelationshipRequest($request4);
+        $this->familyRelationService->acceptRelationshipRequest($request2);
         echo "✅ Fatima et Youssef sont maintenant frère et sœur\n";
 
-        echo "\n=== ÉTAPE 3: Youssef crée ses demandes ===\n";
-
-        // 5. Youssef → Ahmed (Beau-frère) - Si le type existe
+        // 3. Youssef → Ahmed (Beau-frère)
         if ($brotherInLawType) {
-            echo "5. Youssef demande à Ahmed d'être son beau-frère...\n";
-            $request5 = $this->familyRelationService->createRelationshipRequest(
+            echo "3. Youssef demande à Ahmed d'être son beau-frère...\n";
+            $request3 = $this->familyRelationService->createRelationshipRequest(
                 $youssef, $ahmed->id, $brotherInLawType->id, 'Tu es mon beau-frère'
             );
-            $this->familyRelationService->acceptRelationshipRequest($request5);
+            $this->familyRelationService->acceptRelationshipRequest($request3);
             echo "✅ Youssef et Ahmed sont maintenant beaux-frères\n";
         } else {
             echo "⚠️ Type brother_in_law non trouvé, relation ignorée\n";
         }
 
-        // 6. Youssef → Mohammed (Neveu) - Si le type existe
-        if ($nephewType) {
-            echo "6. Youssef demande à Mohammed d'être son neveu...\n";
-            $request6 = $this->familyRelationService->createRelationshipRequest(
-                $youssef, $mohammed->id, $nephewType->id, 'Tu es mon neveu'
+        // 4. Ahmed → Leila (Sœur)
+        echo "4. Ahmed demande à Leila d'être sa sœur...\n";
+        $request4 = $this->familyRelationService->createRelationshipRequest(
+            $ahmed, $leila->id, $sisterType->id, 'Tu es ma sœur'
+        );
+        $this->familyRelationService->acceptRelationshipRequest($request4);
+        echo "✅ Ahmed et Leila sont maintenant frère et sœur\n";
+
+        // 5. Leila → Youssef (Beau-frère)
+        if ($brotherInLawType) {
+            echo "5. Leila demande à Youssef d'être son beau-frère...\n";
+            $request5 = $this->familyRelationService->createRelationshipRequest(
+                $leila, $youssef->id, $brotherInLawType->id, 'Tu es mon beau-frère'
             );
-            $this->familyRelationService->acceptRelationshipRequest($request6);
-            echo "✅ Youssef et Mohammed sont maintenant oncle et neveu\n";
+            $this->familyRelationService->acceptRelationshipRequest($request5);
+            echo "✅ Leila et Youssef sont maintenant belle-sœur et beau-frère\n";
         } else {
-            echo "⚠️ Type nephew non trouvé, relation ignorée\n";
+            echo "⚠️ Type brother_in_law non trouvé, relation ignorée\n";
         }
 
-        // 7. Youssef → Amina (Nièce) - Si le type existe
-        if ($nieceType) {
-            echo "7. Youssef demande à Amina d'être sa nièce...\n";
-            $request7 = $this->familyRelationService->createRelationshipRequest(
-                $youssef, $amina->id, $nieceType->id, 'Tu es ma nièce'
+        // 6. Leila → Fatima (Belle-sœur)
+        if ($sisterInLawType) {
+            echo "6. Leila demande à Fatima d'être sa belle-sœur...\n";
+            $request6 = $this->familyRelationService->createRelationshipRequest(
+                $leila, $fatima->id, $sisterInLawType->id, 'Tu es ma belle-sœur'
             );
-            $this->familyRelationService->acceptRelationshipRequest($request7);
-            echo "✅ Youssef et Amina sont maintenant oncle et nièce\n";
+            $this->familyRelationService->acceptRelationshipRequest($request6);
+            echo "✅ Leila et Fatima sont maintenant belles-sœurs\n";
         } else {
-            echo "⚠️ Type niece non trouvé, relation ignorée\n";
+            echo "⚠️ Type sister_in_law non trouvé, relation ignorée\n";
         }
 
         echo "\n=== VÉRIFICATIONS FINALES ===\n";
@@ -152,37 +135,34 @@ class CompleteScenarioTest extends TestCase
         // Vérifier toutes les relations créées
         $this->verifyUserFamily($ahmed, 'Ahmed');
         $this->verifyUserFamily($fatima, 'Fatima');
-        $this->verifyUserFamily($mohammed, 'Mohammed');
-        $this->verifyUserFamily($amina, 'Amina');
         $this->verifyUserFamily($youssef, 'Youssef');
+        $this->verifyUserFamily($leila, 'Leila');
 
         // Vérifier les relations bidirectionnelles
         echo "\n=== VÉRIFICATION DES RELATIONS BIDIRECTIONNELLES ===\n";
-        
+
         $totalRelations = FamilyRelationship::where('status', 'accepted')->count();
         echo "Total des relations en base : {$totalRelations}\n";
 
         // Vérifier que chaque relation a sa réciproque
         $this->verifyBidirectionalRelations();
 
-        // Vérifications spécifiques
+        // Vérifications spécifiques du nouveau scénario
         $this->assertUserHasRelation($ahmed, $fatima, 'husband', 'Ahmed devrait avoir Fatima comme épouse');
         $this->assertUserHasRelation($fatima, $ahmed, 'wife', 'Fatima devrait avoir Ahmed comme époux');
-        
-        $this->assertUserHasRelation($ahmed, $mohammed, 'son', 'Ahmed devrait avoir Mohammed comme fils');
-        $this->assertUserHasRelation($mohammed, $ahmed, 'father', 'Mohammed devrait avoir Ahmed comme père');
-        
-        $this->assertUserHasRelation($ahmed, $amina, 'daughter', 'Ahmed devrait avoir Amina comme fille');
-        $this->assertUserHasRelation($amina, $ahmed, 'father', 'Amina devrait avoir Ahmed comme père');
 
         $this->assertUserHasRelation($fatima, $youssef, 'brother', 'Fatima devrait avoir Youssef comme frère');
         $this->assertUserHasRelation($youssef, $fatima, 'sister', 'Youssef devrait avoir Fatima comme sœur');
 
-        // Vérifier les relations automatiquement créées
+        $this->assertUserHasRelation($ahmed, $leila, 'sister', 'Ahmed devrait avoir Leila comme sœur');
+        $this->assertUserHasRelation($leila, $ahmed, 'brother', 'Leila devrait avoir Ahmed comme frère');
+
+        // Vérifier qu'AUCUNE relation automatique n'a été créée
         $autoRelations = FamilyRelationship::where('created_automatically', true)->count();
         echo "\nRelations automatiquement créées : {$autoRelations}\n";
+        $this->assertEquals(0, $autoRelations, 'Aucune relation automatique ne devrait être créée');
 
-        echo "\n🎉 SCÉNARIO COMPLET RÉUSSI ! Toutes les relations fonctionnent correctement.\n";
+        echo "\n🎉 NOUVEAU SCÉNARIO RÉUSSI ! Seules les relations directes ont été créées.\n";
     }
 
     private function verifyUserFamily(User $user, string $name): void
