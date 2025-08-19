@@ -269,6 +269,14 @@ class FamilyRelationService
         return RelationshipType::all();
     }
 
+    /**
+     * Obtient le type de relation inverse (publique)
+     */
+    public function getPublicInverseRelationshipType(int $relationshipTypeId, ?User $requester = null, ?User $target = null): ?RelationshipType
+    {
+        return $this->getInverseRelationshipType($relationshipTypeId, $requester, $target);
+    }
+
     public function getFamilyTree(User $user): array
     {
         $relationships = $this->getUserRelationships($user);

@@ -365,7 +365,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    <Link href="/family-relations">
+                    <Link href="/reseaux">
                       <Button variant="outline" className={`w-full ${isRTL ? 'justify-end' : 'justify-start'}`}>
                         <UserPlus className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                         {t('add_relationship')}

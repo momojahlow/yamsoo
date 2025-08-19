@@ -10,6 +10,7 @@ use App\Services\NetworkService;
 use App\Services\SearchService;
 use App\Services\FamilyRelationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -49,12 +50,25 @@ class NetworkController extends Controller
             ->where('status', 'pending')
             ->with(['requester.profile', 'relationshipType'])
             ->get()
-            ->map(function($request) {
+            ->map(function($request) use ($user) {
+                // Obtenir la relation inverse (ce que le target sera pour le requester)
+                $familyRelationService = app(\App\Services\FamilyRelationService::class);
+                $inverseRelationType = $familyRelationService->getPublicInverseRelationshipType(
+                    $request->relationship_type_id,
+                    $request->requester,
+                    $user
+                );
+
+
+
+
+
                 return [
                     'id' => $request->id,
                     'requester_name' => $request->requester->name,
                     'requester_email' => $request->requester->email,
                     'relationship_name' => $request->relationshipType->display_name_fr,
+                    'inverse_relationship_name' => $inverseRelationType ? $inverseRelationType->display_name_fr : null,
                     'message' => $request->message,
                     'mother_name' => $request->mother_name,
                     'created_at' => $request->created_at->toISOString(),

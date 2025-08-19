@@ -9,6 +9,8 @@ import { EmptyProfilesState } from '@/components/networks/EmptyProfilesState';
 import { AddFamilyRelation } from '@/components/networks/AddFamilyRelation';
 import YamsooButton from '@/components/YamsooButton';
 import { useTranslation } from '@/hooks/useTranslation';
+import { getInverseRelation } from '@/utils/relationUtils';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import {
   Search,
   Users,
@@ -77,6 +79,7 @@ interface PendingRequest {
   requester_name: string;
   requester_email: string;
   relationship_name: string;
+  inverse_relationship_name?: string;
   message?: string;
   mother_name?: string;
   created_at: string;
@@ -207,6 +210,18 @@ export default function Networks({
       },
       onError: () => {
         toast({ title: 'Erreur', description: 'Impossible de rejeter la demande.' });
+      }
+    });
+  };
+
+  const handleCancelRequest = (requestId: number) => {
+    router.delete(`/family-relations/${requestId}`, {
+      onSuccess: () => {
+        toast({ title: 'Demande annulée', description: 'La demande a été annulée avec succès.' });
+        router.reload({ only: ['sentRequests', 'pendingRequests', 'existingRelations'] });
+      },
+      onError: () => {
+        toast({ title: 'Erreur', description: 'Impossible d\'annuler la demande.' });
       }
     });
   };
@@ -366,9 +381,6 @@ export default function Networks({
                               <h3 className="font-semibold text-gray-900 dark:text-white truncate">
                                 {relation.related_user_name}
                               </h3>
-                              <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                                {relation.related_user_email}
-                              </p>
                               <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 mt-2 inline-block">
                                 {getLocalizedRelationName(relation.relationship_name)}
                               </Badge>
@@ -412,15 +424,98 @@ export default function Networks({
                                 <h3 className="font-medium text-gray-900 dark:text-white truncate">
                                   {requesterName}
                                 </h3>
-                                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                                  {requesterEmail}
-                                </p>
-                                <div className="mt-2 flex flex-col gap-1">
+                                <div className="mt-2 flex items-center gap-2 flex-wrap">
                                   <Badge
                                     className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 w-fit"
                                     variant="secondary"
                                   >
-                                    Demande reçue: {request.relationshipType?.display_name_fr || request.relationship_name || 'Relation'}
+                                    {(() => {
+                                      // Mapper les noms français vers les codes anglais
+                                      const frenchToEnglish: Record<string, string> = {
+                                        'Épouse': 'wife',
+                                        'Mari': 'husband',
+                                        'Père': 'father',
+                                        'Mère': 'mother',
+                                        'Fils': 'son',
+                                        'Fille': 'daughter',
+                                        'Frère': 'brother',
+                                        'Sœur': 'sister',
+                                        'Oncle': 'uncle',
+                                        'Tante': 'aunt',
+                                        'Neveu': 'nephew',
+                                        'Nièce': 'niece',
+                                        'Grand-père': 'grandfather',
+                                        'Grand-mère': 'grandmother',
+                                        'Petit-fils': 'grandson',
+                                        'Petite-fille': 'granddaughter',
+                                        'Beau-père': 'father_in_law',
+                                        'Belle-mère': 'mother_in_law',
+                                        'Gendre': 'son_in_law',
+                                        'Belle-fille': 'daughter_in_law',
+                                        'Cousin(e)': 'cousin',
+                                      };
+
+                                      // Obtenir le code anglais de la relation demandée
+                                      const relationCode = request.relationshipType?.name ||
+                                        frenchToEnglish[request.relationship_name] || 'unknown';
+
+                                      // Obtenir la relation inverse
+                                      const inverseRelation = getInverseRelation(relationCode as any);
+
+                                      // Mapper les codes anglais vers les noms français
+                                      const englishToFrench: Record<string, string> = {
+                                        'father': 'Père',
+                                        'mother': 'Mère',
+                                        'son': 'Fils',
+                                        'daughter': 'Fille',
+                                        'brother': 'Frère',
+                                        'sister': 'Sœur',
+                                        'husband': 'Mari',
+                                        'wife': 'Épouse',
+                                        'uncle': 'Oncle',
+                                        'aunt': 'Tante',
+                                        'nephew': 'Neveu',
+                                        'niece': 'Nièce',
+                                        'grandfather': 'Grand-père',
+                                        'grandmother': 'Grand-mère',
+                                        'grandson': 'Petit-fils',
+                                        'granddaughter': 'Petite-fille',
+                                        'father_in_law': 'Beau-père',
+                                        'mother_in_law': 'Belle-mère',
+                                        'son_in_law': 'Gendre',
+                                        'daughter_in_law': 'Belle-fille',
+                                        'cousin': 'Cousin(e)',
+                                      };
+
+                                      return englishToFrench[inverseRelation] || request.relationship_name;
+                                    })()}
+                                  </Badge>
+
+                                  {/* Boutons d'action sous forme de badges */}
+                                  <ConfirmDialog
+                                    title="Rejeter la demande"
+                                    description="Êtes-vous sûr de vouloir rejeter cette demande de relation ?"
+                                    confirmText="Rejeter"
+                                    cancelText="Annuler"
+                                    onConfirm={() => handleRejectRequest(request.id)}
+                                    variant="destructive"
+                                  >
+                                    <Badge
+                                      className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 w-fit cursor-pointer hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                                      variant="outline"
+                                    >
+                                      <XCircle className="w-3 h-3 mr-1" />
+                                      Rejeter
+                                    </Badge>
+                                  </ConfirmDialog>
+
+                                  <Badge
+                                    className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 w-fit cursor-pointer hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
+                                    variant="outline"
+                                    onClick={() => handleAcceptRequest(request.id)}
+                                  >
+                                    <CheckCircle className="w-3 h-3 mr-1" />
+                                    Accepter
                                   </Badge>
                                   {request.message && (
                                     <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
@@ -437,27 +532,7 @@ export default function Networks({
                             </div>
                           )}
 
-                          <div className="flex space-x-2 mt-4">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 w-full sm:w-auto"
-                                onClick={() => handleRejectRequest(request.id)}
-                              >
-                                <XCircle className="w-4 h-4 mr-1" />
-                                <span className="hidden sm:inline">Rejeter</span>
-                                <span className="sm:hidden">Non</span>
-                              </Button>
-                              <Button
-                                size="sm"
-                                className="bg-green-600 hover:bg-green-700 shadow-md w-full sm:w-auto"
-                                onClick={() => handleAcceptRequest(request.id)}
-                              >
-                                <CheckCircle className="w-4 h-4 mr-1" />
-                                <span className="hidden sm:inline">Accepter</span>
-                                <span className="sm:hidden">Oui</span>
-                              </Button>
-                            </div>
+
                         </CardContent>
                       </Card>
                       );
@@ -497,20 +572,35 @@ export default function Networks({
                                 <h3 className="font-medium text-gray-900 dark:text-white truncate">
                                   {targetName}
                                 </h3>
-                                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                                  {targetEmail}
-                                </p>
-                                <div className="mt-2">
+                                <div className="mt-2 flex items-center gap-2">
                                   <Badge
                                     className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 w-fit"
                                     variant="secondary"
                                   >
-                                    Demande envoyée: {request.relationshipType?.display_name_fr || request.relationship_name || 'Relation'}
+                                    {request.relationshipType?.display_name_fr || request.relationship_name || 'Relation'}
                                   </Badge>
-                                  <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
-                                    {targetName} sera votre {request.relationshipType?.display_name_fr || request.relationship_name || 'relation'}
-                                  </p>
+                                  <Badge
+                                    className="bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400 w-fit"
+                                    variant="outline"
+                                  >
+                                    En attente
+                                  </Badge>
+                                  <Badge
+                                    className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 w-fit cursor-pointer hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                                    variant="outline"
+                                    onClick={() => {
+                                      if (window.confirm('Êtes-vous sûr de vouloir annuler cette demande ?')) {
+                                        handleCancelRequest(request.id);
+                                      }
+                                    }}
+                                  >
+                                    <XCircle className="w-3 h-3 mr-1" />
+                                    Annuler
+                                  </Badge>
                                 </div>
+                                <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
+                                  {targetName} sera votre {request.relationshipType?.display_name_fr || request.relationship_name || 'relation'}
+                                </p>
                               </div>
                             </div>
 
@@ -520,11 +610,8 @@ export default function Networks({
                             </div>
                           )}
 
-                          <div className="flex justify-center mt-4">
-                            <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                              En attente
-                            </Badge>
-                          </div>
+
+
                         </CardContent>
                       </Card>
                       );

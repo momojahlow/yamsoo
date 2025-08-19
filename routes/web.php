@@ -280,6 +280,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('family-relations', [FamilyRelationController::class, 'store'])->name('family-relations.store');
     Route::post('family-relations/{requestId}/accept', [FamilyRelationController::class, 'accept'])->name('family-relations.accept');
     Route::post('family-relations/{requestId}/reject', [FamilyRelationController::class, 'reject'])->name('family-relations.reject');
+    Route::delete('family-relations/{requestId}', [FamilyRelationController::class, 'cancel'])->name('family-relations.cancel');
     Route::get('users/search', [FamilyRelationController::class, 'searchUserByEmail'])->name('users.search-by-email');
 
     // Routes pour l'analyse Yamsoo

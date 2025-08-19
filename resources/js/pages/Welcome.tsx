@@ -126,19 +126,19 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
               {t('build_family_tree')}. {t('share_memories')}, {t('discover_heritage')}.
             </p>
 
-            <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6 mb-16">
+            <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-6 mb-16">
               {user ? (
                 // Utilisateur connecté - Boutons vers les fonctionnalités
                 <>
-                  <Link href={route('dashboard')}>
-                    <Button size="lg" className={`px-6 sm:px-10 py-3 sm:py-4 text-base sm:text-lg font-semibold bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <Link href={route('dashboard')} className="w-full sm:w-auto">
+                    <Button size="lg" className={`w-full sm:w-auto px-6 sm:px-10 py-3 sm:py-4 text-base sm:text-lg font-semibold bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl flex items-center justify-center ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <span className="hidden sm:inline">{t('access_dashboard')}</span>
                       <span className="sm:hidden">{t('dashboard')}</span>
                       <ArrowRight className={`w-4 h-4 sm:w-5 sm:h-5 ${isRTL ? 'mr-2' : 'ml-2'}`} />
                     </Button>
                   </Link>
-                  <Link href={route('family')}>
-                    <Button variant="outline" size="lg" className="px-10 py-4 text-lg font-semibold border-2 border-orange-300 text-orange-600 hover:bg-orange-50 hover:border-orange-400 transition-all duration-200 rounded-xl">
+                  <Link href={route('family')} className="w-full sm:w-auto">
+                    <Button variant="outline" size="lg" className="w-full sm:w-auto px-10 py-4 text-lg font-semibold border-2 border-orange-300 text-orange-600 hover:bg-orange-50 hover:border-orange-400 transition-all duration-200 rounded-xl">
                       {t('family')}
                     </Button>
                   </Link>
@@ -146,14 +146,14 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
               ) : (
                 // Utilisateur non connecté - Boutons d'inscription/connexion
                 <>
-                  <Link href={route('register')}>
-                    <Button size="lg" className={`px-10 py-4 text-lg font-semibold bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <Link href={route('register')} className="w-full sm:w-auto">
+                    <Button size="lg" className={`w-full sm:w-auto px-10 py-4 text-lg font-semibold bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl flex items-center justify-center ${isRTL ? 'flex-row-reverse' : ''}`}>
                       {t('get_started')}
                       <ArrowRight className={`w-5 h-5 ${isRTL ? 'mr-2' : 'ml-2'}`} />
                     </Button>
                   </Link>
-                  <Link href={route('login')}>
-                    <Button variant="outline" size="lg" className="px-10 py-4 text-lg font-semibold border-2 border-orange-300 text-orange-600 hover:bg-orange-50 hover:border-orange-400 transition-all duration-200 rounded-xl">
+                  <Link href={route('login')} className="w-full sm:w-auto">
+                    <Button variant="outline" size="lg" className="w-full sm:w-auto px-10 py-4 text-lg font-semibold border-2 border-orange-300 text-orange-600 hover:bg-orange-50 hover:border-orange-400 transition-all duration-200 rounded-xl">
                       {t('sign_in')}
                     </Button>
                   </Link>
@@ -296,18 +296,18 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
                   <p className="text-orange-100 mb-10 text-xl max-w-3xl mx-auto leading-relaxed">
                     {t('join_thousands')}
                   </p>
-                  <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6">
+                  <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-6">
                     {user ? (
                       // Utilisateur connecté
                       <>
-                        <Link href={route('messages.index')}>
-                          <Button size="lg" className={`px-10 py-4 text-lg font-semibold bg-white text-orange-600 hover:bg-gray-100 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <Link href={route('messages.index')} className="w-full sm:w-auto">
+                          <Button size="lg" className={`w-full sm:w-auto px-10 py-4 text-lg font-semibold bg-white text-orange-600 hover:bg-gray-100 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl flex items-center justify-center ${isRTL ? 'flex-row-reverse' : ''}`}>
                             {t('messages')}
                             <ArrowRight className={`w-5 h-5 ${isRTL ? 'mr-2' : 'ml-2'}`} />
                           </Button>
                         </Link>
-                        <Link href={route('family.tree')}>
-                          <Button variant="outline" size="lg" className="px-10 py-4 text-lg font-semibold border-2 border-white text-white hover:bg-white hover:text-orange-600 transition-all duration-200 rounded-xl">
+                        <Link href={route('family.tree')} className="w-full sm:w-auto">
+                          <Button variant="outline" size="lg" className="w-full sm:w-auto px-10 py-4 text-lg font-semibold border-2 border-white text-white hover:bg-white hover:text-orange-600 transition-all duration-200 rounded-xl">
                             {t('family_tree')}
                           </Button>
                         </Link>
@@ -315,14 +315,14 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
                     ) : (
                       // Utilisateur non connecté
                       <>
-                        <Link href={route('register')}>
-                          <Button size="lg" className={`px-10 py-4 text-lg font-semibold bg-white text-orange-600 hover:bg-gray-100 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <Link href={route('register')} className="w-full sm:w-auto">
+                          <Button size="lg" className={`w-full sm:w-auto px-10 py-4 text-lg font-semibold bg-white text-orange-600 hover:bg-gray-100 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl flex items-center justify-center ${isRTL ? 'flex-row-reverse' : ''}`}>
                             {t('get_started')}
                             <ArrowRight className={`w-5 h-5 ${isRTL ? 'mr-2' : 'ml-2'}`} />
                           </Button>
                         </Link>
-                        <Link href={route('login')}>
-                          <Button variant="outline" size="lg" className="px-10 py-4 text-lg font-semibold border-2 border-white text-white hover:bg-white hover:text-orange-600 transition-all duration-200 rounded-xl">
+                        <Link href={route('login')} className="w-full sm:w-auto">
+                          <Button variant="outline" size="lg" className="w-full sm:w-auto px-10 py-4 text-lg font-semibold border-2 border-white text-white bg-transparent hover:bg-white hover:text-orange-600 transition-all duration-200 rounded-xl">
                             {t('learn_more')}
                           </Button>
                         </Link>
@@ -358,7 +358,7 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
               </Link>
             </p>
             <p className="text-sm text-gray-400">
-              Propulsé par Laravel {laravelVersion} & PHP {phpVersion}
+              © 2024 Yamsoo - Tous droits réservés
             </p>
           </div>
         </footer>

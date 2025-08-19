@@ -180,6 +180,21 @@ class FamilyRelationController extends Controller
         return back()->with('success', 'Relation rejetée.');
     }
 
+    public function cancel(Request $request, int $requestId): \Illuminate\Http\RedirectResponse
+    {
+        $relationshipRequest = RelationshipRequest::findOrFail($requestId);
+
+        // Vérifier que l'utilisateur connecté est bien l'expéditeur de la demande
+        if ($relationshipRequest->requester_id !== $request->user()->id) {
+            return back()->withErrors(['error' => 'Vous n\'êtes pas autorisé à annuler cette demande.']);
+        }
+
+        // Supprimer la demande
+        $relationshipRequest->delete();
+
+        return back()->with('success', 'Demande annulée avec succès.');
+    }
+
     public function destroy(FamilyRelationship $relationship): \Illuminate\Http\RedirectResponse
     {
         // Vérifier que l'utilisateur connecté est bien impliqué dans cette relation

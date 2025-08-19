@@ -21,13 +21,6 @@ class Profile extends Model
         'avatar',
         'bio',
         'language',
-        'timezone',
-        'notifications_email',
-        'notifications_push',
-        'notifications_sms',
-        'privacy_profile',
-        'privacy_family',
-        'theme',
     ];
 
     /**
@@ -35,9 +28,6 @@ class Profile extends Model
      */
     protected $casts = [
         'birth_date' => 'date',
-        'notifications_email' => 'boolean',
-        'notifications_push' => 'boolean',
-        'notifications_sms' => 'boolean',
     ];
 
     /**
@@ -45,13 +35,6 @@ class Profile extends Model
      */
     protected $attributes = [
         'language' => 'fr',
-        'timezone' => 'UTC',
-        'notifications_email' => true,
-        'notifications_push' => true,
-        'notifications_sms' => false,
-        'privacy_profile' => 'friends',
-        'privacy_family' => 'public',
-        'theme' => 'light',
     ];
 
     /**
