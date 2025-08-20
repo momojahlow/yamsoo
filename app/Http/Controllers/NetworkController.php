@@ -10,7 +10,7 @@ use App\Services\NetworkService;
 use App\Services\SearchService;
 use App\Services\FamilyRelationService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -45,30 +45,25 @@ class NetworkController extends Controller
                 ];
             });
 
-        // Récupérer les demandes en attente
+        // Récupérer les demandes en attente (reçues par l'utilisateur)
         $pendingRequests = RelationshipRequest::where('target_user_id', $user->id)
             ->where('status', 'pending')
-            ->with(['requester.profile', 'relationshipType'])
+            ->with(['requester.profile', 'relationshipType', 'inverseRelationshipType'])
             ->get()
-            ->map(function($request) use ($user) {
-                // Obtenir la relation inverse (ce que le target sera pour le requester)
-                $familyRelationService = app(\App\Services\FamilyRelationService::class);
-                $inverseRelationType = $familyRelationService->getPublicInverseRelationshipType(
-                    $request->relationship_type_id,
-                    $request->requester,
-                    $user
-                );
+            ->map(function($request) {
+                $locale = app()->getLocale();
+                $isRTL = $locale === 'ar';
 
-
-
+                // Pour les demandes REÇUES : afficher la relation DEMANDÉE (ce que le requester sera pour le target)
 
 
                 return [
                     'id' => $request->id,
                     'requester_name' => $request->requester->name,
                     'requester_email' => $request->requester->email,
-                    'relationship_name' => $request->relationshipType->display_name_fr,
-                    'inverse_relationship_name' => $inverseRelationType ? $inverseRelationType->display_name_fr : null,
+                    'relationship_name' => $isRTL
+                        ? ($request->relationshipType->display_name_ar ?? $request->relationshipType->display_name_fr)
+                        : $request->relationshipType->display_name_fr,
                     'message' => $request->message,
                     'mother_name' => $request->mother_name,
                     'created_at' => $request->created_at->toISOString(),
@@ -78,15 +73,21 @@ class NetworkController extends Controller
         // Récupérer les demandes envoyées par l'utilisateur
         $sentRequests = RelationshipRequest::where('requester_id', $user->id)
             ->where('status', 'pending')
-            ->with(['targetUser.profile', 'relationshipType'])
+            ->with(['targetUser.profile', 'relationshipType', 'inverseRelationshipType'])
             ->get()
             ->map(function($request) {
+                $locale = app()->getLocale();
+                $isRTL = $locale === 'ar';
+
+                // Pour les demandes ENVOYÉES : afficher la relation demandée (ce que le requester veut être)
                 return [
                     'id' => $request->id,
                     'target_user_id' => $request->target_user_id,
                     'target_user_name' => $request->targetUser->name,
                     'target_user_email' => $request->targetUser->email,
-                    'relationship_name' => $request->relationshipType->display_name_fr,
+                    'relationship_name' => $isRTL
+                        ? ($request->relationshipType->display_name_ar ?? $request->relationshipType->display_name_fr)
+                        : $request->relationshipType->display_name_fr,
                     'created_at' => $request->created_at->toISOString(),
                 ];
             });

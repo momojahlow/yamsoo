@@ -80,11 +80,15 @@ class FamilyRelationService
             throw new \InvalidArgumentException('Une demande de relation de ce type est déjà en attente entre ces utilisateurs.');
         }
 
+        // Calculer la relation inverse
+        $inverseRelationType = $this->getInverseRelationshipType($relationshipTypeId, $requester, $targetUser);
+
         // Créer la demande avec vérification
         $request = RelationshipRequest::create([
             'requester_id' => $requester->id,
             'target_user_id' => $targetUserId,
             'relationship_type_id' => $relationshipTypeId,
+            'inverse_relationship_type_id' => $inverseRelationType ? $inverseRelationType->id : null,
             'message' => $message,
             'mother_name' => $motherName,
             'status' => 'pending',
@@ -317,7 +321,7 @@ class FamilyRelationService
             ->get();
     }
 
-    private function getInverseRelationshipType(int $relationshipTypeId, ?User $requester = null, ?User $target = null): ?RelationshipType
+    public function getInverseRelationshipType(int $relationshipTypeId, ?User $requester = null, ?User $target = null): ?RelationshipType
     {
         // Récupérer le type de relation actuel
         $currentType = RelationshipType::find($relationshipTypeId);
@@ -436,19 +440,23 @@ class FamilyRelationService
     }
 
     /**
-     * Retourne la relation frère/sœur appropriée selon le genre
+     * Retourne la relation frère/sœur inverse appropriée selon le genre du demandeur
+     * Si le demandeur est un homme, la relation inverse est "brother"
+     * Si le demandeur est une femme, la relation inverse est "sister"
+     * MAIS pour la relation inverse, c'est l'opposé !
      */
-    private function getSiblingRelationByGender(User $sibling): ?RelationshipType
+    private function getSiblingRelationByGender(User $requester): ?RelationshipType
     {
-        $siblingGender = $sibling->profile?->gender;
+        $requesterGender = $requester->profile?->gender;
 
-        if (!$siblingGender) {
-            $siblingGender = $this->guessGenderFromName($sibling->name);
+        if (!$requesterGender) {
+            $requesterGender = $this->guessGenderFromName($requester->name);
         }
 
-        if ($siblingGender === 'male') {
+        // Pour la relation inverse : si le demandeur est une femme, le target sera "brother"
+        if ($requesterGender === 'female') {
             return RelationshipType::where('name', 'brother')->first();
-        } elseif ($siblingGender === 'female') {
+        } elseif ($requesterGender === 'male') {
             return RelationshipType::where('name', 'sister')->first();
         }
 

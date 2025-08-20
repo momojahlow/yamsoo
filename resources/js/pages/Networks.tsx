@@ -9,8 +9,8 @@ import { EmptyProfilesState } from '@/components/networks/EmptyProfilesState';
 import { AddFamilyRelation } from '@/components/networks/AddFamilyRelation';
 import YamsooButton from '@/components/YamsooButton';
 import { useTranslation } from '@/hooks/useTranslation';
-import { getInverseRelation } from '@/utils/relationUtils';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import {
   Search,
   Users,
@@ -429,66 +429,7 @@ export default function Networks({
                                     className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 w-fit"
                                     variant="secondary"
                                   >
-                                    {(() => {
-                                      // Mapper les noms français vers les codes anglais
-                                      const frenchToEnglish: Record<string, string> = {
-                                        'Épouse': 'wife',
-                                        'Mari': 'husband',
-                                        'Père': 'father',
-                                        'Mère': 'mother',
-                                        'Fils': 'son',
-                                        'Fille': 'daughter',
-                                        'Frère': 'brother',
-                                        'Sœur': 'sister',
-                                        'Oncle': 'uncle',
-                                        'Tante': 'aunt',
-                                        'Neveu': 'nephew',
-                                        'Nièce': 'niece',
-                                        'Grand-père': 'grandfather',
-                                        'Grand-mère': 'grandmother',
-                                        'Petit-fils': 'grandson',
-                                        'Petite-fille': 'granddaughter',
-                                        'Beau-père': 'father_in_law',
-                                        'Belle-mère': 'mother_in_law',
-                                        'Gendre': 'son_in_law',
-                                        'Belle-fille': 'daughter_in_law',
-                                        'Cousin(e)': 'cousin',
-                                      };
-
-                                      // Obtenir le code anglais de la relation demandée
-                                      const relationCode = request.relationshipType?.name ||
-                                        frenchToEnglish[request.relationship_name] || 'unknown';
-
-                                      // Obtenir la relation inverse
-                                      const inverseRelation = getInverseRelation(relationCode as any);
-
-                                      // Mapper les codes anglais vers les noms français
-                                      const englishToFrench: Record<string, string> = {
-                                        'father': 'Père',
-                                        'mother': 'Mère',
-                                        'son': 'Fils',
-                                        'daughter': 'Fille',
-                                        'brother': 'Frère',
-                                        'sister': 'Sœur',
-                                        'husband': 'Mari',
-                                        'wife': 'Épouse',
-                                        'uncle': 'Oncle',
-                                        'aunt': 'Tante',
-                                        'nephew': 'Neveu',
-                                        'niece': 'Nièce',
-                                        'grandfather': 'Grand-père',
-                                        'grandmother': 'Grand-mère',
-                                        'grandson': 'Petit-fils',
-                                        'granddaughter': 'Petite-fille',
-                                        'father_in_law': 'Beau-père',
-                                        'mother_in_law': 'Belle-mère',
-                                        'son_in_law': 'Gendre',
-                                        'daughter_in_law': 'Belle-fille',
-                                        'cousin': 'Cousin(e)',
-                                      };
-
-                                      return englishToFrench[inverseRelation] || request.relationship_name;
-                                    })()}
+                                    {request.relationship_name}
                                   </Badge>
 
                                   {/* Boutons d'action sous forme de badges */}
@@ -509,14 +450,21 @@ export default function Networks({
                                     </Badge>
                                   </ConfirmDialog>
 
-                                  <Badge
-                                    className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 w-fit cursor-pointer hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
-                                    variant="outline"
-                                    onClick={() => handleAcceptRequest(request.id)}
+                                  <ConfirmationDialog
+                                    title="Accepter la demande"
+                                    description="Êtes-vous sûr de vouloir accepter cette demande de relation ?"
+                                    confirmText="Oui, accepter"
+                                    cancelText="Annuler"
+                                    onConfirm={() => handleAcceptRequest(request.id)}
                                   >
-                                    <CheckCircle className="w-3 h-3 mr-1" />
-                                    Accepter
-                                  </Badge>
+                                    <Badge
+                                      className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 w-fit cursor-pointer hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
+                                      variant="outline"
+                                    >
+                                      <CheckCircle className="w-3 h-3 mr-1" />
+                                      Accepter
+                                    </Badge>
+                                  </ConfirmationDialog>
                                   {request.message && (
                                     <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
                                       "{request.message}"
@@ -585,18 +533,22 @@ export default function Networks({
                                   >
                                     En attente
                                   </Badge>
-                                  <Badge
-                                    className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 w-fit cursor-pointer hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
-                                    variant="outline"
-                                    onClick={() => {
-                                      if (window.confirm('Êtes-vous sûr de vouloir annuler cette demande ?')) {
-                                        handleCancelRequest(request.id);
-                                      }
-                                    }}
+                                  <ConfirmationDialog
+                                    title="Annuler la demande"
+                                    description="Êtes-vous sûr de vouloir annuler cette demande de relation ?"
+                                    confirmText="Oui, annuler"
+                                    cancelText="Non, garder"
+                                    onConfirm={() => handleCancelRequest(request.id)}
+                                    variant="destructive"
                                   >
-                                    <XCircle className="w-3 h-3 mr-1" />
-                                    Annuler
-                                  </Badge>
+                                    <Badge
+                                      className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 w-fit cursor-pointer hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                                      variant="outline"
+                                    >
+                                      <XCircle className="w-3 h-3 mr-1" />
+                                      Annuler
+                                    </Badge>
+                                  </ConfirmationDialog>
                                 </div>
                                 <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
                                   {targetName} sera votre {request.relationshipType?.display_name_fr || request.relationship_name || 'relation'}
@@ -696,23 +648,35 @@ export default function Networks({
                           )}
                         </div>
                         <div className="font-bold text-lg text-brown-800 mb-1 text-center">{user.name}</div>
-                        <div className="text-sm text-gray-500 mb-3 text-center">{user.email}</div>
+                        {/* <div className="text-sm text-gray-500 mb-3 text-center">{user.email}</div> */}
                       </div>
                       <div className="w-full mt-2">
-                        <label className="block text-sm font-semibold mb-1">{t('add_as')}</label>
-                        <Select value={selectedRelation} onValueChange={(value) => handleSelectChange(user.id, value)}>
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder={t('select_family_relation')} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <div className={`py-1.5 text-xs font-semibold text-muted-foreground ${isRTL ? 'pr-2' : 'pl-2'}`}>{t('close_family')}</div>
-                            {safeRelationshipTypes.map((type) => (
-                              <SelectItem key={type.id} value={type.id.toString()}>
-                                {isRTL ? type.display_name_ar || type.name_ar : type.display_name_fr || type.name_fr}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <label className="block text-sm font-semibold mb-1">{t('add_as')} :</label>
+                        {(() => {
+                          // Vérifier si une invitation existe déjà avec cet utilisateur
+                          const hasExistingRequest = sentRequests.some(req => req.target_user_id === user.id) ||
+                                                   pendingRequests.some(req => req.requester_email === user.email);
+
+                          return (
+                            <Select
+                              value={selectedRelation}
+                              onValueChange={(value) => handleSelectChange(user.id, value)}
+                              disabled={hasExistingRequest}
+                            >
+                              <SelectTrigger className={`w-full ${hasExistingRequest ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                                <SelectValue placeholder={hasExistingRequest ? 'Invitation en cours...' : t('select_family_relation')} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <div className={`py-1.5 text-xs font-semibold text-muted-foreground ${isRTL ? 'pr-2' : 'pl-2'}`}>{t('close_family')}</div>
+                                {safeRelationshipTypes.map((type) => (
+                                  <SelectItem key={type.id} value={type.id.toString()}>
+                                    {isRTL ? type.display_name_ar || type.name_ar : type.display_name_fr || type.name_fr}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          );
+                        })()}
                       </div>
                       <div className="w-full mt-4">
                         <Button

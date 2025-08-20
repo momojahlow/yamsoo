@@ -26,14 +26,12 @@ interface User {
 interface Props {
   canLogin: boolean;
   canRegister: boolean;
-  laravelVersion: string;
-  phpVersion: string;
   auth: {
     user: User | null;
   };
 }
 
-export default function Welcome({ canLogin, canRegister, laravelVersion, phpVersion, auth }: Props) {
+export default function Welcome({ canLogin, canRegister, auth }: Props) {
   const { user } = auth;
   const { t, isRTL } = useTranslation();
 
@@ -322,7 +320,7 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
                           </Button>
                         </Link>
                         <Link href={route('login')} className="w-full sm:w-auto">
-                          <Button variant="outline" size="lg" className="w-full sm:w-auto px-10 py-4 text-lg font-semibold border-2 border-white text-white bg-transparent hover:bg-white hover:text-orange-600 transition-all duration-200 rounded-xl">
+                          <Button variant="outline" size="lg" className="w-full sm:w-auto px-10 py-4 text-lg font-semibold border-2 border-orange-600 text-orange-600 bg-white hover:bg-orange-600 hover:text-white transition-all duration-200 rounded-xl">
                             {t('learn_more')}
                           </Button>
                         </Link>
@@ -358,7 +356,7 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
               </Link>
             </p>
             <p className="text-sm text-gray-400">
-              © 2024 Yamsoo - Tous droits réservés
+              © 2024 momojahlow - Tous droits réservés
             </p>
           </div>
         </footer>
