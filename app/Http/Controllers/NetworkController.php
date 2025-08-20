@@ -10,6 +10,7 @@ use App\Services\NetworkService;
 use App\Services\SearchService;
 use App\Services\FamilyRelationService;
 use Illuminate\Http\Request;
+
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -35,26 +36,42 @@ class NetworkController extends Controller
             ->where('status', 'accepted')
             ->with(['user.profile', 'relatedUser.profile', 'relationshipType'])
             ->get()
-            ->map(function($relation) use ($user) {
+            ->map(function($relation) {
+                $locale = app()->getLocale();
+                $isRTL = $locale === 'ar';
+
                 return [
+                    'related_user_id' => $relation->relatedUser->id,
                     'related_user_name' => $relation->relatedUser->name,
                     'related_user_email' => $relation->relatedUser->email,
-                    'relationship_name' => $relation->relationshipType->display_name_fr,
+                    'relationship_name' => $isRTL
+                        ? ($relation->relationshipType->display_name_ar ?? $relation->relationshipType->display_name_fr)
+                        : $relation->relationshipType->display_name_fr,
                     'created_at' => $relation->created_at->toISOString(),
                 ];
             });
 
-        // Récupérer les demandes en attente
+        // Récupérer les demandes en attente (reçues par l'utilisateur)
+        // Afficher la relation INVERSE (ce que le target sera pour le requester)
         $pendingRequests = RelationshipRequest::where('target_user_id', $user->id)
             ->where('status', 'pending')
-            ->with(['requester.profile', 'relationshipType'])
+            ->with(['requester.profile', 'relationshipType', 'inverseRelationshipType'])
             ->get()
             ->map(function($request) {
+                $locale = app()->getLocale();
+                $isRTL = $locale === 'ar';
+
                 return [
                     'id' => $request->id,
                     'requester_name' => $request->requester->name,
                     'requester_email' => $request->requester->email,
-                    'relationship_name' => $request->relationshipType->display_name_fr,
+                    'relationship_name' => $request->inverseRelationshipType
+                        ? ($isRTL
+                            ? ($request->inverseRelationshipType->display_name_ar ?? $request->inverseRelationshipType->display_name_fr)
+                            : $request->inverseRelationshipType->display_name_fr)
+                        : ($isRTL
+                            ? ($request->relationshipType->display_name_ar ?? $request->relationshipType->display_name_fr)
+                            : $request->relationshipType->display_name_fr),
                     'message' => $request->message,
                     'mother_name' => $request->mother_name,
                     'created_at' => $request->created_at->toISOString(),
@@ -64,29 +81,34 @@ class NetworkController extends Controller
         // Récupérer les demandes envoyées par l'utilisateur
         $sentRequests = RelationshipRequest::where('requester_id', $user->id)
             ->where('status', 'pending')
-            ->with(['targetUser.profile', 'relationshipType'])
+            ->with(['targetUser.profile', 'relationshipType', 'inverseRelationshipType'])
             ->get()
             ->map(function($request) {
+                $locale = app()->getLocale();
+                $isRTL = $locale === 'ar';
+
+                // Pour les demandes ENVOYÉES : afficher la relation demandée (ce que le requester veut être)
                 return [
                     'id' => $request->id,
                     'target_user_id' => $request->target_user_id,
+                    'target_user_name' => $request->targetUser->name,
                     'target_user_email' => $request->targetUser->email,
-                    'relationship_name' => $request->relationshipType->display_name_fr,
+                    'relationship_name' => $isRTL
+                        ? ($request->relationshipType->display_name_ar ?? $request->relationshipType->display_name_fr)
+                        : $request->relationshipType->display_name_fr,
                     'created_at' => $request->created_at->toISOString(),
                 ];
             });
 
         // Filtrer les utilisateurs pour exclure ceux déjà en famille
-        $familyMemberIds = $existingRelations->pluck('related_user_email')->toArray();
-        $filteredUsers = $users->filter(function($userItem) use ($familyMemberIds, $user) {
-            return !in_array($userItem->email, $familyMemberIds) && $userItem->id !== $user->id;
-        });
-
-        // Liste des IDs des membres de la famille (pour compatibilité)
-        $familyMemberIds = [];
+        $familyMemberIds = $existingRelations->pluck('related_user_id')->toArray();
         if ($user->family) {
-            $familyMemberIds = $user->family->members->pluck('id')->toArray();
+            $familyMemberIds = array_merge($familyMemberIds, $user->family->members->pluck('id')->toArray());
         }
+
+        $filteredUsers = $users->filter(function($userItem) use ($familyMemberIds, $user) {
+            return !in_array($userItem->id, $familyMemberIds) && $userItem->id !== $user->id;
+        });
 
         $relationshipTypes = \App\Models\RelationshipType::ordered()->get()->map(function($type) {
             return [
@@ -102,36 +124,7 @@ class NetworkController extends Controller
             ];
         });
 
-        // Récupérer les relations existantes (seulement où l'utilisateur est user_id pour éviter les doublons)
-        $existingRelations = FamilyRelationship::where('user_id', $user->id)
-            ->where('status', 'accepted')
-            ->with(['user.profile', 'relatedUser.profile', 'relationshipType'])
-            ->get()
-            ->map(function($relation) {
-                return [
-                    'related_user_name' => $relation->relatedUser->name,
-                    'related_user_email' => $relation->relatedUser->email,
-                    'relationship_name' => $relation->relationshipType->display_name_fr,
-                    'created_at' => $relation->created_at->toISOString(),
-                ];
-            });
 
-        // Récupérer les demandes en attente
-        $pendingRequests = RelationshipRequest::where('target_user_id', $user->id)
-            ->where('status', 'pending')
-            ->with(['requester.profile', 'relationshipType'])
-            ->get()
-            ->map(function($request) {
-                return [
-                    'id' => $request->id,
-                    'requester_name' => $request->requester->name,
-                    'requester_email' => $request->requester->email,
-                    'relationship_name' => $request->relationshipType->display_name_fr,
-                    'message' => $request->message,
-                    'mother_name' => $request->mother_name,
-                    'created_at' => $request->created_at->toISOString(),
-                ];
-            });
 
         return Inertia::render('Networks', [
             'users' => $filteredUsers->values(),

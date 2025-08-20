@@ -14,8 +14,20 @@ import {
   Star,
   Globe,
   Shield,
-  Zap
+  Zap,
+  ChevronDown,
+  User,
+  Settings,
+  LogOut
 } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface User {
   id: number;
@@ -26,14 +38,12 @@ interface User {
 interface Props {
   canLogin: boolean;
   canRegister: boolean;
-  laravelVersion: string;
-  phpVersion: string;
   auth: {
     user: User | null;
   };
 }
 
-export default function Welcome({ canLogin, canRegister, laravelVersion, phpVersion, auth }: Props) {
+export default function Welcome({ canLogin, canRegister, auth }: Props) {
   const { user } = auth;
   const { t, isRTL } = useTranslation();
 
@@ -61,24 +71,46 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
               <QuickLanguageToggle />
 
               {user ? (
-                // Utilisateur connecté
-                <>
-                  <span className="hidden sm:block text-gray-600 font-medium text-sm sm:text-base">
-                    Bonjour, {user.name}
-                  </span>
-                  <Link href={route('dashboard')}>
-                    <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg transform hover:scale-105 transition-all duration-200 text-sm sm:text-base px-3 sm:px-4 py-2 flex items-center gap-2">
-                      {/* Avatar pour mobile */}
-                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-white/20 rounded-full flex items-center justify-center sm:hidden">
-                        <span className="text-white text-xs font-bold">
-                          {user.name?.charAt(0)?.toUpperCase() || 'U'}
+                // Utilisateur connecté - Menu dropdown moderne
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="flex items-center gap-2 text-sm font-semibold leading-6 text-gray-900 hover:bg-gray-100 rounded-lg px-3 py-2">
+                      <Avatar className="h-8 w-8 ring-2 ring-orange-500/30 hover:ring-orange-500/50 transition-all duration-200">
+                        <AvatarImage src={user.profile?.avatar_url} />
+                        <AvatarFallback className="bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold">
+                          {user.name.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="hidden sm:flex sm:items-center">
+                        <span className="mr-2 font-medium">
+                          {user.name}
                         </span>
-                      </div>
-                      <span className="hidden sm:inline">{t('my_account')}</span>
-                      <span className="sm:hidden">{t('my_account')}</span>
+                        <ChevronDown className="h-4 w-4 text-gray-400" />
+                      </span>
                     </Button>
-                  </Link>
-                </>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem asChild>
+                      <Link href={route('dashboard')} className="flex items-center">
+                        <User className="h-4 w-4 mr-2" />
+                        {t('dashboard')}
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/settings" className="flex items-center">
+                        <Settings className="h-4 w-4 mr-2" />
+                        {t('settings')}
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/logout" method="post" className="flex items-center text-red-600">
+                        <LogOut className="h-4 w-4 mr-2" />
+                        {t('logout')}
+                      </Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               ) : (
                 // Utilisateur non connecté
                 <>
@@ -126,19 +158,19 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
               {t('build_family_tree')}. {t('share_memories')}, {t('discover_heritage')}.
             </p>
 
-            <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6 mb-16">
+            <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-6 mb-16">
               {user ? (
                 // Utilisateur connecté - Boutons vers les fonctionnalités
                 <>
-                  <Link href={route('dashboard')}>
-                    <Button size="lg" className={`px-6 sm:px-10 py-3 sm:py-4 text-base sm:text-lg font-semibold bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <Link href={route('dashboard')} className="w-full sm:w-auto">
+                    <Button size="lg" className={`w-full sm:w-auto px-6 sm:px-10 py-3 sm:py-4 text-base sm:text-lg font-semibold bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl flex items-center justify-center ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <span className="hidden sm:inline">{t('access_dashboard')}</span>
                       <span className="sm:hidden">{t('dashboard')}</span>
                       <ArrowRight className={`w-4 h-4 sm:w-5 sm:h-5 ${isRTL ? 'mr-2' : 'ml-2'}`} />
                     </Button>
                   </Link>
-                  <Link href={route('family')}>
-                    <Button variant="outline" size="lg" className="px-10 py-4 text-lg font-semibold border-2 border-orange-300 text-orange-600 hover:bg-orange-50 hover:border-orange-400 transition-all duration-200 rounded-xl">
+                  <Link href={route('family')} className="w-full sm:w-auto">
+                    <Button variant="outline" size="lg" className="w-full sm:w-auto px-10 py-4 text-lg font-semibold border-2 border-orange-300 text-orange-600 hover:bg-orange-50 hover:border-orange-400 transition-all duration-200 rounded-xl">
                       {t('family')}
                     </Button>
                   </Link>
@@ -146,14 +178,14 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
               ) : (
                 // Utilisateur non connecté - Boutons d'inscription/connexion
                 <>
-                  <Link href={route('register')}>
-                    <Button size="lg" className={`px-10 py-4 text-lg font-semibold bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <Link href={route('register')} className="w-full sm:w-auto">
+                    <Button size="lg" className={`w-full sm:w-auto px-10 py-4 text-lg font-semibold bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl flex items-center justify-center ${isRTL ? 'flex-row-reverse' : ''}`}>
                       {t('get_started')}
                       <ArrowRight className={`w-5 h-5 ${isRTL ? 'mr-2' : 'ml-2'}`} />
                     </Button>
                   </Link>
-                  <Link href={route('login')}>
-                    <Button variant="outline" size="lg" className="px-10 py-4 text-lg font-semibold border-2 border-orange-300 text-orange-600 hover:bg-orange-50 hover:border-orange-400 transition-all duration-200 rounded-xl">
+                  <Link href={route('login')} className="w-full sm:w-auto">
+                    <Button variant="outline" size="lg" className="w-full sm:w-auto px-10 py-4 text-lg font-semibold border-2 border-orange-300 text-orange-600 hover:bg-orange-50 hover:border-orange-400 transition-all duration-200 rounded-xl">
                       {t('sign_in')}
                     </Button>
                   </Link>
@@ -296,18 +328,18 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
                   <p className="text-orange-100 mb-10 text-xl max-w-3xl mx-auto leading-relaxed">
                     {t('join_thousands')}
                   </p>
-                  <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6">
+                  <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-6">
                     {user ? (
                       // Utilisateur connecté
                       <>
-                        <Link href={route('messages.index')}>
-                          <Button size="lg" className={`px-10 py-4 text-lg font-semibold bg-white text-orange-600 hover:bg-gray-100 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <Link href={route('messages.index')} className="w-full sm:w-auto">
+                          <Button size="lg" className={`w-full sm:w-auto px-10 py-4 text-lg font-semibold bg-white text-orange-600 hover:bg-gray-100 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl flex items-center justify-center ${isRTL ? 'flex-row-reverse' : ''}`}>
                             {t('messages')}
                             <ArrowRight className={`w-5 h-5 ${isRTL ? 'mr-2' : 'ml-2'}`} />
                           </Button>
                         </Link>
-                        <Link href={route('family.tree')}>
-                          <Button variant="outline" size="lg" className="px-10 py-4 text-lg font-semibold border-2 border-white text-white hover:bg-white hover:text-orange-600 transition-all duration-200 rounded-xl">
+                        <Link href={route('family.tree')} className="w-full sm:w-auto">
+                          <Button variant="outline" size="lg" className="w-full sm:w-auto px-10 py-4 text-lg font-semibold border-2 border-white text-white hover:bg-white hover:text-orange-600 transition-all duration-200 rounded-xl">
                             {t('family_tree')}
                           </Button>
                         </Link>
@@ -315,14 +347,14 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
                     ) : (
                       // Utilisateur non connecté
                       <>
-                        <Link href={route('register')}>
-                          <Button size="lg" className={`px-10 py-4 text-lg font-semibold bg-white text-orange-600 hover:bg-gray-100 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <Link href={route('register')} className="w-full sm:w-auto">
+                          <Button size="lg" className={`w-full sm:w-auto px-10 py-4 text-lg font-semibold bg-white text-orange-600 hover:bg-gray-100 shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl flex items-center justify-center ${isRTL ? 'flex-row-reverse' : ''}`}>
                             {t('get_started')}
                             <ArrowRight className={`w-5 h-5 ${isRTL ? 'mr-2' : 'ml-2'}`} />
                           </Button>
                         </Link>
-                        <Link href={route('login')}>
-                          <Button variant="outline" size="lg" className="px-10 py-4 text-lg font-semibold border-2 border-white text-white hover:bg-white hover:text-orange-600 transition-all duration-200 rounded-xl">
+                        <Link href={route('login')} className="w-full sm:w-auto">
+                          <Button variant="outline" size="lg" className="w-full sm:w-auto px-10 py-4 text-lg font-semibold border-2 border-orange-600 text-orange-600 bg-white hover:bg-orange-600 hover:text-white transition-all duration-200 rounded-xl">
                             {t('learn_more')}
                           </Button>
                         </Link>
@@ -358,7 +390,7 @@ export default function Welcome({ canLogin, canRegister, laravelVersion, phpVers
               </Link>
             </p>
             <p className="text-sm text-gray-400">
-              Propulsé par Laravel {laravelVersion} & PHP {phpVersion}
+              © 2024 momojahlow - Tous droits réservés
             </p>
           </div>
         </footer>

@@ -14,8 +14,10 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PhotoAlbumController;
 use App\Http\Controllers\PhotoController;
 use App\Http\Controllers\LanguageController;
-use Illuminate\Foundation\Application;
+
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Artisan;
 use Inertia\Inertia;
 
 /*
@@ -33,8 +35,6 @@ Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
     ]);
 })->name('home');
 
@@ -278,6 +278,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('family-relations', [FamilyRelationController::class, 'store'])->name('family-relations.store');
     Route::post('family-relations/{requestId}/accept', [FamilyRelationController::class, 'accept'])->name('family-relations.accept');
     Route::post('family-relations/{requestId}/reject', [FamilyRelationController::class, 'reject'])->name('family-relations.reject');
+    Route::delete('family-relations/{requestId}', [FamilyRelationController::class, 'cancel'])->name('family-relations.cancel');
     Route::get('users/search', [FamilyRelationController::class, 'searchUserByEmail'])->name('users.search-by-email');
 
     // Routes pour l'analyse Yamsoo
@@ -292,6 +293,82 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/test-dropdown', function () {
         return inertia('TestDropdown');
     })->name('test.dropdown');
+
+    // Route de test pour le middleware locale
+    Route::get('/test-locale', function () {
+        return inertia('TestLocale');
+    })->name('test.locale');
+
+    // Route de test pour le modèle Profile
+    Route::get('/test-profile', function () {
+        return inertia('TestProfile');
+    })->name('test.profile');
+
+    // Route de test pour le dashboard moderne
+    Route::get('/modern-dashboard', [DashboardController::class, 'index'])->name('modern.dashboard');
+
+    // Route de test pour les badges dynamiques
+    Route::get('/test-badges', function () {
+        return inertia('TestBadges');
+    })->name('test.badges');
+
+    // Route de test pour l'affichage des photos
+    Route::get('/test-photo-display', function () {
+        return inertia('TestPhotoDisplay');
+    })->name('test.photo.display');
+
+    // Route pour créer des données de test pour les photos
+    Route::post('/test-photo-data', function () {
+        try {
+            // Exécuter le seeder
+            Artisan::call('db:seed', ['--class' => 'Database\\Seeders\\PhotoAlbumTestSeeder']);
+
+            return redirect()->back()->with('success', 'Données de test créées avec succès !');
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Erreur lors de la création des données : ' . $e->getMessage()]);
+        }
+    })->name('test.photo.data');
+
+    // Route de test pour les albums photo modernes
+    Route::get('/test-albums', function () {
+        // Créer des albums de test si nécessaire
+        $user = Auth::user();
+
+        // Vérifier si l'utilisateur a des albums
+        $albumsCount = \App\Models\PhotoAlbum::where('user_id', $user->id)->count();
+
+        if ($albumsCount === 0) {
+            // Créer quelques albums de test
+            \App\Models\PhotoAlbum::create([
+                'user_id' => $user->id,
+                'title' => 'Vacances d\'été 2024',
+                'description' => 'Nos meilleures photos de vacances en famille',
+                'privacy' => 'family',
+                'is_default' => false,
+                'photos_count' => 15,
+            ]);
+
+            \App\Models\PhotoAlbum::create([
+                'user_id' => $user->id,
+                'title' => 'Moments en famille',
+                'description' => 'Les petits moments du quotidien qui comptent',
+                'privacy' => 'private',
+                'is_default' => true,
+                'photos_count' => 8,
+            ]);
+
+            \App\Models\PhotoAlbum::create([
+                'user_id' => $user->id,
+                'title' => 'Événements publics',
+                'description' => 'Photos des événements familiaux à partager',
+                'privacy' => 'public',
+                'is_default' => false,
+                'photos_count' => 23,
+            ]);
+        }
+
+        return redirect()->route('photo-albums.index');
+    })->name('test.albums');
 
     // Routes pour les albums photo
     Route::resource('photo-albums', PhotoAlbumController::class);

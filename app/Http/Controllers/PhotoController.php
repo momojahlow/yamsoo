@@ -164,7 +164,7 @@ class PhotoController extends Controller
             'photo_album_id' => $album->id,
             'title' => $request->input('title'),
             'description' => $request->input('description'),
-            'file_path' => 'public/' . $filePath,
+            'file_path' => $filePath,
             'file_name' => $file->getClientOriginalName(),
             'mime_type' => $file->getMimeType(),
             'file_size' => $file->getSize(),

@@ -118,8 +118,8 @@ export const AnimatedStatsCard: React.FC<AnimatedStatsCardProps> = ({
             </div>
             
             <div className={`${isRTL ? 'mr-4' : 'ml-4'}`}>
-              <div className={`w-12 h-12 bg-gradient-to-r ${colors.gradient} rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300`}>
-                <Icon className="w-6 h-6 text-white group-hover:scale-110 transition-transform duration-300" />
+              <div className={`w-10 h-10 bg-gradient-to-r ${colors.gradient} rounded-lg flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300`}>
+                <Icon className="w-5 h-5 text-white group-hover:scale-110 transition-transform duration-300" />
               </div>
             </div>
           </div>

@@ -20,6 +20,21 @@ class Profile extends Model
         'gender',
         'avatar',
         'bio',
+        'language',
+    ];
+
+    /**
+     * The attributes that should be cast.
+     */
+    protected $casts = [
+        'birth_date' => 'date',
+    ];
+
+    /**
+     * The attributes that have default values.
+     */
+    protected $attributes = [
+        'language' => 'fr',
     ];
 
     /**
@@ -58,10 +73,6 @@ class Profile extends Model
     {
         return in_array($this->gender, ['male', 'female']);
     }
-
-    protected $casts = [
-        'birth_date' => 'date',
-    ];
 
     public function user(): BelongsTo
     {

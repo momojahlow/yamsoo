@@ -94,10 +94,22 @@ class FamilyRelationController extends Controller
                 'relationship_type_id' => $validated['relationship_type_id']
             ]);
 
+            // Relation directe choisie
+            $relationType = RelationshipType::findOrFail($validated['relationship_type_id']);
+
+            // Trouver la relation inverse
+            $inverseRelationId = $this->getInverseRelation(
+                $relationType->name,
+                $user,
+                $targetUser
+            );
+
+            // Créer une seule ligne dans la table avec relation inverse
             $relationshipRequest = RelationshipRequest::create([
                 'requester_id' => $user->id,
                 'target_user_id' => $targetUser->id,
                 'relationship_type_id' => $validated['relationship_type_id'],
+                'inverse_relationship_type_id' => $inverseRelationId,
                 'message' => $validated['message'] ?? '',
                 'mother_name' => $validated['mother_name'] ?? null,
                 'status' => 'pending',
@@ -180,6 +192,21 @@ class FamilyRelationController extends Controller
         return back()->with('success', 'Relation rejetée.');
     }
 
+    public function cancel(Request $request, int $requestId): \Illuminate\Http\RedirectResponse
+    {
+        $relationshipRequest = RelationshipRequest::findOrFail($requestId);
+
+        // Vérifier que l'utilisateur connecté est bien l'expéditeur de la demande
+        if ($relationshipRequest->requester_id !== $request->user()->id) {
+            return back()->withErrors(['error' => 'Vous n\'êtes pas autorisé à annuler cette demande.']);
+        }
+
+        // Supprimer la demande
+        $relationshipRequest->delete();
+
+        return back()->with('success', 'Demande annulée avec succès.');
+    }
+
     public function destroy(FamilyRelationship $relationship): \Illuminate\Http\RedirectResponse
     {
         // Vérifier que l'utilisateur connecté est bien impliqué dans cette relation
@@ -257,6 +284,26 @@ class FamilyRelationController extends Controller
                 'profile' => $user->profile
             ]
         ]);
+    }
+
+    /**
+     * Trouver la relation inverse basée sur le type de relation et les utilisateurs
+     */
+    private function getInverseRelation(string $relationName, User $requester, User $target): ?int
+    {
+        // Utiliser le service existant pour calculer la relation inverse
+        $relationshipType = RelationshipType::where('name', $relationName)->first();
+        if (!$relationshipType) {
+            return null;
+        }
+
+        $inverseRelationType = $this->familyRelationService->getInverseRelationshipType(
+            $relationshipType->id,
+            $requester,
+            $target
+        );
+
+        return $inverseRelationType ? $inverseRelationType->id : null;
     }
 }
 

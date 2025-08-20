@@ -4,10 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { EmptyProfilesState } from '@/components/networks/EmptyProfilesState';
 import { AddFamilyRelation } from '@/components/networks/AddFamilyRelation';
 import YamsooButton from '@/components/YamsooButton';
 import { useTranslation } from '@/hooks/useTranslation';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import {
   Search,
   Users,
@@ -76,17 +79,23 @@ interface PendingRequest {
   requester_name: string;
   requester_email: string;
   relationship_name: string;
+  inverse_relationship_name?: string;
   message?: string;
   mother_name?: string;
   created_at: string;
+  requester?: User;
+  relationshipType?: RelationshipType;
 }
 
 interface SentRequest {
   id: number;
   target_user_id: number;
+  target_user_name: string;
   target_user_email: string;
   relationship_name: string;
   created_at: string;
+  targetUser?: User;
+  relationshipType?: RelationshipType;
 }
 
 interface Props {
@@ -205,6 +214,18 @@ export default function Networks({
     });
   };
 
+  const handleCancelRequest = (requestId: number) => {
+    router.delete(`/family-relations/${requestId}`, {
+      onSuccess: () => {
+        toast({ title: 'Demande annulée', description: 'La demande a été annulée avec succès.' });
+        router.reload({ only: ['sentRequests', 'pendingRequests', 'existingRelations'] });
+      },
+      onError: () => {
+        toast({ title: 'Erreur', description: 'Impossible d\'annuler la demande.' });
+      }
+    });
+  };
+
   const handleStartConversation = (userId: number) => {
     // Redirect to messages page with the user ID to start a conversation
     router.visit(`/messages?user=${userId}`);
@@ -257,62 +278,67 @@ export default function Networks({
 
               {/* Stats modernes responsive */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
-                <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-500 to-red-500 text-white cursor-pointer hover:scale-105 transition-transform" onClick={() => scrollToSection('relations-section')}>
+                <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm cursor-pointer hover:scale-105 transition-transform relative overflow-hidden" onClick={() => scrollToSection('relations-section')}>
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 to-red-500"></div>
                   <CardContent className="p-4 sm:p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-orange-100 text-xs sm:text-sm font-medium">{t('relations')}</p>
-                        <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{safeExistingRelations.length}</p>
+                        <p className="text-gray-600 text-xs sm:text-sm font-medium">{t('relations')}</p>
+                        <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{safeExistingRelations.length}</p>
                       </div>
-                      <Heart className="w-6 h-6 sm:w-8 sm:h-8 text-orange-200" />
+                      <Heart className="w-6 h-6 sm:w-8 sm:h-8 text-orange-500" />
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="border-0 shadow-lg bg-gradient-to-br from-green-500 to-green-600 text-white cursor-pointer hover:scale-105 transition-transform" onClick={() => scrollToSection('connections-section')}>
+                <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm cursor-pointer hover:scale-105 transition-transform relative overflow-hidden" onClick={() => scrollToSection('connections-section')}>
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-500 to-green-600"></div>
                   <CardContent className="p-4 sm:p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-green-100 text-xs sm:text-sm font-medium">{t('connected')}</p>
-                        <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{safeConnections.length}</p>
+                        <p className="text-gray-600 text-xs sm:text-sm font-medium">{t('connected')}</p>
+                        <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{safeConnections.length}</p>
                       </div>
-                      <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-green-200" />
+                      <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-green-500" />
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="border-0 shadow-lg bg-gradient-to-br from-yellow-500 to-orange-500 text-white cursor-pointer hover:scale-105 transition-transform" onClick={() => scrollToSection('pending-section')}>
+                <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm cursor-pointer hover:scale-105 transition-transform relative overflow-hidden" onClick={() => scrollToSection('pending-section')}>
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-yellow-500 to-orange-500"></div>
                   <CardContent className="p-4 sm:p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-yellow-100 text-xs sm:text-sm font-medium">{t('received')}</p>
-                        <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{safePendingRequests.length}</p>
+                        <p className="text-gray-600 text-xs sm:text-sm font-medium">{t('received')}</p>
+                        <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{safePendingRequests.length}</p>
                       </div>
-                      <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-200" />
+                      <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-500" />
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-500 to-indigo-500 text-white cursor-pointer hover:scale-105 transition-transform" onClick={() => scrollToSection('sent-section')}>
+                <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm cursor-pointer hover:scale-105 transition-transform relative overflow-hidden" onClick={() => scrollToSection('sent-section')}>
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
                   <CardContent className="p-4 sm:p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-blue-100 text-xs sm:text-sm font-medium">{t('sent')}</p>
-                        <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{safeSentRequests.length}</p>
+                        <p className="text-gray-600 text-xs sm:text-sm font-medium">{t('sent')}</p>
+                        <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{safeSentRequests.length}</p>
                       </div>
-                      <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-blue-200" />
+                      <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500" />
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-500 to-pink-500 text-white cursor-pointer hover:scale-105 transition-transform" onClick={() => scrollToSection('discover-section')}>
+                <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm cursor-pointer hover:scale-105 transition-transform relative overflow-hidden" onClick={() => scrollToSection('discover-section')}>
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
                   <CardContent className="p-4 sm:p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-purple-100 text-xs sm:text-sm font-medium">{t('discoveries')}</p>
-                        <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{safeUsers.length}</p>
+                        <p className="text-gray-600 text-xs sm:text-sm font-medium">{t('discoveries')}</p>
+                        <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{safeUsers.length}</p>
                       </div>
-                      <Globe className="w-6 h-6 sm:w-8 sm:h-8 text-purple-200" />
+                      <Globe className="w-6 h-6 sm:w-8 sm:h-8 text-purple-500" />
                     </div>
                   </CardContent>
                 </Card>
@@ -360,9 +386,6 @@ export default function Networks({
                               <h3 className="font-semibold text-gray-900 dark:text-white truncate">
                                 {relation.related_user_name}
                               </h3>
-                              <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                                {relation.related_user_email}
-                              </p>
                               <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 mt-2 inline-block">
                                 {getLocalizedRelationName(relation.relationship_name)}
                               </Badge>
@@ -384,60 +407,72 @@ export default function Networks({
                     </div>
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Demandes reçues</h3>
                   </div>
-                  <div className="space-y-4">
-                    {safePendingRequests.map((request) => (
-                      <Card key={request.id} className="border-0 shadow-lg bg-white dark:bg-gray-800">
-                        <CardContent className="p-6">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center mb-3">
-                                <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center mr-4">
-                                  <span className="text-white font-semibold">
-                                    {request.requester_name.charAt(0).toUpperCase()}
-                                  </span>
-                                </div>
-                                <div>
-                                  <p className="font-semibold text-gray-900 dark:text-white">{request.requester_name}</p>
-                                  <p className="text-sm text-gray-600 dark:text-gray-400">{request.requester_email}</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {safePendingRequests.map((request) => {
+                      // Vérification de sécurité pour éviter les erreurs
+                      const requester = request.requester || {};
+                      const requesterName = requester.name || request.requester_name || 'Utilisateur inconnu';
+                      const requesterEmail = requester.email || request.requester_email || '';
+
+                      return (
+                        <Card key={request.id} className="border-0 shadow-lg bg-white/80 backdrop-blur-sm hover:shadow-xl transition-all duration-200">
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-3">
+                                <Avatar className="w-10 h-10">
+                                  <AvatarImage src={requester.profile?.avatar_url || ''} />
+                                  <AvatarFallback className="bg-gray-100 text-gray-600">
+                                    {requesterName.split(' ').map(n => n[0]).join('').toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="font-medium text-gray-900 dark:text-white truncate">
+                                    {requesterName}
+                                  </h3>
+                                  <Badge variant="outline" className="text-xs mt-1">
+                                    {request.relationship_name}
+                                  </Badge>
                                 </div>
                               </div>
-                              <div className="ml-16">
-                                <div className="text-sm mb-2">
-                                  {t('added_you_as')} <Badge variant="outline" className={`${isRTL ? 'mr-1' : 'ml-1'}`}>{getLocalizedRelationName(request.relationship_name)}</Badge>
-                                </div>
-                                {request.message && (
-                                  <p className="text-sm text-gray-600 dark:text-gray-400 italic mb-2">"{request.message}"</p>
-                                )}
-                                {request.mother_name && (
-                                  <p className="text-sm text-gray-500 dark:text-gray-500">Nom de la mère : {request.mother_name}</p>
-                                )}
+
+                              <div className="flex items-center gap-2">
+                                <ConfirmationDialog
+                                  title="Accepter la demande"
+                                  description="Êtes-vous sûr de vouloir accepter cette demande de relation ?"
+                                  confirmText="Oui, accepter"
+                                  cancelText="Annuler"
+                                  onConfirm={() => handleAcceptRequest(request.id)}
+                                >
+                                  <Button variant="outline" size="sm" className="text-green-600 border-green-200 hover:bg-green-50">
+                                    <CheckCircle className="w-4 h-4" />
+                                  </Button>
+                                </ConfirmationDialog>
+
+                                <ConfirmationDialog
+                                  title="Rejeter la demande"
+                                  description="Êtes-vous sûr de vouloir rejeter cette demande de relation ?"
+                                  confirmText="Oui, rejeter"
+                                  cancelText="Annuler"
+                                  onConfirm={() => handleRejectRequest(request.id)}
+                                  variant="destructive"
+                                >
+                                  <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50">
+                                    <XCircle className="w-4 h-4" />
+                                  </Button>
+                                </ConfirmationDialog>
                               </div>
                             </div>
-                            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 ml-0 sm:ml-6 mt-3 sm:mt-0">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 w-full sm:w-auto"
-                                onClick={() => handleRejectRequest(request.id)}
-                              >
-                                <XCircle className="w-4 h-4 mr-1" />
-                                <span className="hidden sm:inline">Rejeter</span>
-                                <span className="sm:hidden">Non</span>
-                              </Button>
-                              <Button
-                                size="sm"
-                                className="bg-green-600 hover:bg-green-700 shadow-md w-full sm:w-auto"
-                                onClick={() => handleAcceptRequest(request.id)}
-                              >
-                                <CheckCircle className="w-4 h-4 mr-1" />
-                                <span className="hidden sm:inline">Accepter</span>
-                                <span className="sm:hidden">Oui</span>
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+
+                            {request.message && (
+                              <p className="text-xs text-gray-500 mt-2 truncate">
+                                "{request.message}"
+                              </p>
+                            )}
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -451,40 +486,65 @@ export default function Networks({
                     </div>
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Demandes envoyées</h3>
                   </div>
-                  <div className="space-y-4">
-                    {safeSentRequests.map((request) => (
-                      <Card key={request.id} className="border-0 shadow-lg bg-white dark:bg-gray-800">
-                        <CardContent className="p-6">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center mb-3">
-                                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mr-4">
-                                  <span className="text-white font-semibold">
-                                    {request.target_user_email.charAt(0).toUpperCase()}
-                                  </span>
-                                </div>
-                                <div>
-                                  <p className="font-semibold text-gray-900 dark:text-white">{request.target_user_email}</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {safeSentRequests.map((request) => {
+                      // Vérification de sécurité pour éviter les erreurs
+                      const targetUser = request.targetUser || request.target_user || {};
+                      const targetName = targetUser.name || request.target_user_name || 'Utilisateur inconnu';
+                      const targetEmail = targetUser.email || request.target_user_email || '';
+
+                      return (
+                        <Card key={request.id} className="border-0 shadow-lg bg-white/80 backdrop-blur-sm hover:shadow-xl transition-all duration-200">
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-3">
+                                <Avatar className="w-10 h-10">
+                                  <AvatarImage src={targetUser.profile?.avatar_url || ''} />
+                                  <AvatarFallback className="bg-gray-100 text-gray-600">
+                                    {targetName.split(' ').map(n => n[0]).join('').toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="font-medium text-gray-900 dark:text-white truncate">
+                                    {targetName}
+                                  </h3>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <Badge variant="outline" className="text-xs">
+                                      {request.relationshipType?.display_name_fr || request.relationship_name || 'Relation'}
+                                    </Badge>
+                                    <Badge variant="secondary" className="text-xs">
+                                      En attente
+                                    </Badge>
+                                  </div>
                                 </div>
                               </div>
-                              <div className="ml-16">
-                                <div className="text-sm mb-2">
-                                  {t('relation_request_as')} <Badge variant="outline" className={`${isRTL ? 'mr-1' : 'ml-1'}`}>{getLocalizedRelationName(request.relationship_name)}</Badge>
-                                </div>
-                                <p className="text-xs text-gray-500 dark:text-gray-500">
-                                  {t('sent_on')} {new Date(request.created_at).toLocaleDateString(isRTL ? 'ar-SA' : 'fr-FR')}
-                                </p>
+
+                              <div className="flex items-center gap-2">
+                                <ConfirmationDialog
+                                  title="Annuler la demande"
+                                  description="Êtes-vous sûr de vouloir annuler cette demande de relation ?"
+                                  confirmText="Oui, annuler"
+                                  cancelText="Non, garder"
+                                  onConfirm={() => handleCancelRequest(request.id)}
+                                  variant="destructive"
+                                >
+                                  <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50">
+                                    <XCircle className="w-4 h-4" />
+                                  </Button>
+                                </ConfirmationDialog>
                               </div>
                             </div>
-                            <div className="flex items-center ml-6">
-                              <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                                En attente
-                              </Badge>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+
+                            {request.message && (
+                              <p className="text-xs text-gray-500 mt-2 truncate">
+                                "{request.message}"
+                              </p>
+                            )}
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -530,58 +590,69 @@ export default function Networks({
                   const disableButton = isAlreadyFamily || isExistingRelation || isPending || hasSentRequest;
 
                   return (
-                    <Card key={user.id} className="rounded-2xl shadow-md border border-gray-100 p-4 flex flex-col items-center relative">
-                      {/* Top buttons - Yamsoo on left, Message on right */}
-                      <div className="absolute top-4 left-4 right-4 flex justify-between z-10">
-                        <YamsooButton
-                          targetUserId={user.id}
-                          targetUserName={user.name}
-                          variant="outline"
-                          size="sm"
-                        />
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="flex items-center justify-center h-8 w-8"
-                          onClick={() => handleStartConversation(user.id)}
-                          title="Démarrer une conversation"
-                        >
-                          <MessageSquare className="h-4 w-4" />
-                        </Button>
-                      </div>
+                    <Card key={user.id} className="border-0 shadow-lg bg-white/80 backdrop-blur-sm hover:shadow-xl transition-all duration-200">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
+                          <div className="flex items-center space-x-3 flex-nowrap min-w-0">
+                            <Avatar className="w-10 h-10 flex-shrink-0">
+                              <AvatarImage src={user.profile?.avatar_url || ''} />
+                              <AvatarFallback className="bg-gray-100 text-gray-600">
+                                {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <h3 className="font-medium text-gray-900 dark:text-white whitespace-nowrap">
+                                {user.name}
+                              </h3>
+                            </div>
+                          </div>
 
-                      <div className="flex flex-col items-center w-full mt-6">
-                        <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mb-3 overflow-hidden">
-                          {user.profile?.avatar_url ? (
-                            <img
-                              src={user.profile.avatar_url}
-                              alt={user.name}
-                              className="w-14 h-14 object-cover"
+                          <div className="flex items-center gap-1 flex-nowrap">
+                            <YamsooButton
+                              targetUserId={user.id}
+                              targetUserName={user.name}
+                              variant="outline"
+                              size="sm"
                             />
-                          ) : (
-                            <span className="text-xl font-bold text-gray-500">
-                              {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                            </span>
-                          )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                              onClick={() => handleStartConversation(user.id)}
+                              title="Démarrer une conversation"
+                            >
+                              <MessageSquare className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
-                        <div className="font-bold text-lg text-brown-800 mb-1 text-center">{user.name}</div>
-                        <div className="text-sm text-gray-500 mb-3 text-center">{user.email}</div>
-                      </div>
-                      <div className="w-full mt-2">
-                        <label className="block text-sm font-semibold mb-1">{t('add_as')}</label>
-                        <Select value={selectedRelation} onValueChange={(value) => handleSelectChange(user.id, value)}>
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder={t('select_family_relation')} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <div className={`py-1.5 text-xs font-semibold text-muted-foreground ${isRTL ? 'pr-2' : 'pl-2'}`}>{t('close_family')}</div>
-                            {safeRelationshipTypes.map((type) => (
-                              <SelectItem key={type.id} value={type.id.toString()}>
-                                {isRTL ? type.display_name_ar || type.name_ar : type.display_name_fr || type.name_fr}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+
+                        <div className="mt-3">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">{t('add_as')} :</label>
+                        {(() => {
+                          // Vérifier si une invitation existe déjà avec cet utilisateur
+                          const hasExistingRequest = sentRequests.some(req => req.target_user_id === user.id) ||
+                                                   pendingRequests.some(req => req.requester_email === user.email);
+
+                          return (
+                            <Select
+                              value={selectedRelation}
+                              onValueChange={(value) => handleSelectChange(user.id, value)}
+                              disabled={hasExistingRequest}
+                            >
+                              <SelectTrigger className={`w-full ${hasExistingRequest ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                                <SelectValue placeholder={hasExistingRequest ? 'Invitation en cours...' : t('select_family_relation')} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <div className={`py-1.5 text-xs font-semibold text-muted-foreground ${isRTL ? 'pr-2' : 'pl-2'}`}>{t('close_family')}</div>
+                                {safeRelationshipTypes.map((type) => (
+                                  <SelectItem key={type.id} value={type.id.toString()}>
+                                    {isRTL ? type.display_name_ar || type.name_ar : type.display_name_fr || type.name_fr}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          );
+                        })()}
                       </div>
                       <div className="w-full mt-4">
                         <Button
@@ -597,7 +668,8 @@ export default function Networks({
                                 ? t('invitation_received')
                                 : t('request_relation')}
                         </Button>
-                      </div>
+                        </div>
+                      </CardContent>
                     </Card>
                   );
                 })}

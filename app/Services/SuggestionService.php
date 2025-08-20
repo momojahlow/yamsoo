@@ -221,7 +221,7 @@ class SuggestionService
                 $requester,
                 $targetUser->id,
                 $relationshipType->id,
-                "Demande créée automatiquement à partir d'une suggestion acceptée",
+                '', // message - chaîne vide au lieu de null
                 null // mother_name - peut être null pour les suggestions
             );
 

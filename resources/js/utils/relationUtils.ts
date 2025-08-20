@@ -25,6 +25,7 @@ export const getRelationLabel = (relationType: string): string => {
     'sister': 'Sœur',
     'sibling': 'Frère/Sœur',
     'half_brother': 'Demi-frère',
+    'half_sister': 'Demi-sœur',
     'half_brother_paternal': 'Demi-frère paternel',
     'half_brother_maternal': 'Demi-frère maternel',
     'half_sister_paternal': 'Demi-sœur paternelle',

@@ -16,6 +16,7 @@ class RelationshipRequest extends Model
         'requester_id',
         'target_user_id',
         'relationship_type_id',
+        'inverse_relationship_type_id',
         'message',
         'mother_name',
         'status',
@@ -41,6 +42,11 @@ class RelationshipRequest extends Model
     public function relationshipType(): BelongsTo
     {
         return $this->belongsTo(RelationshipType::class);
+    }
+
+    public function inverseRelationshipType(): BelongsTo
+    {
+        return $this->belongsTo(RelationshipType::class, 'inverse_relationship_type_id');
     }
 }
 

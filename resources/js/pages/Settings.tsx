@@ -241,10 +241,10 @@ const Settings: React.FC = () => {
         </div>
 
         {/* Help Section */}
-        <AnimatedCard className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
+        <AnimatedCard className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
           <AnimatedCardContent className="p-8 text-center">
             <div className="flex items-center justify-center mb-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
                 <HelpCircle className="w-6 h-6 text-white" />
               </div>
             </div>
@@ -255,10 +255,10 @@ const Settings: React.FC = () => {
               {t('settings_help_description')}
             </p>
             <div className={`flex justify-center space-x-4 ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
-              <Button variant="outline">
+              <Button variant="outline" className="border-orange-200 text-orange-600 hover:bg-orange-50">
                 {t('contact_support')}
               </Button>
-              <Button className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white">
+              <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white">
                 {t('view_documentation')}
               </Button>
             </div>

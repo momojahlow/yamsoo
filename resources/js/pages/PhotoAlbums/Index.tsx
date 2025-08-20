@@ -1,11 +1,19 @@
-import { Head } from '@inertiajs/react';
-import { KwdDashboardLayout } from '@/Layouts/modern';
+import React, { useState, useEffect } from 'react';
+import { Head, Link, router } from '@inertiajs/react';
+import { KwdDashboardLayout } from '@/layouts/modern';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Camera, Plus, Eye, Settings, Calendar, User } from 'lucide-react';
-import { Link } from '@inertiajs/react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+  Camera, Plus, Eye, Settings, Calendar, User, Search, Filter, Grid3X3,
+  List, Heart, Share2, Download, MoreVertical, Edit, Trash2, Lock,
+  Globe, Users, Image, Upload, FolderPlus, Star, Clock, MapPin
+} from 'lucide-react';
 
 interface PhotoAlbum {
     id: number;
@@ -39,6 +47,35 @@ const privacyConfig = {
 
 export default function PhotoAlbumsIndex({ albums, user, canCreateAlbum }: Props) {
     const { t } = useTranslation();
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [sortBy, setSortBy] = useState('recent');
+    const [filterBy, setFilterBy] = useState('all');
+    const [selectedAlbums, setSelectedAlbums] = useState<number[]>([]);
+    const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+
+    // Filtrage et tri des albums
+    const filteredAndSortedAlbums = albums
+        .filter(album => {
+            const matchesSearch = album.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                album.description?.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesFilter = filterBy === 'all' || album.privacy === filterBy;
+            return matchesSearch && matchesFilter;
+        })
+        .sort((a, b) => {
+            switch (sortBy) {
+                case 'recent':
+                    return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+                case 'oldest':
+                    return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+                case 'name':
+                    return a.title.localeCompare(b.title);
+                case 'photos':
+                    return b.photos_count - a.photos_count;
+                default:
+                    return 0;
+            }
+        });
 
     return (
         <KwdDashboardLayout title={t('photo_albums')}>

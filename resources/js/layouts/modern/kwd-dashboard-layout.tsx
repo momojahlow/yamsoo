@@ -39,9 +39,22 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
+interface DynamicBadges {
+  notifications: number;
+  suggestions: number;
+  new_suggestions: number;
+  pending_requests: number;
+  albums: number;
+  unread_messages: number;
+  active_conversations: number;
+  upcoming_events: number;
+  total_badges: number;
+}
+
 interface Props {
   children: React.ReactNode;
   title?: string;
+  badges?: DynamicBadges;
 }
 
 interface User {
@@ -59,7 +72,7 @@ interface PageProps {
   };
 }
 
-const KwdDashboardLayout: React.FC<Props> = ({ children, title = 'Dashboard' }) => {
+const KwdDashboardLayout: React.FC<Props> = ({ children, title = 'Dashboard', badges }) => {
   const { t, isRTL } = useTranslation();
   const { auth } = usePage<PageProps>().props;
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -95,39 +108,39 @@ const KwdDashboardLayout: React.FC<Props> = ({ children, title = 'Dashboard' }) 
   };
 
   const navigation = [
-    { 
-      name: t('dashboard'), 
-      href: '/dashboard', 
-      icon: Home, 
+    {
+      name: t('dashboard'),
+      href: '/dashboard',
+      icon: Home,
       badge: null,
       description: t('overview_stats')
     },
-    { 
-      name: t('my_family'), 
-      href: '/famille', 
-      icon: Users, 
+    {
+      name: t('my_family'),
+      href: '/famille',
+      icon: Users,
       badge: '3',
       description: t('family_members')
     },
-    { 
-      name: t('family_tree'), 
-      href: '/famille/arbre', 
-      icon: TreePine, 
+    {
+      name: t('family_tree'),
+      href: '/famille/arbre',
+      icon: TreePine,
       badge: null,
       description: t('family_tree_view')
     },
-    { 
-      name: t('networks'), 
-      href: '/reseaux', 
-      icon: Globe, 
-      badge: '12',
+    {
+      name: t('networks'),
+      href: '/reseaux',
+      icon: Globe,
+      badge: badges?.suggestions ? badges.suggestions.toString() : undefined,
       description: t('discover_connect')
     },
-    { 
-      name: t('messages'), 
-      href: '/messagerie', 
-      icon: MessageSquare, 
-      badge: '2',
+    {
+      name: t('messages'),
+      href: '/messagerie',
+      icon: MessageSquare,
+      badge: badges?.unread_messages ? badges.unread_messages.toString() : undefined,
       description: t('family_chat')
     },
     {
@@ -136,13 +149,6 @@ const KwdDashboardLayout: React.FC<Props> = ({ children, title = 'Dashboard' }) 
       icon: Activity,
       badge: null,
       description: t('relation_suggestions')
-    },
-    {
-      name: t('notifications'),
-      href: '/notifications',
-      icon: Bell,
-      badge: '5',
-      description: t('alerts_updates')
     },
     {
       name: t('photo_albums'),
@@ -168,7 +174,7 @@ const KwdDashboardLayout: React.FC<Props> = ({ children, title = 'Dashboard' }) 
   return (
     <div className={`min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 ${isRTL ? 'rtl' : 'ltr'}`}>
       <Head title={title} />
-      
+
       {/* Sidebar */}
       <div
         className={`fixed inset-y-0 z-50 flex ${sidebarWidth} flex-col ${isRTL ? 'right-0' : 'left-0'} ${
@@ -221,7 +227,7 @@ const KwdDashboardLayout: React.FC<Props> = ({ children, title = 'Dashboard' }) 
           </div>
 
           {/* Navigation */}
-          <div className="flex flex-1 flex-col px-4 py-4">
+          <div className="flex flex-1 flex-col px-4 py-2">
             <nav className="flex-1">
               <ul role="list" className="flex flex-col gap-y-2">
               {navigation.map((item) => {
@@ -254,8 +260,8 @@ const KwdDashboardLayout: React.FC<Props> = ({ children, title = 'Dashboard' }) 
                             </div>
                           </div>
                           {item.badge && (
-                            <Badge 
-                              variant={isActive ? "secondary" : "outline"} 
+                            <Badge
+                              variant={isActive ? "secondary" : "outline"}
                               className={`text-xs ${isActive ? 'bg-white/20 text-white border-white/30' : ''}`}
                             >
                               {item.badge}
@@ -338,18 +344,6 @@ const KwdDashboardLayout: React.FC<Props> = ({ children, title = 'Dashboard' }) 
             <div className="flex-1"></div>
 
             <div className={`flex items-center gap-x-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              {/* Notifications */}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="relative text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-              >
-                <Bell className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
-                  3
-                </span>
-              </Button>
-
               {/* Dark mode toggle */}
               <Button
                 variant="ghost"
@@ -360,6 +354,25 @@ const KwdDashboardLayout: React.FC<Props> = ({ children, title = 'Dashboard' }) 
               >
                 {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               </Button>
+
+              {/* Notifications */}
+              <Link
+                href="/notifications"
+                className="relative p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors flex items-center justify-center"
+                title={t('notifications')}
+              >
+                <Bell className="h-5 w-5" />
+                {/* Badge dynamique avec nombre exact de notifications */}
+                {badges && badges.total_badges > 0 && (
+                  <>
+                    <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse">
+                      {badges.total_badges > 99 ? '99+' : badges.total_badges}
+                    </span>
+                    {/* Point rouge qui pulse pour attirer l'attention */}
+                    <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full animate-ping" />
+                  </>
+                )}
+              </Link>
 
               {/* Language toggle */}
               <Link

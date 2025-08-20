@@ -13,19 +13,40 @@ class PhotoAlbumController extends Controller
     /**
      * Display a listing of the user's photo albums.
      */
-    public function index(Request $request, ?User $user = null)
+    public function index(?User $user = null)
     {
         $user = $user ?? Auth::user();
 
-        // Vérifier les permissions
-        if ($user->id !== Auth::id() && !$user->hasRelationWith(Auth::user())) {
+        // Vérifier les permissions (pour l'instant, seul le propriétaire peut voir ses albums)
+        if ($user->id !== Auth::id()) {
             abort(403, 'Vous n\'avez pas accès aux albums de cet utilisateur.');
         }
 
-        // Pour l'instant, récupérer tous les albums de l'utilisateur
-        $albums = $user->photoAlbums()->withCount('photos')->get();
+        // Récupérer tous les albums de l'utilisateur avec le nombre de photos
+        $albums = PhotoAlbum::where('user_id', $user->id)
+            ->withCount('photos')
+            ->with(['photos' => function($query) {
+                $query->latest()->limit(1); // Récupérer la dernière photo pour la couverture
+            }])
+            ->orderBy('updated_at', 'desc')
+            ->get();
 
-        return Inertia::render('PhotoAlbums/Index', [
+        // Transformer les albums pour l'affichage
+        $albums = $albums->map(function ($album) {
+            return [
+                'id' => $album->id,
+                'title' => $album->title,
+                'description' => $album->description,
+                'cover_photo' => $album->cover_photo ?: ($album->photos->first()?->url ?? null),
+                'privacy' => $album->privacy,
+                'is_default' => $album->is_default,
+                'photos_count' => $album->photos_count,
+                'created_at' => $album->created_at->toISOString(),
+                'updated_at' => $album->updated_at->toISOString(),
+            ];
+        });
+
+        return Inertia::render('PhotoAlbums/ModernIndex', [
             'albums' => $albums,
             'user' => $user,
             'canCreateAlbum' => $user->id === Auth::id(),
@@ -37,7 +58,7 @@ class PhotoAlbumController extends Controller
      */
     public function create()
     {
-        return view('photo-albums.create');
+        return Inertia::render('PhotoAlbums/Create');
     }
 
     /**
@@ -70,14 +91,56 @@ class PhotoAlbumController extends Controller
      */
     public function show(PhotoAlbum $photoAlbum)
     {
-        // Vérifier les permissions
-        if (!$photoAlbum->canBeViewedBy(Auth::user())) {
+        // Vérifier les permissions (pour l'instant, seul le propriétaire peut voir)
+        if ($photoAlbum->user_id !== Auth::id()) {
             abort(403, 'Vous n\'avez pas accès à cet album.');
         }
 
-        $photos = $photoAlbum->photos()->paginate(24);
+        // Charger les photos avec leurs informations
+        $photos = $photoAlbum->photos()
+            ->orderBy('order')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($photo) {
+                return [
+                    'id' => $photo->id,
+                    'title' => $photo->title,
+                    'description' => $photo->description,
+                    'file_path' => $photo->url,
+                    'thumbnail_path' => $photo->thumbnail_url ?: $photo->url,
+                    'width' => $photo->width,
+                    'height' => $photo->height,
+                    'file_size' => $photo->file_size,
+                    'taken_at' => $photo->taken_at?->toISOString() ?? $photo->created_at->toISOString(),
+                    'created_at' => $photo->created_at->toISOString(),
+                ];
+            });
 
-        return view('photo-albums.show', compact('photoAlbum', 'photos'));
+        // Charger l'utilisateur propriétaire
+        $photoAlbum->load('user');
+
+        // Transformer l'album pour l'affichage
+        $album = [
+            'id' => $photoAlbum->id,
+            'title' => $photoAlbum->title,
+            'description' => $photoAlbum->description,
+            'cover_photo' => $photoAlbum->cover_photo,
+            'privacy' => $photoAlbum->privacy,
+            'is_default' => $photoAlbum->is_default,
+            'photos_count' => $photoAlbum->photos_count,
+            'created_at' => $photoAlbum->created_at->toISOString(),
+            'updated_at' => $photoAlbum->updated_at->toISOString(),
+            'user' => [
+                'id' => $photoAlbum->user->id,
+                'name' => $photoAlbum->user->name,
+            ],
+        ];
+
+        return Inertia::render('PhotoAlbums/Show', [
+            'album' => $album,
+            'photos' => $photos,
+            'canEdit' => $photoAlbum->user_id === Auth::id(),
+        ]);
     }
 
     /**

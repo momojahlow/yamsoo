@@ -569,4 +569,11 @@ return [
     'settings_help_description' => 'راجع وثائقنا أو اتصل بالدعم للحصول على المساعدة.',
     'contact_support' => 'اتصل بالدعم',
     'view_documentation' => 'عرض الوثائق',
+
+    // Family categories
+    'immediate_family' => 'العائلة المباشرة',
+    'siblings' => 'الإخوة والأخوات',
+    'extended_family' => 'العائلة الممتدة',
+    'in_laws' => 'عائلة الزوج/الزوجة',
+    'other_relations' => 'علاقات أخرى',
 ];
