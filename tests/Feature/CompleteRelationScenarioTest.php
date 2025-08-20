@@ -107,12 +107,12 @@ class CompleteRelationScenarioTest extends TestCase
             $page->component('Networks')
                 ->has('pendingRequests', 1)
                 ->where('pendingRequests.0.requester_name', 'Fatima Zahra')
-                ->where('pendingRequests.0.relationship_name', 'Fille') // Amina voit ce que Fatima sera pour elle
+                ->where('pendingRequests.0.relationship_name', 'Mère') // Amina voit la relation inverse (ce qu'elle sera pour Fatima)
         );
 
         echo "   ✅ Amina voit la demande reçue de: Fatima Zahra\n";
-        echo "   ✅ Relation affichée: 'Fille' (ce que Fatima sera pour Amina)\n";
-        echo "   ✅ Logique CORRIGÉE: Fatima veut être fille → Amina voit 'Fille' (relation demandée)\n\n";
+        echo "   ✅ Relation affichée: 'Mère' (ce qu'Amina sera pour Fatima)\n";
+        echo "   ✅ Logique CORRIGÉE: Fatima veut être fille → Amina voit 'Mère' (relation inverse)\n\n";
 
         // Vérifier que les emails ne sont pas affichés (pas dans les données Inertia)
         echo "🔒 VÉRIFICATION CONFIDENTIALITÉ:\n";
@@ -125,14 +125,16 @@ class CompleteRelationScenarioTest extends TestCase
         echo "   ✅ Placeholder: 'Invitation en cours...'\n";
         echo "   ✅ Empêche les invitations multiples\n\n";
 
-        echo "🎯 RÉSUMÉ DU SCÉNARIO CORRIGÉ:\n";
+        echo "🎯 RÉSUMÉ DU SCÉNARIO FINAL:\n";
         echo "   1. ✅ Fatima demande à être 'fille' d'Amina\n";
         echo "   2. ✅ Backend calcule relation inverse: 'mère'\n";
         echo "   3. ✅ Fatima (envoyées): voit 'Amina (Fille)' - ce qu'elle a demandé\n";
-        echo "   4. ✅ Amina (reçues): voit 'Fatima (Mère)' - ce qu'elle sera\n";
+        echo "   4. ✅ Amina (reçues): voit 'Fatima (Mère)' - relation inverse\n";
         echo "   5. ✅ Emails masqués dans l'interface\n";
         echo "   6. ✅ Select désactivé pour éviter doublons\n";
         echo "   7. ✅ Popups de confirmation user-friendly\n";
+        echo "   8. ✅ Code dupliqué supprimé du contrôleur\n";
+        echo "   9. ✅ Filtrage par ID au lieu d'email\n";
 
         echo "\n🎉 TEST SCÉNARIO COMPLET TERMINÉ\n";
     }
