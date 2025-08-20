@@ -14,8 +14,20 @@ import {
   Star,
   Globe,
   Shield,
-  Zap
+  Zap,
+  ChevronDown,
+  User,
+  Settings,
+  LogOut
 } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface User {
   id: number;
@@ -59,24 +71,46 @@ export default function Welcome({ canLogin, canRegister, auth }: Props) {
               <QuickLanguageToggle />
 
               {user ? (
-                // Utilisateur connecté
-                <>
-                  <span className="hidden sm:block text-gray-600 font-medium text-sm sm:text-base">
-                    Bonjour, {user.name}
-                  </span>
-                  <Link href={route('dashboard')}>
-                    <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg transform hover:scale-105 transition-all duration-200 text-sm sm:text-base px-3 sm:px-4 py-2 flex items-center gap-2">
-                      {/* Avatar pour mobile */}
-                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-white/20 rounded-full flex items-center justify-center sm:hidden">
-                        <span className="text-white text-xs font-bold">
-                          {user.name?.charAt(0)?.toUpperCase() || 'U'}
+                // Utilisateur connecté - Menu dropdown moderne
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="flex items-center gap-2 text-sm font-semibold leading-6 text-gray-900 hover:bg-gray-100 rounded-lg px-3 py-2">
+                      <Avatar className="h-8 w-8 ring-2 ring-orange-500/30 hover:ring-orange-500/50 transition-all duration-200">
+                        <AvatarImage src={user.profile?.avatar_url} />
+                        <AvatarFallback className="bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold">
+                          {user.name.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="hidden sm:flex sm:items-center">
+                        <span className="mr-2 font-medium">
+                          {user.name}
                         </span>
-                      </div>
-                      <span className="hidden sm:inline">{t('my_account')}</span>
-                      <span className="sm:hidden">{t('my_account')}</span>
+                        <ChevronDown className="h-4 w-4 text-gray-400" />
+                      </span>
                     </Button>
-                  </Link>
-                </>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem asChild>
+                      <Link href={route('dashboard')} className="flex items-center">
+                        <User className="h-4 w-4 mr-2" />
+                        {t('dashboard')}
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/settings" className="flex items-center">
+                        <Settings className="h-4 w-4 mr-2" />
+                        {t('settings')}
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/logout" method="post" className="flex items-center text-red-600">
+                        <LogOut className="h-4 w-4 mr-2" />
+                        {t('logout')}
+                      </Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               ) : (
                 // Utilisateur non connecté
                 <>

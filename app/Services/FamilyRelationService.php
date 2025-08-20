@@ -343,7 +343,7 @@ class FamilyRelationService
             case 'daughter':
                 return $requester ? $this->getParentRelationByGender($requester) : null;
 
-            // Relations symétriques - la relation inverse dépend du genre du demandeur
+            // Relations symétriques - la relation inverse dépend du genre du requester
             case 'brother':
                 return $requester ? $this->getSiblingRelationByGender($requester) : null;
             case 'sister':
@@ -440,10 +440,10 @@ class FamilyRelationService
     }
 
     /**
-     * Retourne la relation frère/sœur inverse appropriée selon le genre du demandeur
-     * Si le demandeur est un homme, la relation inverse est "brother"
-     * Si le demandeur est une femme, la relation inverse est "sister"
-     * MAIS pour la relation inverse, c'est l'opposé !
+     * Retourne la relation frère/sœur inverse appropriée selon le genre du REQUESTER
+     * Cette méthode est appelée pour déterminer la relation inverse
+     * Si le requester est un homme, il sera "brother" pour le target
+     * Si le requester est une femme, elle sera "sister" pour le target
      */
     private function getSiblingRelationByGender(User $requester): ?RelationshipType
     {
@@ -453,10 +453,10 @@ class FamilyRelationService
             $requesterGender = $this->guessGenderFromName($requester->name);
         }
 
-        // Pour la relation inverse : si le demandeur est une femme, le target sera "brother"
-        if ($requesterGender === 'female') {
+        // La relation inverse dépend du genre du REQUESTER
+        if ($requesterGender === 'male') {
             return RelationshipType::where('name', 'brother')->first();
-        } elseif ($requesterGender === 'male') {
+        } elseif ($requesterGender === 'female') {
             return RelationshipType::where('name', 'sister')->first();
         }
 

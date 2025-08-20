@@ -366,19 +366,19 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <CardContent>
                   <div className="space-y-3">
                     <Link href="/reseaux">
-                      <Button variant="outline" className={`w-full ${isRTL ? 'justify-end' : 'justify-start'}`}>
+                      <Button variant="outline" className={`w-full ${isRTL ? 'justify-end' : 'justify-start'} border-orange-200 text-orange-600 hover:bg-orange-50 hover:border-orange-300`}>
                         <UserPlus className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                         {t('add_relationship')}
                       </Button>
                     </Link>
                     <Link href="/famille/arbre">
-                      <Button variant="outline" className={`w-full ${isRTL ? 'justify-end' : 'justify-start'}`}>
+                      <Button variant="outline" className={`w-full ${isRTL ? 'justify-end' : 'justify-start'} border-orange-200 text-orange-600 hover:bg-orange-50 hover:border-orange-300`}>
                         <TreePine className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                         {t('explore_tree')}
                       </Button>
                     </Link>
                     <Link href="/profile">
-                      <Button variant="outline" className={`w-full ${isRTL ? 'justify-end' : 'justify-start'}`}>
+                      <Button variant="outline" className={`w-full ${isRTL ? 'justify-end' : 'justify-start'} border-orange-200 text-orange-600 hover:bg-orange-50 hover:border-orange-300`}>
                         <Crown className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                         {t('edit_my_profile')}
                       </Button>

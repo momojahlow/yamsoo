@@ -266,10 +266,27 @@ export default function ModernPhotoAlbumsIndex({ albums, user, canCreateAlbum }:
                                     </Button>
                                 </Link>
                                 
-                                <Button variant="outline" className="border-orange-200 hover:bg-orange-50">
+                                <Button
+                                    variant="outline"
+                                    className="border-orange-200 hover:bg-orange-50"
+                                    onClick={() => document.getElementById('quick-upload-input')?.click()}
+                                >
                                     <Upload className="w-4 h-4 mr-2" />
                                     Upload rapide
                                 </Button>
+                                <input
+                                    id="quick-upload-input"
+                                    type="file"
+                                    multiple
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                        if (e.target.files && e.target.files.length > 0) {
+                                            // Rediriger vers la création d'album avec les fichiers sélectionnés
+                                            window.location.href = '/photo-albums/create';
+                                        }
+                                    }}
+                                />
                             </div>
                         )}
                     </div>
