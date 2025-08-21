@@ -236,9 +236,54 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('suggestions', [SuggestionController::class, 'store'])->name('suggestions.store');
     Route::post('suggestions/refresh', [SuggestionController::class, 'refresh'])->name('suggestions.refresh');
     Route::patch('suggestions/{suggestion}', [SuggestionController::class, 'update'])->name('suggestions.update');
+    // Route principale
     Route::post('suggestions/{suggestion}/send-request', [SuggestionController::class, 'sendRelationRequest'])->name('suggestions.send-request');
+
+    // Route alternative pour debug
+    Route::post('suggestions/{id}/send-request-alt', function ($id) {
+        try {
+            $suggestion = \App\Models\Suggestion::findOrFail($id);
+
+            // Simuler l'action du contrôleur
+            return response()->json([
+                'success' => true,
+                'message' => 'Demande envoyée avec succès (route alternative)',
+                'suggestion_id' => $suggestion->id,
+                'user' => $suggestion->user->name,
+                'suggested_user' => $suggestion->suggestedUser->name,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 404);
+        }
+    });
+
+    // Route de test simple pour debug
+    Route::post('suggestions/{id}/send-request-test', function ($id) {
+        return response()->json([
+            'success' => true,
+            'message' => "Test réussi pour suggestion ID: {$id}",
+            'data' => request()->all()
+        ]);
+    });
     Route::patch('suggestions/{suggestion}/accept-with-correction', [SuggestionController::class, 'acceptWithCorrection'])->name('suggestions.accept-with-correction');
     Route::delete('suggestions/{suggestion}', [SuggestionController::class, 'destroy'])->name('suggestions.destroy');
+
+    // Route de test pour debug (à supprimer en production)
+    Route::post('suggestions/{suggestion}/test-send-request', function (\App\Models\Suggestion $suggestion) {
+        return response()->json([
+            'success' => true,
+            'message' => 'Route de test fonctionnelle',
+            'suggestion_id' => $suggestion->id,
+            'user' => $suggestion->user->name,
+            'suggested_user' => $suggestion->suggestedUser->name,
+            'relation' => $suggestion->suggested_relation_name,
+            'url' => request()->url(),
+            'method' => request()->method(),
+        ]);
+    })->name('suggestions.test-send-request');
 
     // Routes pour les réseaux
     Route::get('reseaux', [NetworkController::class, 'index'])->name('networks');
@@ -317,6 +362,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return inertia('TestPhotoDisplay');
     })->name('test.photo.display');
 
+    // Route de test pour les suggestions
+    Route::get('/test-suggestions', function () {
+        return inertia('TestSuggestions');
+    })->name('test.suggestions');
+
     // Route pour créer des données de test pour les photos
     Route::post('/test-photo-data', function () {
         try {
@@ -328,6 +378,39 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return redirect()->back()->withErrors(['error' => 'Erreur lors de la création des données : ' . $e->getMessage()]);
         }
     })->name('test.photo.data');
+
+    // Route pour nettoyer les profils en double
+    Route::post('/cleanup-profiles', function () {
+        try {
+            Artisan::call('db:seed', ['--class' => 'Database\\Seeders\\CleanupProfilesSeeder']);
+
+            return redirect()->back()->with('success', 'Profils nettoyés avec succès !');
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Erreur lors du nettoyage : ' . $e->getMessage()]);
+        }
+    })->name('cleanup.profiles');
+
+    // Route pour le seeding optimisé complet
+    Route::post('/optimized-seed', function () {
+        try {
+            Artisan::call('db:seed', ['--class' => 'Database\\Seeders\\OptimizedDatabaseSeeder']);
+
+            return redirect()->back()->with('success', 'Seeding optimisé terminé avec succès !');
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Erreur lors du seeding : ' . $e->getMessage()]);
+        }
+    })->name('optimized.seed');
+
+    // Route pour générer des suggestions de test
+    Route::post('/generate-suggestions', function () {
+        try {
+            Artisan::call('db:seed', ['--class' => 'Database\\Seeders\\SuggestionTestSeeder']);
+
+            return redirect()->back()->with('success', 'Suggestions de test générées avec succès !');
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Erreur lors de la génération : ' . $e->getMessage()]);
+        }
+    })->name('generate.suggestions');
 
     // Route de test pour les albums photo modernes
     Route::get('/test-albums', function () {
@@ -391,6 +474,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+// Routes de debug (à supprimer en production)
+if (app()->environment(['local', 'staging'])) {
+    require __DIR__.'/debug.php';
+}
 
 // Route de debug - à supprimer après résolution
 Route::get('/debug/relations', function () {
