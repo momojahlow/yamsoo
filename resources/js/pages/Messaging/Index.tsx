@@ -32,14 +32,27 @@ interface Conversation {
     is_online: boolean;
 }
 
-interface MessagingProps {
-    conversations: Conversation[];
+interface Message {
+    id: number;
+    content: string;
+    type: 'text' | 'image' | 'file' | 'audio' | 'video';
+    file_url?: string;
+    file_name?: string;
+    created_at: string;
     user: User;
 }
 
-export default function Messaging({ conversations, user }: MessagingProps) {
+interface MessagingProps {
+    conversations: Conversation[];
+    selectedConversation?: Conversation | null;
+    messages: Message[];
+    targetUser?: User | null;
+    user: User;
+}
+
+export default function Messaging({ conversations, selectedConversation: initialSelectedConversation, messages, targetUser, user }: MessagingProps) {
     const { t } = useTranslation();
-    const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+    const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(initialSelectedConversation || null);
     const [showUserSearch, setShowUserSearch] = useState(false);
     const [showMessageSearch, setShowMessageSearch] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
@@ -57,6 +70,17 @@ export default function Messaging({ conversations, user }: MessagingProps) {
         window.addEventListener('resize', checkMobile);
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
+
+    // Effet pour gérer la sélection automatique d'une conversation
+    useEffect(() => {
+        if (initialSelectedConversation) {
+            setSelectedConversation(initialSelectedConversation);
+            // Si on est sur mobile et qu'une conversation est sélectionnée, afficher directement le chat
+            if (isMobile) {
+                setShowMobileChat(true);
+            }
+        }
+    }, [initialSelectedConversation, isMobile]);
 
     const handleConversationSelect = (conversation: Conversation) => {
         setSelectedConversation(conversation);
@@ -175,6 +199,7 @@ export default function Messaging({ conversations, user }: MessagingProps) {
                     {selectedConversation ? (
                         <ChatArea
                             conversation={selectedConversation}
+                            messages={messages}
                             user={user}
                             onBack={isMobile ? handleBackToList : undefined}
                         />

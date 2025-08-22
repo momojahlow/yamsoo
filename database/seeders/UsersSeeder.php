@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use App\Models\Profile;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -261,9 +260,24 @@ class UsersSeeder extends Seeder
             $profileData = $userData['profile'];
             unset($userData['profile']);
 
-            $user = User::create($userData);
+            // Vérifier si l'utilisateur existe déjà
+            $existingUser = User::where('email', $userData['email'])->first();
 
-            $user->profile()->create($profileData);
+            if ($existingUser) {
+                // Mettre à jour l'utilisateur existant
+                $existingUser->update($userData);
+                $user = $existingUser;
+            } else {
+                // Créer un nouvel utilisateur
+                $user = User::create($userData);
+            }
+
+            // Créer ou mettre à jour le profil
+            if ($user->profile) {
+                $user->profile->update($profileData);
+            } else {
+                $user->profile()->create($profileData);
+            }
         }
     }
 }

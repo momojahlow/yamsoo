@@ -48,26 +48,15 @@ export default function FamilySuggestions({ isOpen, onClose, onConversationCreat
 
     const handleCreateConversation = async (userId: number) => {
         setCreating(userId);
-        try {
-            const response = await axios.post('/api/conversations', {
-                user_id: userId,
-                type: 'private'
-            });
-            onConversationCreated(response.data.conversation_id);
-        } catch (error) {
-            console.error('Erreur lors de la création de la conversation:', error);
-        } finally {
-            setCreating(null);
-        }
+        // Utiliser Inertia au lieu d'API
+        window.location.href = `/messagerie?selectedContactId=${userId}`;
     };
 
     const handleCreateFamilyGroup = async () => {
         setCreatingGroup(true);
         try {
-            const response = await axios.post('/api/conversations/family-group', {
-                name: groupName || undefined
-            });
-            onConversationCreated(response.data.conversation_id);
+            // Utiliser une route web au lieu d'API
+            window.location.href = `/messagerie/family-group?name=${encodeURIComponent(groupName || '')}`;
         } catch (error) {
             console.error('Erreur lors de la création du groupe familial:', error);
         } finally {

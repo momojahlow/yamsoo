@@ -167,6 +167,7 @@ export default function Family({ members }: FamilyProps) {
                     <div key={member.id} className="flex flex-col items-center">
                       <FamilyMemberCard
                         id={member.id.toString()}
+                        userId={member.id}
                         name={member.name}
                         avatarUrl={member.avatar || undefined}
                         relation={member.relation}
@@ -189,6 +190,7 @@ export default function Family({ members }: FamilyProps) {
                     <div key={member.id} className="flex flex-col items-center">
                       <FamilyMemberCard
                         id={member.id.toString()}
+                        userId={member.id}
                         name={member.name}
                         avatarUrl={member.avatar || undefined}
                         relation={member.relation}
@@ -211,6 +213,7 @@ export default function Family({ members }: FamilyProps) {
                     <div key={member.id} className="flex flex-col items-center">
                       <FamilyMemberCard
                         id={member.id.toString()}
+                        userId={member.id}
                         name={member.name}
                         avatarUrl={member.avatar || undefined}
                         relation={member.relation}
@@ -233,6 +236,7 @@ export default function Family({ members }: FamilyProps) {
                     <div key={member.id} className="flex flex-col items-center">
                       <FamilyMemberCard
                         id={member.id.toString()}
+                        userId={member.id}
                         name={member.name}
                         avatarUrl={member.avatar || undefined}
                         relation={member.relation}
@@ -255,6 +259,7 @@ export default function Family({ members }: FamilyProps) {
                     <div key={member.id} className="flex flex-col items-center">
                       <FamilyMemberCard
                         id={member.id.toString()}
+                        userId={member.id}
                         name={member.name}
                         avatarUrl={member.avatar || undefined}
                         relation={member.relation}

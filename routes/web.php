@@ -222,9 +222,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // API pour l'arbre familial
     Route::get('api/family-relations', [FamilyTreeController::class, 'getFamilyRelations'])->name('api.family.relations');
 
-    // Routes pour les messages
-    Route::get('messagerie', [MessageController::class, 'index'])->name('messages');
-    Route::get('messagerie/{conversationId}', [MessageController::class, 'show'])->name('messages.conversation');
+    // Routes pour les messages (ancien système - gardé pour compatibilité)
+    Route::get('messages-old', [MessageController::class, 'index'])->name('messages.old');
+    Route::get('messages-old/{conversationId}', [MessageController::class, 'show'])->name('messages.conversation.old');
+
+    // Route principale de messagerie (nouveau système moderne)
+    Route::get('messagerie', [App\Http\Controllers\MessagingController::class, 'index'])->name('messages');
+
+    // Routes simples pour la messagerie avec Inertia
+    Route::post('messagerie/start', [App\Http\Controllers\MessagingController::class, 'startConversation'])->name('messages.start');
+    Route::post('messagerie/send', [App\Http\Controllers\MessagingController::class, 'sendSimpleMessage'])->name('messages.send');
+    Route::get('messagerie/family-group', [App\Http\Controllers\MessagingController::class, 'createFamilyGroupWeb'])->name('messages.family-group');
+
+    // Page de test pour diagnostiquer la messagerie
+    Route::get('test-messaging', [App\Http\Controllers\TestMessagingController::class, 'index'])->name('test.messaging');
+    Route::post('test-messaging/send', [App\Http\Controllers\TestMessagingController::class, 'sendTest'])->name('test.messaging.send');
+
+    // Debug de la messagerie
+    Route::get('debug-messaging', [App\Http\Controllers\DebugMessagingController::class, 'index'])->name('debug.messaging');
 
     // Routes pour les notifications
     Route::get('notifications', [NotificationController::class, 'index'])->name('notifications');
@@ -509,24 +524,7 @@ Route::middleware('auth')->group(function () {
     // Interface de messagerie
     Route::get('/messages', [App\Http\Controllers\MessagingController::class, 'index'])->name('messages.index');
 
-    // API Routes pour la messagerie
-    Route::prefix('api')->group(function () {
-        // Conversations
-        Route::get('/conversations/{conversation}/messages', [App\Http\Controllers\MessagingController::class, 'getMessages']);
-        Route::post('/conversations/{conversation}/messages', [App\Http\Controllers\MessagingController::class, 'sendMessage']);
-        Route::post('/conversations', [App\Http\Controllers\MessagingController::class, 'createConversation']);
-
-        // Recherche
-        Route::get('/users/search', [App\Http\Controllers\MessagingController::class, 'searchUsers']);
-        Route::get('/messages/search', [App\Http\Controllers\MessagingController::class, 'searchMessages']);
-
-        // Statistiques
-        Route::get('/messages/stats', [App\Http\Controllers\MessagingController::class, 'getStats']);
-
-        // Fonctionnalités familiales
-        Route::post('/conversations/family-group', [App\Http\Controllers\MessagingController::class, 'createFamilyGroup']);
-        Route::get('/conversations/family-suggestions', [App\Http\Controllers\MessagingController::class, 'getFamilySuggestions']);
-    });
+    // Supprimé : API Routes dupliquées - utiliser routes/api.php à la place
 });
 
 // Routes de langue (sans préfixe pour la compatibilité)

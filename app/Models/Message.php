@@ -13,7 +13,7 @@ class Message extends Model
         'user_id',
         'content',
         'type', // 'text', 'image', 'file', 'audio', 'video'
-        'file_path',
+        'file_url',
         'file_name',
         'file_size',
         'is_edited',

@@ -80,7 +80,12 @@ self.addEventListener('fetch', (event) => {
   if (NEVER_CACHE.some(path => url.pathname.startsWith(path))) {
     return;
   }
-  
+
+  // Ne pas intercepter les requêtes POST, PUT, DELETE, etc.
+  if (request.method !== 'GET') {
+    return;
+  }
+
   // Stratégie Cache First pour les assets statiques
   if (isStaticAsset(request)) {
     event.respondWith(cacheFirst(request));
@@ -139,23 +144,27 @@ async function cacheFirst(request) {
 async function networkFirst(request) {
   try {
     const networkResponse = await fetch(request);
-    
-    if (networkResponse.ok) {
+
+    // Ne mettre en cache que les requêtes GET réussies
+    if (networkResponse.ok && request.method === 'GET') {
       const cache = await caches.open(DYNAMIC_CACHE);
       cache.put(request, networkResponse.clone());
       console.log('[SW] Page mise en cache dynamiquement:', request.url);
     }
-    
+
     return networkResponse;
   } catch (error) {
     console.log('[SW] Réseau indisponible, tentative depuis le cache:', request.url);
-    
-    const cache = await caches.open(DYNAMIC_CACHE);
-    const cachedResponse = await cache.match(request);
-    
-    if (cachedResponse) {
-      console.log('[SW] Page servie depuis le cache:', request.url);
-      return cachedResponse;
+
+    // Ne chercher dans le cache que pour les requêtes GET
+    if (request.method === 'GET') {
+      const cache = await caches.open(DYNAMIC_CACHE);
+      const cachedResponse = await cache.match(request);
+
+      if (cachedResponse) {
+        console.log('[SW] Page servie depuis le cache:', request.url);
+        return cachedResponse;
+      }
     }
     
     // Si c'est une page et qu'elle n'est pas en cache, servir la page hors ligne

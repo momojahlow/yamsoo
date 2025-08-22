@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Phone, Video, MoreVertical, Paperclip, Smile, Send, Image, File } from 'lucide-react';
 import MessageBubble from './MessageBubble';
 import EmojiPicker from './EmojiPicker';
-import { useMessaging } from '@/hooks/useMessaging';
+import { useForm } from '@inertiajs/react';
 
 interface User {
     id: number;
@@ -11,11 +11,13 @@ interface User {
 }
 
 interface Conversation {
-    id: number;
+    id: number | null;
     name: string;
     type: 'private' | 'group';
     avatar?: string;
     is_online?: boolean;
+    other_participant_id?: number;
+    is_new?: boolean;
 }
 
 interface Message {
@@ -43,12 +45,12 @@ interface Message {
 
 interface ChatAreaProps {
     conversation: Conversation;
+    messages: Message[];
     user: User;
     onBack?: () => void;
 }
 
-export default function ChatArea({ conversation, user, onBack }: ChatAreaProps) {
-    const [newMessage, setNewMessage] = useState('');
+export default function ChatArea({ conversation, messages, user, onBack }: ChatAreaProps) {
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [replyTo, setReplyTo] = useState<Message | null>(null);
@@ -57,56 +59,44 @@ export default function ChatArea({ conversation, user, onBack }: ChatAreaProps) 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-    // Utiliser le hook de messagerie
-    const {
-        messages,
-        loading,
-        sending,
-        error,
-        sendMessage,
-        markAsRead
-    } = useMessaging(conversation.id);
+    // Utiliser Inertia pour envoyer des messages
+    const { data, setData, post, processing, errors, reset } = useForm({
+        conversation_id: conversation.id,
+        message: '',
+    });
 
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
 
-    useEffect(() => {
-        // Marquer comme lu quand on ouvre la conversation
-        if (conversation.id) {
-            markAsRead(conversation.id);
-        }
-    }, [conversation.id, markAsRead]);
-
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
-    const handleSendMessage = async (e: React.FormEvent) => {
+    const handleSendMessage = (e: React.FormEvent) => {
         e.preventDefault();
 
-        if ((!newMessage.trim() && !selectedFile) || sending) return;
+        if (!data.message.trim() || processing) return;
 
-        try {
-            await sendMessage(
-                conversation.id,
-                newMessage,
-                selectedFile || undefined,
-                replyTo?.id
-            );
+        post('/messagerie/send', {
+            onSuccess: () => {
+                reset('message');
+                setSelectedFile(null);
+                setReplyTo(null);
 
-            // Réinitialiser le formulaire
-            setNewMessage('');
-            setSelectedFile(null);
-            setReplyTo(null);
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                }
 
-            if (fileInputRef.current) {
-                fileInputRef.current.value = '';
+                // Ajuster la hauteur du textarea
+                if (textareaRef.current) {
+                    textareaRef.current.style.height = '48px';
+                }
+            },
+            onError: (errors) => {
+                console.error('Erreur lors de l\'envoi du message:', errors);
             }
-        } catch (error) {
-            // L'erreur est déjà gérée par le hook
-            console.error('Erreur lors de l\'envoi du message:', error);
-        }
+        });
     };
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -117,7 +107,7 @@ export default function ChatArea({ conversation, user, onBack }: ChatAreaProps) 
     };
 
     const handleEmojiSelect = (emoji: string) => {
-        setNewMessage(prev => prev + emoji);
+        setData('message', data.message + emoji);
         setShowEmojiPicker(false);
         textareaRef.current?.focus();
     };
@@ -191,19 +181,27 @@ export default function ChatArea({ conversation, user, onBack }: ChatAreaProps) 
 
             {/* Zone des messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
-                {loading ? (
-                    <div className="flex justify-center items-center h-full">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
-                    </div>
-                ) : messages.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-gray-500">
-                        <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-red-100 rounded-full flex items-center justify-center mb-4">
-                            <Send className="w-8 h-8 text-orange-500" />
+                {messages.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-gray-500 px-4">
+                        <div className="w-20 h-20 bg-gradient-to-br from-orange-100 to-red-100 rounded-full flex items-center justify-center mb-6 shadow-lg">
+                            <Send className="w-10 h-10 text-orange-500" />
                         </div>
-                        <p className="text-lg font-medium mb-2">Aucun message</p>
-                        <p className="text-sm text-center max-w-sm">
-                            Commencez la conversation en envoyant le premier message à {conversation.name}.
+                        <h3 className="text-xl font-semibold mb-3 text-gray-800">
+                            {conversation.is_new ? 'Nouvelle conversation' : 'Aucun message'}
+                        </h3>
+                        <p className="text-sm text-center max-w-sm leading-relaxed">
+                            {conversation.is_new
+                                ? `Commencez une nouvelle conversation avec ${conversation.name}. Envoyez votre premier message !`
+                                : `Commencez la conversation en envoyant le premier message à ${conversation.name}.`
+                            }
                         </p>
+                        {conversation.is_new && (
+                            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                                <p className="text-sm text-blue-700 text-center">
+                                    💡 Cette conversation sera créée dès que vous enverrez votre premier message
+                                </p>
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <>
@@ -261,8 +259,8 @@ export default function ChatArea({ conversation, user, onBack }: ChatAreaProps) 
                     <div className="flex-1 relative">
                         <textarea
                             ref={textareaRef}
-                            value={newMessage}
-                            onChange={(e) => setNewMessage(e.target.value)}
+                            value={data.message}
+                            onChange={(e) => setData('message', e.target.value)}
                             onKeyPress={handleKeyPress}
                             placeholder="Écrivez votre message..."
                             className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none max-h-32"
@@ -290,10 +288,10 @@ export default function ChatArea({ conversation, user, onBack }: ChatAreaProps) 
 
                     <button
                         type="submit"
-                        disabled={(!newMessage.trim() && !selectedFile) || sending}
+                        disabled={(!data.message.trim() && !selectedFile) || processing}
                         className="p-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:from-orange-600 hover:to-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105"
                     >
-                        {sending ? (
+                        {processing ? (
                             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                         ) : (
                             <Send className="w-5 h-5" />

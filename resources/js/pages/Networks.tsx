@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -31,7 +31,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { router } from '@inertiajs/react';
 
 interface User {
   id: number;
@@ -226,9 +225,9 @@ export default function Networks({
     });
   };
 
-  const handleStartConversation = (userId: number) => {
-    // Redirect to messages page with the user ID to start a conversation
-    router.visit(`/messages?user=${userId}`);
+  const handleStartConversation = (user: any) => {
+    // Rediriger directement vers la messagerie avec le contact sélectionné
+    router.visit(`/messagerie?selectedContactId=${user.id}`);
   };
 
   if (safeUsers.length === 0) {
@@ -618,7 +617,7 @@ export default function Networks({
                               variant="outline"
                               size="sm"
                               className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                              onClick={() => handleStartConversation(user.id)}
+                              onClick={() => handleStartConversation(user)}
                               title="Démarrer une conversation"
                             >
                               <MessageSquare className="h-4 w-4" />
