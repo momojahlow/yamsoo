@@ -197,9 +197,9 @@ class MessagingController extends Controller
         ]);
 
         return Inertia::render('Messaging/Index', [
-            'conversations' => $conversations,
+            'conversations' => $conversations->toArray(),
             'selectedConversation' => $selectedConversation,
-            'messages' => $messages,
+            'messages' => is_array($messages) ? $messages : [],
             'targetUser' => $targetUser ? [
                 'id' => $targetUser->id,
                 'name' => $targetUser->name,

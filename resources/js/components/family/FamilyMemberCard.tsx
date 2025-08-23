@@ -59,14 +59,9 @@ export function FamilyMemberCard({
     : name.slice(0, 2).toUpperCase();
 
   const handleSendMessage = () => {
-    console.log('handleSendMessage appelé:', { userId, relation, id, name });
     if (userId && relation !== 'Moi') {
-      const url = `/messagerie?selectedContactId=${userId}`;
-      console.log('Redirection vers:', url);
-      // Rediriger directement vers la messagerie avec le contact sélectionné
-      router.visit(url);
-    } else {
-      console.log('Redirection bloquée:', { userId, relation });
+      // Rediriger vers la messagerie simple et fonctionnelle
+      router.visit(`/simple-messaging?selectedContactId=${userId}`);
     }
   };
 

@@ -50,7 +50,7 @@ interface ChatAreaProps {
     onBack?: () => void;
 }
 
-export default function ChatArea({ conversation, messages, user, onBack }: ChatAreaProps) {
+export default function ChatArea({ conversation, messages = [], user, onBack }: ChatAreaProps) {
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [replyTo, setReplyTo] = useState<Message | null>(null);

@@ -241,6 +241,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Debug de la messagerie
     Route::get('debug-messaging', [App\Http\Controllers\DebugMessagingController::class, 'index'])->name('debug.messaging');
 
+    // Messagerie simple et fonctionnelle
+    Route::get('simple-messaging', [App\Http\Controllers\SimpleMessagingController::class, 'index'])->name('simple.messaging');
+    Route::post('simple-messaging/send', [App\Http\Controllers\SimpleMessagingController::class, 'sendMessage'])->name('simple.messaging.send');
+
     // Routes pour les notifications
     Route::get('notifications', [NotificationController::class, 'index'])->name('notifications');
     Route::patch('notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');

@@ -50,7 +50,7 @@ interface MessagingProps {
     user: User;
 }
 
-export default function Messaging({ conversations, selectedConversation: initialSelectedConversation, messages, targetUser, user }: MessagingProps) {
+export default function Messaging({ conversations = [], selectedConversation: initialSelectedConversation, messages = [], targetUser, user }: MessagingProps) {
     const { t } = useTranslation();
     const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(initialSelectedConversation || null);
     const [showUserSearch, setShowUserSearch] = useState(false);
