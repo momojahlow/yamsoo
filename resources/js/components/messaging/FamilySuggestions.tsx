@@ -169,7 +169,7 @@ export default function FamilySuggestions({ isOpen, onClose, onConversationCreat
                                         onClick={() => {
                                             onClose();
                                             // Rediriger vers la page des suggestions
-                                            window.location.href = '/family-relations/suggestions';
+                                            window.location.href = '/suggestions';
                                         }}
                                         className="inline-flex items-center px-6 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-all duration-200 transform hover:scale-105 font-medium"
                                     >

@@ -343,9 +343,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Routes pour les relations familiales
     Route::get('family-relations', [FamilyRelationController::class, 'index'])->name('family-relations.index');
-    Route::get('family-relations/suggestions', function () {
-        return inertia('Relations/Suggestions');
-    })->name('family-relations.suggestions');
+
     Route::post('family-relations', [FamilyRelationController::class, 'store'])->name('family-relations.store');
     Route::post('family-relations/{requestId}/accept', [FamilyRelationController::class, 'accept'])->name('family-relations.accept');
     Route::post('family-relations/{requestId}/reject', [FamilyRelationController::class, 'reject'])->name('family-relations.reject');

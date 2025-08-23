@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -22,7 +22,7 @@ interface CreateGroupProps {
 
 export default function CreateGroup({ contacts }: CreateGroupProps) {
     const [selectedParticipants, setSelectedParticipants] = useState<Contact[]>([]);
-    
+
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         description: '',
@@ -31,7 +31,7 @@ export default function CreateGroup({ contacts }: CreateGroupProps) {
 
     const handleParticipantToggle = (contact: Contact) => {
         const isSelected = selectedParticipants.some(p => p.id === contact.id);
-        
+
         if (isSelected) {
             const newSelected = selectedParticipants.filter(p => p.id !== contact.id);
             setSelectedParticipants(newSelected);
@@ -45,7 +45,16 @@ export default function CreateGroup({ contacts }: CreateGroupProps) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post('/groups');
+        console.log('Submitting group creation with data:', data);
+        console.log('Selected participants:', selectedParticipants);
+        post('/groups', {
+            onSuccess: () => {
+                console.log('Group created successfully');
+            },
+            onError: (errors) => {
+                console.error('Group creation errors:', errors);
+            }
+        });
     };
 
     const getInitials = (name: string) => {
@@ -58,7 +67,7 @@ export default function CreateGroup({ contacts }: CreateGroupProps) {
     return (
         <KwdDashboardLayout title="Créer un groupe">
             <Head title="Créer un groupe" />
-            
+
             <div className="min-h-screen bg-gray-50 p-6">
                 <div className="max-w-4xl mx-auto">
                     {/* En-tête */}
@@ -165,28 +174,39 @@ export default function CreateGroup({ contacts }: CreateGroupProps) {
                                     Ajouter des participants
                                 </CardTitle>
                                 <p className="text-sm text-gray-600">
-                                    Sélectionnez les personnes que vous souhaitez ajouter au groupe
+                                    Sélectionnez les membres de votre famille que vous souhaitez ajouter au groupe
                                 </p>
+                                <div className="mt-2 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                                    <p className="text-sm text-orange-800">
+                                        <span className="font-medium">ℹ️ Information :</span> Seuls les membres de votre famille peuvent être ajoutés aux groupes.
+                                    </p>
+                                </div>
                             </CardHeader>
                             <CardContent>
                                 {contacts.length === 0 ? (
                                     <div className="text-center py-8 text-gray-500">
                                         <Users className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                                        <p>Aucun contact disponible</p>
-                                        <p className="text-sm">Ajoutez des relations familiales pour créer des groupes</p>
+                                        <p className="font-medium">Aucun membre de famille disponible</p>
+                                        <p className="text-sm mt-2">Ajoutez des relations familiales pour créer des groupes</p>
+                                        <button
+                                            onClick={() => router.get('/reseaux')}
+                                            className="mt-4 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+                                        >
+                                            Ajouter des membres
+                                        </button>
                                     </div>
                                 ) : (
                                     <div className="space-y-2">
                                         {contacts.map(contact => {
                                             const isSelected = selectedParticipants.some(p => p.id === contact.id);
-                                            
+
                                             return (
                                                 <div
                                                     key={contact.id}
                                                     onClick={() => handleParticipantToggle(contact)}
                                                     className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
-                                                        isSelected 
-                                                            ? 'bg-blue-50 border-2 border-blue-200' 
+                                                        isSelected
+                                                            ? 'bg-orange-50 border-2 border-orange-200'
                                                             : 'hover:bg-gray-50 border-2 border-transparent'
                                                     }`}
                                                 >
@@ -196,14 +216,14 @@ export default function CreateGroup({ contacts }: CreateGroupProps) {
                                                             {getInitials(contact.name)}
                                                         </AvatarFallback>
                                                     </Avatar>
-                                                    
+
                                                     <div className="flex-1">
                                                         <p className="font-medium">{contact.name}</p>
                                                         <p className="text-sm text-gray-500">{contact.relation}</p>
                                                     </div>
-                                                    
+
                                                     {isSelected && (
-                                                        <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                                                        <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
                                                             <Plus className="w-4 h-4 text-white rotate-45" />
                                                         </div>
                                                     )}
@@ -212,7 +232,7 @@ export default function CreateGroup({ contacts }: CreateGroupProps) {
                                         })}
                                     </div>
                                 )}
-                                
+
                                 {errors.participants && (
                                     <p className="text-red-600 text-sm mt-2">{errors.participants}</p>
                                 )}
@@ -232,7 +252,7 @@ export default function CreateGroup({ contacts }: CreateGroupProps) {
                             <Button
                                 type="submit"
                                 disabled={processing || !data.name.trim() || selectedParticipants.length === 0}
-                                className="flex-1 bg-blue-500 hover:bg-blue-600"
+                                className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
                             >
                                 {processing ? 'Création...' : 'Créer le groupe'}
                             </Button>
