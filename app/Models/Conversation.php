@@ -6,14 +6,18 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Schema;
 
 class Conversation extends Model
 {
     protected $fillable = [
         'name',
+        'description',
+        'avatar',
         'type', // 'private' ou 'group'
         'created_by',
         'last_message_at',
+        'max_participants',
         'is_active'
     ];
 
@@ -27,9 +31,36 @@ class Conversation extends Model
      */
     public function participants(): BelongsToMany
     {
+        // Vérifier quelles colonnes existent dans la table pivot
+        $pivotColumns = ['joined_at', 'left_at', 'is_admin', 'last_read_at'];
+
+        // Ajouter les nouvelles colonnes si elles existent
+        if (Schema::hasColumn('conversation_participants', 'role')) {
+            $pivotColumns[] = 'role';
+        }
+        if (Schema::hasColumn('conversation_participants', 'notifications_enabled')) {
+            $pivotColumns[] = 'notifications_enabled';
+        }
+
         return $this->belongsToMany(User::class, 'conversation_participants')
-            ->withPivot(['joined_at', 'left_at', 'is_admin'])
+            ->withPivot($pivotColumns)
             ->withTimestamps();
+    }
+
+    /**
+     * Participants actifs (non partis)
+     */
+    public function activeParticipants(): BelongsToMany
+    {
+        return $this->participants()->whereNull('conversation_participants.left_at');
+    }
+
+    /**
+     * Administrateurs de la conversation
+     */
+    public function admins(): BelongsToMany
+    {
+        return $this->activeParticipants()->where('conversation_participants.is_admin', true);
     }
 
     /**
@@ -54,6 +85,14 @@ class Conversation extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * Activités de la conversation (historique)
+     */
+    public function activities()
+    {
+        return $this->hasMany(ConversationActivity::class)->orderBy('created_at', 'desc');
     }
 
     /**
@@ -139,18 +178,55 @@ class Conversation extends Model
     public function getUnreadCountFor(User $user): int
     {
         $participant = $this->participants()->where('user_id', $user->id)->first();
-        
+
         if (!$participant) {
             return 0;
         }
 
         $lastReadAt = $participant->pivot->last_read_at;
-        
+
         return $this->messages()
             ->where('user_id', '!=', $user->id)
             ->when($lastReadAt, function ($query) use ($lastReadAt) {
                 return $query->where('created_at', '>', $lastReadAt);
             })
             ->count();
+    }
+
+    /**
+     * Vérifier si l'utilisateur est admin
+     */
+    public function isAdmin(User $user): bool
+    {
+        $participant = $this->participants()->where('user_id', $user->id)->first();
+        return $participant && $participant->pivot->is_admin;
+    }
+
+    /**
+     * Vérifier si c'est un groupe
+     */
+    public function isGroup(): bool
+    {
+        return $this->type === 'group';
+    }
+
+    /**
+     * Obtenir le nombre de participants actifs
+     */
+    public function getActiveParticipantsCountAttribute(): int
+    {
+        return $this->activeParticipants()->count();
+    }
+
+    /**
+     * Vérifier si le groupe peut accepter plus de participants
+     */
+    public function canAddParticipants(): bool
+    {
+        if (!$this->isGroup()) {
+            return false;
+        }
+
+        return $this->active_participants_count < $this->max_participants;
     }
 }
