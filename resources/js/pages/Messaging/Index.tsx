@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { Search, Phone, Video, MoreVertical, Paperclip, Smile, Send, ArrowLeft, Settings, BarChart3, Users, Plus } from 'lucide-react';
 import { KwdDashboardLayout } from '@/Layouts/modern';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -83,9 +83,22 @@ export default function Messaging({ conversations = [], selectedConversation: in
     }, [initialSelectedConversation, isMobile]);
 
     const handleConversationSelect = (conversation: Conversation) => {
+        console.log('Selecting conversation:', conversation);
+        console.log('Other participant ID:', conversation.other_participant_id);
+
         setSelectedConversation(conversation);
         if (isMobile) {
             setShowMobileChat(true);
+        }
+
+        // Mettre à jour l'URL avec le selectedContactId
+        if (conversation.other_participant_id) {
+            console.log('Navigating to:', `/messagerie?selectedContactId=${conversation.other_participant_id}`);
+            router.get(`/messagerie?selectedContactId=${conversation.other_participant_id}`, {}, {
+                preserveState: false,
+                preserveScroll: false,
+                replace: true
+            });
         }
     };
 

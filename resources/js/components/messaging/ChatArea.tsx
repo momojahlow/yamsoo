@@ -55,6 +55,11 @@ export default function ChatArea({ conversation, messages = [], user, onBack }: 
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [replyTo, setReplyTo] = useState<Message | null>(null);
 
+    // Debug pour identifier le problème
+    console.log('ChatArea - Messages reçus:', messages);
+    console.log('ChatArea - User reçu:', user);
+    console.log('ChatArea - Messages avec problème:', messages.filter(m => !m || !m.user || !m.id));
+
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -77,6 +82,9 @@ export default function ChatArea({ conversation, messages = [], user, onBack }: 
         e.preventDefault();
 
         if (!data.message.trim() || processing) return;
+
+        console.log('Sending message with data:', data);
+        console.log('Conversation ID:', conversation.id);
 
         post('/messagerie/send', {
             onSuccess: () => {
@@ -205,11 +213,11 @@ export default function ChatArea({ conversation, messages = [], user, onBack }: 
                     </div>
                 ) : (
                     <>
-                        {messages.map((message) => (
+                        {messages.filter(message => message && message.user && message.id).map((message) => (
                             <MessageBubble
                                 key={message.id}
                                 message={message}
-                                isOwn={message.user.id === user.id}
+                                isOwn={message.user?.id === user?.id}
                                 onReply={() => setReplyTo(message)}
                             />
                         ))}

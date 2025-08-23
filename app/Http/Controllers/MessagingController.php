@@ -86,17 +86,31 @@ class MessagingController extends Controller
 
                 // Charger les messages
                 $messages = $conversation->messages()
-                    ->with('user')
+                    ->with(['user', 'replyTo.user'])
                     ->orderBy('created_at', 'asc')
                     ->get()
                     ->map(function ($msg) {
                         return [
                             'id' => $msg->id,
                             'content' => $msg->content,
-                            'user_id' => $msg->user_id,
-                            'user_name' => $msg->user->name,
-                            'created_at' => $msg->created_at ? $msg->created_at->format('H:i') : '',
-                            'is_mine' => $msg->user_id === auth()->id(),
+                            'type' => $msg->type ?? 'text',
+                            'file_url' => $msg->file_url,
+                            'file_name' => $msg->file_name,
+                            'file_size' => $msg->file_size,
+                            'created_at' => $msg->created_at ? $msg->created_at->toISOString() : '',
+                            'is_edited' => $msg->is_edited ?? false,
+                            'edited_at' => $msg->edited_at ? $msg->edited_at->toISOString() : null,
+                            'user' => [
+                                'id' => $msg->user->id,
+                                'name' => $msg->user->name,
+                                'avatar' => $msg->user->profile?->avatar_url ?? null,
+                            ],
+                            'reply_to' => $msg->reply_to_id ? [
+                                'id' => $msg->reply_to_id,
+                                'content' => $msg->replyTo?->content ?? '',
+                                'user_name' => $msg->replyTo?->user?->name ?? '',
+                            ] : null,
+                            'reactions' => [], // À implémenter si nécessaire
                         ];
                     })->toArray();
             }
@@ -190,8 +204,14 @@ class MessagingController extends Controller
     {
         $user = $request->user();
 
+        // Debug logs
+        \Log::info('SendMessage - User ID: ' . $user->id);
+        \Log::info('SendMessage - Conversation ID: ' . $conversation->id);
+        \Log::info('SendMessage - Conversation participants: ' . $conversation->participants->pluck('id')->toArray());
+
         // Vérifier que l'utilisateur fait partie de la conversation
         if (!$conversation->hasParticipant($user)) {
+            \Log::warning('SendMessage - User not participant of conversation');
             return response()->json(['error' => 'Accès non autorisé'], 403);
         }
 
@@ -224,6 +244,8 @@ class MessagingController extends Controller
             }
 
             $message = Message::create($messageData);
+
+            \Log::info('Message created - ID: ' . $message->id . ', User: ' . $user->id . ', Conversation: ' . $conversation->id);
 
             // Mettre à jour la conversation
             $conversation->update(['last_message_at' => now()]);

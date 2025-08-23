@@ -2,6 +2,8 @@ import React from 'react';
 import { Head, useForm } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { KwdDashboardLayout } from '@/Layouts/modern';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Conversation {
     id: number;
@@ -31,6 +33,7 @@ interface SimpleMessagingProps {
 }
 
 export default function SimpleMessaging({ conversations, selectedConversation, messages, user }: SimpleMessagingProps) {
+    const { t } = useTranslation();
     const { data, setData, post, processing, reset } = useForm({
         conversation_id: selectedConversation?.id || '',
         message: '',
@@ -48,18 +51,18 @@ export default function SimpleMessaging({ conversations, selectedConversation, m
     };
 
     return (
-        <>
+        <KwdDashboardLayout title={t('messaging')}>
             <Head title="Messagerie Simple" />
-            
-            <div className="min-h-screen bg-gray-100">
-                <div className="max-w-6xl mx-auto">
-                    <div className="flex h-screen">
+
+            <div className="h-full">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                    <div className="flex h-[calc(100vh-200px)] bg-white rounded-lg shadow-lg overflow-hidden">
                         {/* Liste des conversations */}
                         <div className="w-1/3 bg-white border-r border-gray-200">
                             <div className="p-4 border-b border-gray-200">
                                 <h1 className="text-xl font-semibold">Messages</h1>
                             </div>
-                            
+
                             <div className="overflow-y-auto">
                                 {conversations.length === 0 ? (
                                     <div className="p-4 text-gray-500 text-center">
@@ -71,7 +74,7 @@ export default function SimpleMessaging({ conversations, selectedConversation, m
                                             key={conv.id}
                                             href={`/simple-messaging?selectedContactId=${conv.other_user_id}`}
                                             className={`block p-4 border-b border-gray-100 hover:bg-gray-50 ${
-                                                selectedConversation?.id === conv.id ? 'bg-blue-50' : ''
+                                                selectedConversation?.id === conv.id ? 'bg-orange-50 border-l-4 border-l-orange-500' : ''
                                             }`}
                                         >
                                             <div className="font-medium">{conv.name}</div>
@@ -115,7 +118,7 @@ export default function SimpleMessaging({ conversations, selectedConversation, m
                                                     <div
                                                         className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                                                             message.is_mine
-                                                                ? 'bg-blue-500 text-white'
+                                                                ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white'
                                                                 : 'bg-gray-200 text-gray-900'
                                                         }`}
                                                     >
@@ -126,7 +129,7 @@ export default function SimpleMessaging({ conversations, selectedConversation, m
                                                         )}
                                                         <div>{message.content}</div>
                                                         <div className={`text-xs mt-1 ${
-                                                            message.is_mine ? 'text-blue-100' : 'text-gray-500'
+                                                            message.is_mine ? 'text-orange-100' : 'text-gray-500'
                                                         }`}>
                                                             {message.created_at}
                                                         </div>
@@ -146,10 +149,10 @@ export default function SimpleMessaging({ conversations, selectedConversation, m
                                                 className="flex-1"
                                                 disabled={processing}
                                             />
-                                            <Button 
-                                                type="submit" 
+                                            <Button
+                                                type="submit"
                                                 disabled={processing || !data.message.trim()}
-                                                className="bg-blue-500 hover:bg-blue-600"
+                                                className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
                                             >
                                                 {processing ? 'Envoi...' : 'Envoyer'}
                                             </Button>
@@ -162,7 +165,7 @@ export default function SimpleMessaging({ conversations, selectedConversation, m
                                         <h3 className="text-lg font-medium mb-2">Sélectionnez une conversation</h3>
                                         <p>Choisissez une conversation dans la liste pour commencer à discuter</p>
                                         <div className="mt-4">
-                                            <a href="/famille" className="text-blue-500 hover:underline">
+                                            <a href="/famille" className="text-orange-500 hover:underline">
                                                 Aller à la page famille pour envoyer un message
                                             </a>
                                         </div>
@@ -173,6 +176,6 @@ export default function SimpleMessaging({ conversations, selectedConversation, m
                     </div>
                 </div>
             </div>
-        </>
+        </KwdDashboardLayout>
     );
 }
