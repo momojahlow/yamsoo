@@ -38,20 +38,33 @@ export default function ConversationList({
     };
 
     const formatTime = (dateString: string) => {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+        try {
+            if (!dateString) return '';
 
-        if (diffInHours < 24) {
-            return date.toLocaleTimeString('fr-FR', { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-            });
-        } else {
-            return formatDistanceToNow(date, { 
-                addSuffix: false, 
-                locale: fr 
-            });
+            const date = new Date(dateString);
+
+            // Vérifier si la date est valide
+            if (isNaN(date.getTime())) {
+                return '';
+            }
+
+            const now = new Date();
+            const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+
+            if (diffInHours < 24) {
+                return date.toLocaleTimeString('fr-FR', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } else {
+                return formatDistanceToNow(date, {
+                    addSuffix: false,
+                    locale: fr
+                });
+            }
+        } catch (error) {
+            console.error('Erreur de formatage de date:', error, dateString);
+            return '';
         }
     };
 
@@ -128,7 +141,7 @@ export default function ConversationList({
                                                 : 'text-gray-500'
                                             }
                                         `}>
-                                            {formatTime(conversation.last_message.created_at)}
+                                            {conversation.last_message?.created_at ? formatTime(conversation.last_message.created_at) : ''}
                                         </span>
                                     )}
                                 </div>

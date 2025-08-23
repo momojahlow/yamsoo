@@ -31,184 +31,84 @@ class MessagingController extends Controller
         $user = $request->user();
         $selectedContactId = $request->query('selectedContactId');
 
-        Log::info('Messagerie - Début', [
-            'user_id' => $user->id,
-            'selectedContactId' => $selectedContactId,
-            'url' => $request->fullUrl()
-        ]);
-
-        // Mettre à jour le last_seen_at de l'utilisateur
-        $user->update(['last_seen_at' => now()]);
-
-        // Récupérer les conversations de l'utilisateur
+        // Récupérer toutes les conversations de l'utilisateur (logique simple)
         $conversations = $user->conversations()
-            ->with([
-                'lastMessage.user',
-                'participants' => function ($query) use ($user) {
-                    $query->where('user_id', '!=', $user->id);
-                }
-            ])
+            ->with(['participants', 'messages' => function($query) {
+                $query->latest()->limit(1);
+            }])
             ->orderBy('last_message_at', 'desc')
             ->get()
-            ->map(function ($conversation) use ($user) {
-                $otherParticipants = $conversation->participants->where('id', '!=', $user->id);
+            ->map(function ($conv) use ($user) {
+                $otherUser = $conv->participants->where('id', '!=', $user->id)->first();
+                $lastMessage = $conv->messages->first();
 
                 return [
-                    'id' => $conversation->id,
-                    'name' => $conversation->display_name,
-                    'type' => $conversation->type,
-                    'avatar' => $conversation->avatar,
-                    'last_message' => $conversation->lastMessage ? [
-                        'content' => $conversation->lastMessage->content,
-                        'created_at' => $conversation->lastMessage->created_at,
-                        'user_name' => $conversation->lastMessage->user->name,
-                        'is_own' => $conversation->lastMessage->user_id === $user->id
+                    'id' => $conv->id,
+                    'name' => $conv->type === 'group' ? $conv->name : ($otherUser ? $otherUser->name : 'Conversation'),
+                    'type' => $conv->type,
+                    'avatar' => $conv->type === 'private' ? ($otherUser?->profile?->avatar_url ?? null) : null,
+                    'other_participant_id' => $otherUser ? $otherUser->id : null,
+                    'last_message' => $lastMessage ? [
+                        'content' => $lastMessage->content,
+                        'created_at' => $lastMessage->created_at ? $lastMessage->created_at->diffForHumans() : '',
+                        'user_name' => $lastMessage->user->name
                     ] : null,
-                    'unread_count' => $conversation->getUnreadCountFor($user),
-                    'is_online' => $conversation->type === 'private' ?
-                        $otherParticipants->first()?->isOnline() ?? false : false,
-                    'participants_count' => $otherParticipants->count(),
-                    'other_participant_id' => $conversation->type === 'private' ?
-                        $otherParticipants->first()?->id : null
+                    'unread_count' => 0,
+                    'is_online' => $otherUser?->isOnline() ?? false,
+                    'participants_count' => $conv->participants->count(),
+                    'is_new' => false
                 ];
             });
 
-        // Si un contact est sélectionné, essayer de trouver ou créer la conversation
+        // Conversation et messages sélectionnés
         $selectedConversation = null;
-        $targetUser = null;
+        $messages = [];
 
         if ($selectedContactId) {
             $targetUser = User::find($selectedContactId);
 
             if ($targetUser) {
-                // Chercher une conversation existante entre les deux utilisateurs
-                $existingConversation = $conversations->first(function ($conv) use ($selectedContactId) {
-                    return $conv['type'] === 'private' && $conv['other_participant_id'] == $selectedContactId;
-                });
+                // Chercher ou créer une conversation
+                $conversation = $this->findOrCreateConversation($user, $targetUser);
 
-                if ($existingConversation) {
-                    $selectedConversation = $existingConversation;
-                } else {
-                    // Créer automatiquement une nouvelle conversation
-                    try {
-                        DB::beginTransaction();
+                $selectedConversation = [
+                    'id' => $conversation->id,
+                    'name' => $targetUser->name,
+                    'type' => 'private',
+                    'avatar' => $targetUser->profile?->avatar_url,
+                    'other_participant_id' => $targetUser->id,
+                    'last_message' => null,
+                    'unread_count' => 0,
+                    'is_online' => $targetUser->isOnline(),
+                    'participants_count' => 1,
+                    'is_new' => false
+                ];
 
-                        $conversation = Conversation::create([
-                            'name' => null,
-                            'type' => 'private',
-                            'created_by' => $user->id,
-                            'last_message_at' => now()
-                        ]);
-
-                        // Ajouter les participants
-                        $conversation->addParticipant($user, true);
-                        $conversation->addParticipant($targetUser);
-
-                        DB::commit();
-
-                        // Préparer les données de la conversation pour l'interface
-                        $selectedConversation = [
-                            'id' => $conversation->id,
-                            'name' => $targetUser->name,
-                            'type' => 'private',
-                            'avatar' => $targetUser->profile?->avatar_url,
-                            'last_message' => null,
-                            'unread_count' => 0,
-                            'is_online' => $targetUser->isOnline(),
-                            'participants_count' => 1,
-                            'other_participant_id' => $targetUser->id,
-                            'is_new' => true
-                        ];
-
-                        // Ajouter la nouvelle conversation à la liste
-                        $conversations->prepend($selectedConversation);
-
-                    } catch (\Exception $e) {
-                        DB::rollback();
-                        // En cas d'erreur, créer une conversation virtuelle
-                        $selectedConversation = [
-                            'id' => null,
-                            'name' => $targetUser->name,
-                            'type' => 'private',
-                            'avatar' => $targetUser->profile?->avatar_url,
-                            'last_message' => null,
-                            'unread_count' => 0,
-                            'is_online' => $targetUser->isOnline(),
-                            'participants_count' => 1,
-                            'other_participant_id' => $targetUser->id,
-                            'is_new' => true
-                        ];
-                    }
-                }
-            }
-        }
-
-        // Charger les messages de la conversation sélectionnée
-        $messages = [];
-        if ($selectedConversation && isset($selectedConversation['id']) && $selectedConversation['id']) {
-            $conversation = Conversation::find($selectedConversation['id']);
-            if ($conversation && $conversation->hasParticipant($user)) {
+                // Charger les messages
                 $messages = $conversation->messages()
-                    ->with(['user.profile'])
+                    ->with('user')
                     ->orderBy('created_at', 'asc')
                     ->get()
-                    ->map(function ($message) {
+                    ->map(function ($msg) {
                         return [
-                            'id' => $message->id,
-                            'content' => $message->content,
-                            'type' => $message->type,
-                            'file_url' => $message->file_url,
-                            'file_name' => $message->file_name,
-                            'created_at' => $message->created_at->toISOString(),
-                            'user' => [
-                                'id' => $message->user->id,
-                                'name' => $message->user->name,
-                                'avatar' => $message->user->profile?->avatar_url
-                            ]
+                            'id' => $msg->id,
+                            'content' => $msg->content,
+                            'user_id' => $msg->user_id,
+                            'user_name' => $msg->user->name,
+                            'created_at' => $msg->created_at ? $msg->created_at->format('H:i') : '',
+                            'is_mine' => $msg->user_id === auth()->id(),
                         ];
                     })->toArray();
-
-                Log::info('Messages chargés pour conversation ' . $selectedConversation['id'], [
-                    'count' => count($messages),
-                    'conversation_id' => $selectedConversation['id']
-                ]);
-            } else {
-                Log::warning('Conversation non trouvée ou accès refusé', [
-                    'conversation_id' => $selectedConversation['id'],
-                    'user_id' => $user->id
-                ]);
             }
-        } else {
-            Log::info('Aucune conversation sélectionnée', [
-                'selectedContactId' => $selectedContactId,
-                'selectedConversation' => $selectedConversation
-            ]);
         }
-
-        Log::info('Messagerie - Données finales', [
-            'conversations_count' => $conversations->count(),
-            'selectedConversation' => $selectedConversation ? [
-                'id' => $selectedConversation['id'],
-                'name' => $selectedConversation['name'],
-                'type' => $selectedConversation['type']
-            ] : null,
-            'messages_count' => count($messages),
-            'targetUser' => $targetUser ? $targetUser->name : null
-        ]);
 
         return Inertia::render('Messaging/Index', [
             'conversations' => $conversations->toArray(),
             'selectedConversation' => $selectedConversation,
-            'messages' => is_array($messages) ? $messages : [],
-            'targetUser' => $targetUser ? [
-                'id' => $targetUser->id,
-                'name' => $targetUser->name,
-                'avatar' => $targetUser->profile?->avatar_url
-            ] : null,
+            'messages' => $messages,
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
-                'avatar' => $user->profile?->avatar
             ]
         ]);
     }
@@ -497,12 +397,10 @@ class MessagingController extends Controller
             broadcast(new MessageSent($message, $user));
 
             // Rediriger vers la messagerie avec la conversation sélectionnée
-            $otherParticipant = $conversation->participants()
-                ->where('user_id', '!=', $user->id)
-                ->first();
+            $otherUser = $conversation->participants->where('id', '!=', $user->id)->first();
 
-            if ($otherParticipant) {
-                return redirect("/messagerie?selectedContactId={$otherParticipant->user_id}")
+            if ($otherUser) {
+                return redirect("/messagerie?selectedContactId={$otherUser->id}")
                     ->with('success', 'Message envoyé !');
             }
 
@@ -533,6 +431,37 @@ class MessagingController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Erreur lors de la création du groupe familial');
         }
+    }
+
+    /**
+     * Trouver ou créer une conversation entre deux utilisateurs
+     */
+    private function findOrCreateConversation(User $user1, User $user2)
+    {
+        // Chercher une conversation existante
+        $conversation = Conversation::where('type', 'private')
+            ->whereHas('participants', function ($query) use ($user1) {
+                $query->where('user_id', $user1->id);
+            })
+            ->whereHas('participants', function ($query) use ($user2) {
+                $query->where('user_id', $user2->id);
+            })
+            ->first();
+
+        if (!$conversation) {
+            // Créer une nouvelle conversation
+            DB::transaction(function () use (&$conversation, $user1, $user2) {
+                $conversation = Conversation::create([
+                    'type' => 'private',
+                    'created_by' => $user1->id,
+                    'last_message_at' => now(),
+                ]);
+
+                $conversation->participants()->attach([$user1->id, $user2->id]);
+            });
+        }
+
+        return $conversation;
     }
 
     /**

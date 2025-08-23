@@ -32,7 +32,7 @@ class SimpleMessagingController extends Controller
                     'name' => $otherUser ? $otherUser->name : 'Conversation',
                     'other_user_id' => $otherUser ? $otherUser->id : null,
                     'last_message' => $lastMessage ? $lastMessage->content : null,
-                    'last_message_time' => $lastMessage ? $lastMessage->created_at->diffForHumans() : null,
+                    'last_message_time' => $lastMessage && $lastMessage->created_at ? $lastMessage->created_at->diffForHumans() : null,
                 ];
             });
         
@@ -64,7 +64,7 @@ class SimpleMessagingController extends Controller
                             'content' => $msg->content,
                             'user_id' => $msg->user_id,
                             'user_name' => $msg->user->name,
-                            'created_at' => $msg->created_at->format('H:i'),
+                            'created_at' => $msg->created_at ? $msg->created_at->format('H:i') : '',
                             'is_mine' => $msg->user_id === auth()->id(),
                         ];
                     })->toArray();

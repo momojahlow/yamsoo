@@ -60,8 +60,8 @@ export function FamilyMemberCard({
 
   const handleSendMessage = () => {
     if (userId && relation !== 'Moi') {
-      // Rediriger vers la messagerie simple et fonctionnelle
-      router.visit(`/simple-messaging?selectedContactId=${userId}`);
+      // Rediriger vers la messagerie principale
+      router.visit(`/messagerie?selectedContactId=${userId}`);
     }
   };
 

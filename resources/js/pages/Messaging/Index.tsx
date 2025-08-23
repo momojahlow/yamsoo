@@ -110,6 +110,13 @@ export default function Messaging({ conversations = [], selectedConversation: in
                             <h1 className="text-xl font-semibold text-gray-900">Messages</h1>
                             <div className="flex items-center space-x-2">
                                 <button
+                                    onClick={() => window.location.href = '/groups/create'}
+                                    className="p-2 text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                                    title="Créer un groupe"
+                                >
+                                    <Users className="w-5 h-5" />
+                                </button>
+                                <button
                                     onClick={() => setShowMessageSearch(true)}
                                     className="p-2 text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
                                     title="Rechercher dans les messages"

@@ -245,6 +245,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('simple-messaging', [App\Http\Controllers\SimpleMessagingController::class, 'index'])->name('simple.messaging');
     Route::post('simple-messaging/send', [App\Http\Controllers\SimpleMessagingController::class, 'sendMessage'])->name('simple.messaging.send');
 
+    // Gestion des groupes
+    Route::get('groups/create', [App\Http\Controllers\GroupController::class, 'create'])->name('groups.create');
+    Route::post('groups', [App\Http\Controllers\GroupController::class, 'store'])->name('groups.store');
+    Route::get('groups/{conversation}', [App\Http\Controllers\GroupController::class, 'show'])->name('groups.show');
+    Route::post('groups/{conversation}/add-participant', [App\Http\Controllers\GroupController::class, 'addParticipant'])->name('groups.add-participant');
+    Route::post('groups/{conversation}/leave', [App\Http\Controllers\GroupController::class, 'leave'])->name('groups.leave');
+
     // Routes pour les notifications
     Route::get('notifications', [NotificationController::class, 'index'])->name('notifications');
     Route::patch('notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
