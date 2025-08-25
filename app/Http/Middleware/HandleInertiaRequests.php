@@ -63,6 +63,9 @@ class HandleInertiaRequests extends Middleware
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
 
+            // Token CSRF pour les formulaires
+            'csrf_token' => csrf_token(),
+
             // Données de traduction
             'locale' => app()->getLocale(),
             'available_locales' => config('app.available_locales', ['fr' => 'Français', 'ar' => 'العربية']),

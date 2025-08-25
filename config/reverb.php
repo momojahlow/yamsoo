@@ -34,7 +34,13 @@ return [
             'path' => env('REVERB_SERVER_PATH', ''),
             'hostname' => env('REVERB_HOST'),
             'options' => [
-                'tls' => [],
+                'tls' => [
+                    // Configuration TLS pour production
+                    'local_cert' => env('REVERB_TLS_CERT'),
+                    'local_pk' => env('REVERB_TLS_KEY'),
+                    'verify_peer' => env('REVERB_TLS_VERIFY_PEER', false),
+                    'verify_peer_name' => env('REVERB_TLS_VERIFY_PEER_NAME', false),
+                ],
             ],
             'max_request_size' => env('REVERB_MAX_REQUEST_SIZE', 10_000),
             'scaling' => [

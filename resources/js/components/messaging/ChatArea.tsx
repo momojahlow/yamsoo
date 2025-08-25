@@ -119,27 +119,36 @@ export default function ChatArea({ conversation, messages = [], user, onBack }: 
         }
     }, [playNotification, user?.id]);
 
-    // Écouter les messages via Echo directement
+    // Utiliser le hook useEcho pour écouter les messages
+
+
+    // Écouter les messages via Echo avec vérification de disponibilité
     useEffect(() => {
-        if (!conversation?.id) return;
+        if (!conversation?.id || !window.Echo) return;
 
         console.log(`🔊 Écoute de conversation.${conversation.id}`);
 
-        window.Echo.private(`conversation.${conversation.id}`)
-            .listen('.message.sent', (e: any) => {
-                console.log('📨 Message reçu via Echo:', e);
-                if (e.message) {
-                    handleNewMessage(e.message);
-                }
-            })
-            .error((error: any) => {
-                console.error('❌ Erreur channel Echo:', error);
-            });
+        try {
+            const channel = window.Echo.private(`conversation.${conversation.id}`)
+                .listen('.message.sent', (e: any) => {
+                    console.log('📨 Message reçu via Echo:', e);
+                    if (e.message) {
+                        handleNewMessage(e.message);
+                    }
+                })
+                .error((error: any) => {
+                    console.error('❌ Erreur Echo:', error);
+                });
 
-        return () => {
-            console.log(`👋 Quitte conversation.${conversation.id}`);
-            window.Echo.leave(`conversation.${conversation.id}`);
-        };
+            return () => {
+                console.log(`🔇 Arrêt écoute conversation.${conversation.id}`);
+                if (window.Echo && typeof window.Echo.leave === 'function') {
+                    window.Echo.leave(`conversation.${conversation.id}`);
+                }
+            };
+        } catch (error) {
+            console.error('🚨 Erreur lors de l\'initialisation du canal Echo:', error);
+        }
     }, [conversation?.id, handleNewMessage]);
 
     const scrollToBottom = () => {
