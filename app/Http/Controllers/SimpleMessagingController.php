@@ -8,6 +8,7 @@ use App\Models\Conversation;
 use App\Models\Message;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use App\Events\MessageSent;
 
 class SimpleMessagingController extends Controller
 {
@@ -43,16 +44,18 @@ class SimpleMessagingController extends Controller
                 'id' => $conversation->id,
                 'name' => $conversation->type === 'group' ? $conversation->name : ($otherUser ? $otherUser->name : 'Conversation'),
                 'type' => $conversation->type,
+                'avatar' => $conversation->type === 'private' ? ($otherUser?->profile?->avatar_url ?? null) : null,
                 'other_participant_id' => $otherUser ? $otherUser->id : null,
                 'last_message' => $lastMessage ? [
                     'content' => $lastMessage->content,
-                    'created_at' => $lastMessage->created_at ? $lastMessage->created_at->diffForHumans() : '',
+                    'created_at' => $lastMessage->created_at ? $lastMessage->created_at->toISOString() : '',
                     'user_name' => $lastMessage->user->name,
                     'is_own' => $lastMessage->user_id === $user->id
                 ] : null,
                 'unread_count' => 0,
                 'is_online' => $otherUser?->isOnline() ?? false,
                 'participants_count' => $conversation->participants()->count(),
+                'is_new' => false
             ]);
         }
 
@@ -71,7 +74,13 @@ class SimpleMessagingController extends Controller
                     'id' => $conversation->id,
                     'name' => $targetUser->name,
                     'type' => 'private',
+                    'avatar' => $targetUser->profile?->avatar_url ?? null,
                     'other_participant_id' => $targetUser->id,
+                    'last_message' => null,
+                    'unread_count' => 0,
+                    'is_online' => $targetUser->isOnline(),
+                    'participants_count' => 1,
+                    'is_new' => false
                 ];
 
                 $messages = $this->loadMessages($conversation, $user);
@@ -84,15 +93,20 @@ class SimpleMessagingController extends Controller
                     'id' => $conversation->id,
                     'name' => $conversation->name,
                     'type' => 'group',
+                    'avatar' => null,
                     'other_participant_id' => null,
+                    'last_message' => null,
+                    'unread_count' => 0,
+                    'is_online' => false,
                     'participants_count' => $conversation->participants()->count(),
+                    'is_new' => false
                 ];
 
                 $messages = $this->loadMessages($conversation, $user);
             }
         }
 
-        return Inertia::render('SimpleMessaging', [
+        return Inertia::render('Messaging/Index', [
             'conversations' => $conversations->toArray(),
             'selectedConversation' => $selectedConversation,
             'messages' => $messages,
@@ -119,7 +133,7 @@ class SimpleMessagingController extends Controller
         }
 
         // Créer le message
-        Message::create([
+        $message = Message::create([
             'conversation_id' => $conversation->id,
             'user_id' => $user->id,
             'content' => $request->message,
@@ -128,6 +142,9 @@ class SimpleMessagingController extends Controller
 
         // Mettre à jour la conversation
         $conversation->update(['last_message_at' => now()]);
+
+        // Déclencher l'événement pour le temps réel
+        broadcast(new MessageSent($message, $user));
 
         // Rediriger vers la même conversation
         $otherUser = $conversation->participants->where('id', '!=', $user->id)->first();
@@ -166,17 +183,27 @@ class SimpleMessagingController extends Controller
     private function loadMessages(Conversation $conversation, User $user): array
     {
         return $conversation->messages()
-            ->with('user')
+            ->with('user.profile')
             ->orderBy('created_at', 'asc')
             ->get()
             ->map(function ($msg) use ($user) {
                 return [
                     'id' => $msg->id,
                     'content' => $msg->content,
-                    'user_id' => $msg->user_id,
-                    'user_name' => $msg->user->name,
-                    'created_at' => $msg->created_at ? $msg->created_at->format('H:i') : '',
-                    'is_mine' => $msg->user_id === $user->id,
+                    'type' => $msg->type ?? 'text',
+                    'file_url' => $msg->file_url,
+                    'file_name' => $msg->file_name,
+                    'file_size' => $msg->formatted_file_size ?? null,
+                    'created_at' => $msg->created_at ? $msg->created_at->toISOString() : '',
+                    'is_edited' => false,
+                    'edited_at' => null,
+                    'user' => [
+                        'id' => $msg->user->id,
+                        'name' => $msg->user->name,
+                        'avatar' => $msg->user->profile?->avatar_url ?? null
+                    ],
+                    'reply_to' => null,
+                    'reactions' => []
                 ];
             })->toArray();
     }

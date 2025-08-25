@@ -35,10 +35,11 @@ interface Message {
 interface MessageBubbleProps {
     message: Message;
     isOwn: boolean;
+    isGroup?: boolean;
     onReply: () => void;
 }
 
-export default function MessageBubble({ message, isOwn, onReply }: MessageBubbleProps) {
+export default function MessageBubble({ message, isOwn, isGroup = false, onReply }: MessageBubbleProps) {
     const [showActions, setShowActions] = useState(false);
     const [showImageModal, setShowImageModal] = useState(false);
 
@@ -135,8 +136,8 @@ export default function MessageBubble({ message, isOwn, onReply }: MessageBubble
                 onMouseLeave={() => setShowActions(false)}
             >
                 <div className={`flex max-w-xs lg:max-w-md ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}>
-                    {/* Avatar */}
-                    {!isOwn && (
+                    {/* Avatar (seulement pour les groupes) */}
+                    {!isOwn && isGroup && (
                         <div className="flex-shrink-0 mr-3">
                             {message.user.avatar ? (
                                 <img
@@ -180,8 +181,8 @@ export default function MessageBubble({ message, isOwn, onReply }: MessageBubble
                                 }
                             `}
                         >
-                            {/* Nom de l'utilisateur (pour les groupes) */}
-                            {!isOwn && (
+                            {/* Nom de l'utilisateur (pour les groupes seulement) */}
+                            {!isOwn && isGroup && (
                                 <p className="text-xs font-medium text-orange-600 mb-1">
                                     {message.user.name}
                                 </p>
@@ -202,7 +203,7 @@ export default function MessageBubble({ message, isOwn, onReply }: MessageBubble
                             )}
 
                             {/* Réactions */}
-                            {message.reactions.length > 0 && (
+                            {message.reactions && message.reactions.length > 0 && (
                                 <div className="flex flex-wrap gap-1 mt-2">
                                     {message.reactions.map((reaction, index) => (
                                         <div

@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ArrowLeft, Phone, Video, MoreVertical, Paperclip, Smile, Send, Image, File } from 'lucide-react';
 import MessageBubble from './MessageBubble';
 import EmojiPicker from './EmojiPicker';
 import { useForm } from '@inertiajs/react';
+import { useConversationChannel } from '@/hooks/useReverb';
+import { useNotificationSound } from '@/hooks/useNotificationSound';
 
 interface User {
     id: number;
@@ -54,15 +56,16 @@ export default function ChatArea({ conversation, messages = [], user, onBack }: 
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [replyTo, setReplyTo] = useState<Message | null>(null);
+    const [realtimeMessages, setRealtimeMessages] = useState<Message[]>(messages);
 
-    // Debug pour identifier le problème
-    console.log('ChatArea - Messages reçus:', messages);
-    console.log('ChatArea - User reçu:', user);
-    console.log('ChatArea - Messages avec problème:', messages.filter(m => !m || !m.user || !m.id));
+
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    // Notifications audio
+    const { playNotification, playMessageSent } = useNotificationSound();
 
     // Utiliser Inertia pour envoyer des messages
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -70,12 +73,36 @@ export default function ChatArea({ conversation, messages = [], user, onBack }: 
         message: '',
     });
 
+    // Synchroniser les messages avec les props
     useEffect(() => {
-        scrollToBottom();
+        setRealtimeMessages(messages);
     }, [messages]);
 
+    // Scroll automatique
+    useEffect(() => {
+        scrollToBottom();
+    }, [realtimeMessages]);
+
+    // Écouter les nouveaux messages via Reverb
+    const handleNewMessage = useCallback((newMessage: Message) => {
+        setRealtimeMessages(prev => [...prev, newMessage]);
+
+        // Jouer le son de notification si ce n'est pas notre message
+        if (newMessage.user.id !== user?.id) {
+            playNotification();
+        }
+    }, [playNotification, user?.id]);
+
+    useConversationChannel(conversation?.id || null, handleNewMessage);
+
     const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'end',
+                inline: 'nearest'
+            });
+        }, 100);
     };
 
     const handleSendMessage = (e: React.FormEvent) => {
@@ -83,8 +110,7 @@ export default function ChatArea({ conversation, messages = [], user, onBack }: 
 
         if (!data.message.trim() || processing) return;
 
-        console.log('Sending message with data:', data);
-        console.log('Conversation ID:', conversation.id);
+
 
         post('/messagerie/send', {
             onSuccess: () => {
@@ -100,6 +126,9 @@ export default function ChatArea({ conversation, messages = [], user, onBack }: 
                 if (textareaRef.current) {
                     textareaRef.current.style.height = '48px';
                 }
+
+                // Son d'envoi
+                playMessageSent();
             },
             onError: (errors) => {
                 console.error('Erreur lors de l\'envoi du message:', errors);
@@ -189,7 +218,7 @@ export default function ChatArea({ conversation, messages = [], user, onBack }: 
 
             {/* Zone des messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
-                {messages.length === 0 ? (
+                {realtimeMessages.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-gray-500 px-4">
                         <div className="w-20 h-20 bg-gradient-to-br from-orange-100 to-red-100 rounded-full flex items-center justify-center mb-6 shadow-lg">
                             <Send className="w-10 h-10 text-orange-500" />
@@ -213,11 +242,12 @@ export default function ChatArea({ conversation, messages = [], user, onBack }: 
                     </div>
                 ) : (
                     <>
-                        {messages.filter(message => message && message.user && message.id).map((message) => (
+                        {realtimeMessages.filter(message => message && message.user && message.id).map((message) => (
                             <MessageBubble
                                 key={message.id}
                                 message={message}
                                 isOwn={message.user?.id === user?.id}
+                                isGroup={conversation?.type === 'group'}
                                 onReply={() => setReplyTo(message)}
                             />
                         ))}
@@ -269,7 +299,7 @@ export default function ChatArea({ conversation, messages = [], user, onBack }: 
                             ref={textareaRef}
                             value={data.message}
                             onChange={(e) => setData('message', e.target.value)}
-                            onKeyPress={handleKeyPress}
+                            onKeyDown={handleKeyPress}
                             placeholder="Écrivez votre message..."
                             className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none max-h-32"
                             rows={1}

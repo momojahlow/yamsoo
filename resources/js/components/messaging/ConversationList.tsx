@@ -23,10 +23,10 @@ interface ConversationListProps {
     onConversationSelect: (conversation: Conversation) => void;
 }
 
-export default function ConversationList({ 
-    conversations, 
-    selectedConversation, 
-    onConversationSelect 
+export default function ConversationList({
+    conversations,
+    selectedConversation,
+    onConversationSelect
 }: ConversationListProps) {
     const getInitials = (name: string) => {
         return name
@@ -133,7 +133,7 @@ export default function ConversationList({
                                         {conversation.name}
                                     </h3>
                                     
-                                    {conversation.last_message && (
+                                    {conversation.last_message && typeof conversation.last_message === 'object' && conversation.last_message.created_at && (
                                         <span className={`
                                             text-xs flex-shrink-0 ml-2
                                             ${selectedConversation?.id === conversation.id
@@ -141,13 +141,13 @@ export default function ConversationList({
                                                 : 'text-gray-500'
                                             }
                                         `}>
-                                            {conversation.last_message?.created_at ? formatTime(conversation.last_message.created_at) : ''}
+                                            {formatTime(conversation.last_message.created_at)}
                                         </span>
                                     )}
                                 </div>
 
                                 <div className="flex items-center justify-between mt-1">
-                                    {conversation.last_message ? (
+                                    {conversation.last_message && typeof conversation.last_message === 'object' && conversation.last_message.content ? (
                                         <p className={`
                                             text-sm truncate
                                             ${selectedConversation?.id === conversation.id
