@@ -1,26 +1,10 @@
 import { useEffect } from 'react';
-import Echo from 'laravel-echo';
-import Pusher from 'pusher-js';
 
 declare global {
     interface Window {
-        Pusher: typeof Pusher;
-        Echo: Echo;
+        Echo: any;
     }
 }
-
-// Configuration de Pusher pour Reverb
-window.Pusher = Pusher;
-
-window.Echo = new Echo({
-    broadcaster: 'reverb',
-    key: import.meta.env.VITE_REVERB_APP_KEY,
-    wsHost: import.meta.env.VITE_REVERB_HOST,
-    wsPort: import.meta.env.VITE_REVERB_PORT ?? 80,
-    wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
-    forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
-    enabledTransports: ['ws', 'wss'],
-});
 
 export const useReverb = () => {
     return window.Echo;
@@ -31,19 +15,38 @@ export const useConversationChannel = (
     onMessageReceived: (message: any) => void
 ) => {
     useEffect(() => {
-        if (!conversationId) return;
+        if (!conversationId) {
+            console.log('useConversationChannel: Pas de conversationId');
+            return;
+        }
 
-        console.log(`Listening to conversation.${conversationId}`);
-        
-        const channel = window.Echo.private(`conversation.${conversationId}`)
-            .listen('.message.sent', (e: any) => {
-                console.log('Message reçu via Reverb:', e);
-                onMessageReceived(e.message);
-            });
+        console.log(`🔊 Écoute de conversation.${conversationId}`);
 
-        return () => {
-            console.log(`Leaving conversation.${conversationId}`);
-            window.Echo.leave(`conversation.${conversationId}`);
-        };
+        try {
+            const channel = window.Echo.private(`conversation.${conversationId}`)
+                .listen('.message.sent', (e: any) => {
+                    console.log('📨 Message reçu via Reverb:', e);
+                    if (e.message) {
+                        onMessageReceived(e.message);
+                    }
+                })
+                .error((error: any) => {
+                    console.error('❌ Erreur channel Reverb:', error);
+                });
+
+            // Test de connexion
+            console.log('✅ Channel créé:', channel);
+
+            return () => {
+                console.log(`👋 Quitte conversation.${conversationId}`);
+                try {
+                    window.Echo.leave(`conversation.${conversationId}`);
+                } catch (error) {
+                    console.error('Erreur lors de la déconnexion:', error);
+                }
+            };
+        } catch (error) {
+            console.error('❌ Erreur lors de la création du channel:', error);
+        }
     }, [conversationId, onMessageReceived]);
 };

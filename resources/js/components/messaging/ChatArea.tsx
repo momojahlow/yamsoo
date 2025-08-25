@@ -3,8 +3,8 @@ import { ArrowLeft, Phone, Video, MoreVertical, Paperclip, Smile, Send, Image, F
 import MessageBubble from './MessageBubble';
 import EmojiPicker from './EmojiPicker';
 import { useForm } from '@inertiajs/react';
-import { useConversationChannel } from '@/hooks/useReverb';
 import { useNotificationSound } from '@/hooks/useNotificationSound';
+// Echo est déjà initialisé dans app.tsx
 
 interface User {
     id: number;
@@ -63,6 +63,7 @@ export default function ChatArea({ conversation, messages = [], user, onBack }: 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const audioRef = useRef<HTMLAudioElement>(null);
 
     // Notifications audio
     const { playNotification, playMessageSent } = useNotificationSound();
@@ -85,24 +86,71 @@ export default function ChatArea({ conversation, messages = [], user, onBack }: 
 
     // Écouter les nouveaux messages via Reverb
     const handleNewMessage = useCallback((newMessage: Message) => {
-        setRealtimeMessages(prev => [...prev, newMessage]);
+        console.log('📨 Nouveau message reçu:', newMessage);
+
+        setRealtimeMessages(prev => {
+            // Éviter les doublons
+            const exists = prev.some(msg => msg.id === newMessage.id);
+            if (exists) {
+                console.log('⚠️ Message déjà présent, ignoré');
+                return prev;
+            }
+
+            console.log('✅ Ajout du nouveau message');
+            const newMessages = [...prev, newMessage];
+
+            // Scroll vers le bas après ajout du message
+            setTimeout(() => scrollToBottom(), 100);
+
+            return newMessages;
+        });
 
         // Jouer le son de notification si ce n'est pas notre message
         if (newMessage.user.id !== user?.id) {
+            console.log('🔔 Notification audio');
             playNotification();
+
+            // Jouer aussi le son via l'élément audio
+            if (audioRef.current) {
+                audioRef.current.play().catch((err) => {
+                    console.warn("Impossible de jouer le son audio:", err);
+                });
+            }
         }
     }, [playNotification, user?.id]);
 
-    useConversationChannel(conversation?.id || null, handleNewMessage);
+    // Écouter les messages via Echo directement
+    useEffect(() => {
+        if (!conversation?.id) return;
+
+        console.log(`🔊 Écoute de conversation.${conversation.id}`);
+
+        window.Echo.private(`conversation.${conversation.id}`)
+            .listen('.message.sent', (e: any) => {
+                console.log('📨 Message reçu via Echo:', e);
+                if (e.message) {
+                    handleNewMessage(e.message);
+                }
+            })
+            .error((error: any) => {
+                console.error('❌ Erreur channel Echo:', error);
+            });
+
+        return () => {
+            console.log(`👋 Quitte conversation.${conversation.id}`);
+            window.Echo.leave(`conversation.${conversation.id}`);
+        };
+    }, [conversation?.id, handleNewMessage]);
 
     const scrollToBottom = () => {
-        setTimeout(() => {
-            messagesEndRef.current?.scrollIntoView({
+        // Scroll immédiat pour les nouveaux messages
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({
                 behavior: 'smooth',
                 block: 'end',
                 inline: 'nearest'
             });
-        }, 100);
+        }
     };
 
     const handleSendMessage = (e: React.FormEvent) => {
@@ -351,6 +399,14 @@ export default function ChatArea({ conversation, messages = [], user, onBack }: 
                         onClose={() => setShowEmojiPicker(false)}
                     />
                 )}
+
+                {/* Élément audio caché pour les notifications */}
+                <audio
+                    ref={audioRef}
+                    src="/sounds/notification.mp3"
+                    preload="auto"
+                    style={{ display: 'none' }}
+                />
             </div>
         </div>
     );

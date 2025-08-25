@@ -19,6 +19,11 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+// API pour le polling des messages (fallback si Reverb ne fonctionne pas)
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/conversations/{conversation}/messages/since/{messageId}', [App\Http\Controllers\SimpleMessagingController::class, 'getMessagesSince']);
+});
+
 // Routes pour la messagerie moderne unifiée
 Route::middleware(['auth:sanctum'])->prefix('conversations')->group(function () {
     // Liste des conversations

@@ -235,6 +235,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('test-messaging', [App\Http\Controllers\TestMessagingController::class, 'index'])->name('test.messaging');
     Route::post('test-messaging/send', [App\Http\Controllers\TestMessagingController::class, 'sendTest'])->name('test.messaging.send');
 
+    // Test du chat temps réel
+    Route::get('test-realtime-chat', [App\Http\Controllers\SimpleMessagingController::class, 'testRealtimeChat'])->name('test.realtime-chat');
+
     // Debug de la messagerie
     Route::get('debug-messaging', [App\Http\Controllers\DebugMessagingController::class, 'index'])->name('debug.messaging');
 

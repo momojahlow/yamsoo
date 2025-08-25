@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Conversation;
 use App\Models\Message;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use App\Events\MessageSent;
 
@@ -140,10 +141,20 @@ class SimpleMessagingController extends Controller
             'type' => 'text',
         ]);
 
+        // Charger les relations nécessaires pour l'événement
+        $message->load('user.profile');
+
         // Mettre à jour la conversation
         $conversation->update(['last_message_at' => now()]);
 
         // Déclencher l'événement pour le temps réel
+        Log::info('🚀 Déclenchement événement MessageSent', [
+            'message_id' => $message->id,
+            'conversation_id' => $conversation->id,
+            'user_id' => $user->id,
+            'content' => $message->content
+        ]);
+
         broadcast(new MessageSent($message, $user));
 
         // Rediriger vers la même conversation
@@ -178,6 +189,102 @@ class SimpleMessagingController extends Controller
         }
 
         return $conversation;
+    }
+
+    /**
+     * API pour récupérer les nouveaux messages (polling fallback)
+     */
+    public function getMessagesSince(Request $request, Conversation $conversation, $messageId = 0)
+    {
+        $user = $request->user();
+
+        // Vérifier que l'utilisateur fait partie de la conversation
+        if (!$conversation->participants->contains($user)) {
+            return response()->json(['error' => 'Accès non autorisé'], 403);
+        }
+
+        // Récupérer les messages plus récents que $messageId
+        $messages = $conversation->messages()
+            ->with('user.profile')
+            ->where('id', '>', $messageId)
+            ->orderBy('created_at', 'asc')
+            ->get()
+            ->map(function ($msg) {
+                return [
+                    'id' => $msg->id,
+                    'content' => $msg->content,
+                    'type' => $msg->type ?? 'text',
+                    'file_url' => $msg->file_url,
+                    'file_name' => $msg->file_name,
+                    'file_size' => $msg->formatted_file_size ?? null,
+                    'created_at' => $msg->created_at ? $msg->created_at->toISOString() : '',
+                    'is_edited' => false,
+                    'edited_at' => null,
+                    'user' => [
+                        'id' => $msg->user->id,
+                        'name' => $msg->user->name,
+                        'avatar' => $msg->user->profile?->avatar_url ?? null
+                    ],
+                    'reply_to' => null,
+                    'reactions' => []
+                ];
+            });
+
+        return response()->json(['messages' => $messages]);
+    }
+
+    /**
+     * Page de test pour le chat temps réel
+     */
+    public function testRealtimeChat(Request $request)
+    {
+        $user = $request->user();
+
+        // Récupérer les utilisateurs de test
+        $user1 = User::where('email', 'user1@test.com')->first();
+        $user2 = User::where('email', 'user2@test.com')->first();
+
+        if (!$user1 || !$user2) {
+            return redirect()->back()->with('error', 'Utilisateurs de test non trouvés. Exécutez: php artisan test:realtime-chat');
+        }
+
+        // Déterminer l'autre utilisateur
+        $otherUser = $user->id === $user1->id ? $user2 : $user1;
+
+        // Trouver la conversation
+        $conversation = Conversation::where('type', 'private')
+            ->whereHas('participants', function ($query) use ($user1) {
+                $query->where('user_id', $user1->id);
+            })
+            ->whereHas('participants', function ($query) use ($user2) {
+                $query->where('user_id', $user2->id);
+            })
+            ->first();
+
+        if (!$conversation) {
+            return redirect()->back()->with('error', 'Conversation de test non trouvée. Exécutez: php artisan test:realtime-chat');
+        }
+
+        // Charger les messages
+        $messages = $this->loadMessages($conversation, $user);
+
+        return Inertia::render('TestRealtimeChat', [
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+            ],
+            'otherUser' => [
+                'id' => $otherUser->id,
+                'name' => $otherUser->name,
+                'email' => $otherUser->email,
+            ],
+            'conversation' => [
+                'id' => $conversation->id,
+                'type' => $conversation->type,
+            ],
+            'messages' => $messages,
+        ]);
     }
 
     private function loadMessages(Conversation $conversation, User $user): array
