@@ -229,4 +229,6 @@ class Conversation extends Model
 
         return $this->active_participants_count < $this->max_participants;
     }
+
+
 }

@@ -4,16 +4,21 @@ import { createRoot } from 'react-dom/client';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { Toaster } from '@/components/ui/toaster';
 import './i18n/config';
-// Configuration Echo - sera activée une fois les packages installés
-try {
-    // Vérifier si les packages sont disponibles avant de les importer
-    if (typeof window !== 'undefined') {
-        // Les imports dynamiques seront ajoutés après installation des packages
-        console.log('Echo configuration will be loaded after package installation');
-    }
-} catch (error) {
-    console.warn('Echo packages not yet installed:', error);
-}
+// Configuration Echo pour le temps réel
+import Echo from 'laravel-echo';
+import Pusher from 'pusher-js';
+
+// Configuration Echo avec Reverb
+window.Pusher = Pusher;
+window.Echo = new Echo({
+    broadcaster: 'reverb',
+    key: import.meta.env.VITE_REVERB_APP_KEY || 'yamsoo-key',
+    wsHost: import.meta.env.VITE_REVERB_HOST || 'localhost',
+    wsPort: import.meta.env.VITE_REVERB_PORT || 8080,
+    wssPort: import.meta.env.VITE_REVERB_PORT || 8080,
+    forceTLS: (import.meta.env.VITE_REVERB_SCHEME || 'http') === 'https',
+    enabledTransports: ['ws', 'wss'],
+});
 
 // Enregistrement du Service Worker
 if ('serviceWorker' in navigator && import.meta.env.PROD) {

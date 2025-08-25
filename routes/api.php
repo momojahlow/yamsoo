@@ -52,6 +52,11 @@ Route::middleware(['auth:sanctum'])->prefix('messages')->group(function () {
     Route::get('/{message}/reactions', [App\Http\Controllers\Api\MessageReactionController::class, 'index']);
 });
 
+// API pour l'arbre familial
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('family-relations', [App\Http\Controllers\FamilyTreeController::class, 'getFamilyRelations']);
+});
+
 // Anciennes routes pour compatibilité
 Route::middleware(['auth:sanctum'])->group(function () {
     // Groupes familiaux (compatibilité)

@@ -84,16 +84,23 @@ export default function Messaging({ conversations = [], selectedConversation: in
 
     const handleConversationSelect = (conversation: Conversation) => {
         console.log('Selecting conversation:', conversation);
-        console.log('Other participant ID:', conversation.other_participant_id);
+        console.log('Type:', conversation.type, 'Other participant ID:', conversation.other_participant_id);
 
         setSelectedConversation(conversation);
         if (isMobile) {
             setShowMobileChat(true);
         }
 
-        // Mettre à jour l'URL avec le selectedContactId
-        if (conversation.other_participant_id) {
-            console.log('Navigating to:', `/messagerie?selectedContactId=${conversation.other_participant_id}`);
+        // Mettre à jour l'URL selon le type de conversation
+        if (conversation.type === 'group') {
+            console.log('Navigating to group:', `/messagerie?selectedGroupId=${conversation.id}`);
+            router.get(`/messagerie?selectedGroupId=${conversation.id}`, {}, {
+                preserveState: false,
+                preserveScroll: false,
+                replace: true
+            });
+        } else if (conversation.other_participant_id) {
+            console.log('Navigating to private:', `/messagerie?selectedContactId=${conversation.other_participant_id}`);
             router.get(`/messagerie?selectedContactId=${conversation.other_participant_id}`, {}, {
                 preserveState: false,
                 preserveScroll: false,
