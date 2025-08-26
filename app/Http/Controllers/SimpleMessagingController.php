@@ -208,6 +208,7 @@ class SimpleMessagingController extends Controller
             ->with('user.profile')
             ->where('id', '>', $messageId)
             ->orderBy('created_at', 'asc')
+            ->orderBy('id', 'asc')  // Ordre secondaire par ID
             ->get()
             ->map(function ($msg) {
                 return [
@@ -292,6 +293,7 @@ class SimpleMessagingController extends Controller
         return $conversation->messages()
             ->with('user.profile')
             ->orderBy('created_at', 'asc')
+            ->orderBy('id', 'asc')  // Ordre secondaire par ID pour éviter les conflits
             ->get()
             ->map(function ($msg) use ($user) {
                 return [

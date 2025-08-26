@@ -550,3 +550,7 @@ Route::get('/conditions-generales', function () {
 Route::get('/terms', function () {
     return redirect()->route('terms-of-service');
 })->name('terms');
+// Test d'authentification
+Route::get('test-auth', function () {
+    return Inertia::render('TestAuth');
+})->name('test.auth');

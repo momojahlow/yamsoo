@@ -1,10 +1,16 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { ArrowLeft, Phone, Video, MoreVertical, Paperclip, Smile, Send, Image, File } from 'lucide-react';
+import { ArrowLeft, Phone, Video, MoreVertical, Paperclip, Smile, Send, File } from 'lucide-react';
 import MessageBubble from './MessageBubble';
 import EmojiPicker from './EmojiPicker';
 import { useForm } from '@inertiajs/react';
 import { useNotificationSound } from '@/hooks/useNotificationSound';
-// Echo est déjà initialisé dans app.tsx
+
+// Déclaration globale pour Echo
+declare global {
+    interface Window {
+        Echo: any;
+    }
+}
 
 interface User {
     id: number;
@@ -74,15 +80,36 @@ export default function ChatArea({ conversation, messages = [], user, onBack }: 
         message: '',
     });
 
-    // Synchroniser les messages avec les props
+    // Fonction de scroll automatique (définie en premier)
+    const scrollToBottom = useCallback(() => {
+        // Scroll immédiat pour les nouveaux messages
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({
+                behavior: 'smooth',
+                block: 'end',
+                inline: 'nearest'
+            });
+        }
+    }, []);
+
+    // Synchroniser les messages avec les props et forcer l'ordre correct
     useEffect(() => {
-        setRealtimeMessages(messages);
+        // Trier les messages par created_at pour s'assurer de l'ordre correct
+        const sortedMessages = [...messages].sort((a, b) =>
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+        setRealtimeMessages(sortedMessages);
     }, [messages]);
 
-    // Scroll automatique
+    // Scroll automatique vers le bas quand les messages changent
     useEffect(() => {
-        scrollToBottom();
-    }, [realtimeMessages]);
+        // Délai pour laisser le DOM se mettre à jour
+        const timer = setTimeout(() => {
+            scrollToBottom();
+        }, 100);
+
+        return () => clearTimeout(timer);
+    }, [realtimeMessages, scrollToBottom]);
 
     // Écouter les nouveaux messages via Reverb
     const handleNewMessage = useCallback((newMessage: Message) => {
@@ -97,12 +124,16 @@ export default function ChatArea({ conversation, messages = [], user, onBack }: 
             }
 
             console.log('✅ Ajout du nouveau message');
+
+            // Ajouter le nouveau message à la fin (ordre chronologique)
             const newMessages = [...prev, newMessage];
 
-            // Scroll vers le bas après ajout du message
-            setTimeout(() => scrollToBottom(), 100);
+            // Trier par created_at pour s'assurer de l'ordre correct (du plus ancien au plus récent)
+            const sortedMessages = newMessages.sort((a, b) =>
+                new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+            );
 
-            return newMessages;
+            return sortedMessages;
         });
 
         // Jouer le son de notification si ce n'est pas notre message
@@ -129,7 +160,7 @@ export default function ChatArea({ conversation, messages = [], user, onBack }: 
         console.log(`🔊 Écoute de conversation.${conversation.id}`);
 
         try {
-            const channel = window.Echo.private(`conversation.${conversation.id}`)
+            window.Echo.private(`conversation.${conversation.id}`)
                 .listen('.message.sent', (e: any) => {
                     console.log('📨 Message reçu via Echo:', e);
                     if (e.message) {
@@ -150,17 +181,6 @@ export default function ChatArea({ conversation, messages = [], user, onBack }: 
             console.error('🚨 Erreur lors de l\'initialisation du canal Echo:', error);
         }
     }, [conversation?.id, handleNewMessage]);
-
-    const scrollToBottom = () => {
-        // Scroll immédiat pour les nouveaux messages
-        if (messagesEndRef.current) {
-            messagesEndRef.current.scrollIntoView({
-                behavior: 'smooth',
-                block: 'end',
-                inline: 'nearest'
-            });
-        }
-    };
 
     const handleSendMessage = (e: React.FormEvent) => {
         e.preventDefault();
@@ -186,6 +206,9 @@ export default function ChatArea({ conversation, messages = [], user, onBack }: 
 
                 // Son d'envoi
                 playMessageSent();
+
+                // Scroll automatique vers le bas après envoi
+                setTimeout(() => scrollToBottom(), 200);
             },
             onError: (errors) => {
                 console.error('Erreur lors de l\'envoi du message:', errors);

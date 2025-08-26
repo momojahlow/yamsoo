@@ -13,19 +13,13 @@ import Pusher from 'pusher-js';
 
 // Configuration et initialisation d'Echo adaptative pour Herd
 try {
-    const isHTTPS = window.location.protocol === 'https:';
     const reverbHost = import.meta.env.VITE_REVERB_HOST || 'localhost';
-    const reverbScheme = import.meta.env.VITE_REVERB_SCHEME || (isHTTPS ? 'https' : 'http');
 
-    // Configuration des ports selon l'environnement
-    let reverbPort;
-    if (isHTTPS) {
-        // HTTPS : Herd proxy vers Reverb
-        reverbPort = 443; // Port standard HTTPS
-    } else {
-        // HTTP : Connexion directe vers Reverb
-        reverbPort = parseInt(import.meta.env.VITE_REVERB_PORT) || 8080;
-    }
+    // Forcer HTTP pour Reverb en développement local
+    const reverbScheme = import.meta.env.VITE_REVERB_SCHEME || 'http';
+
+    // Configuration des ports - toujours utiliser le port configuré pour Reverb
+    const reverbPort = parseInt(import.meta.env.VITE_REVERB_PORT) || 4010;
 
     console.log('🔧 Configuration Echo:', {
         host: reverbHost,
