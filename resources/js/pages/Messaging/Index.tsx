@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Head, router } from '@inertiajs/react';
-import { Search, Phone, Video, MoreVertical, Paperclip, Smile, Send, ArrowLeft, Settings, BarChart3, Users, Plus } from 'lucide-react';
+import { Search, Phone, Video, MoreVertical, Paperclip, Smile, Send, ArrowLeft, Settings, Plus, Users } from 'lucide-react';
 import { KwdDashboardLayout } from '@/Layouts/modern';
 import { useTranslation } from '@/hooks/useTranslation';
 import ConversationList from '@/components/messaging/ConversationList';
@@ -8,8 +8,7 @@ import ChatArea from '@/components/messaging/ChatArea';
 import UserSearch from '@/components/messaging/UserSearch';
 import MessageSearch from '@/components/messaging/MessageSearch';
 import MessageSettings from '@/components/messaging/MessageSettings';
-import MessageStats from '@/components/messaging/MessageStats';
-import FamilySuggestions from '@/components/messaging/FamilySuggestions';
+
 
 interface User {
     id: number;
@@ -56,8 +55,6 @@ export default function Messaging({ conversations = [], selectedConversation: in
     const [showUserSearch, setShowUserSearch] = useState(false);
     const [showMessageSearch, setShowMessageSearch] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
-    const [showStats, setShowStats] = useState(false);
-    const [showFamilySuggestions, setShowFamilySuggestions] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     const [showMobileChat, setShowMobileChat] = useState(false);
 
@@ -130,7 +127,16 @@ export default function Messaging({ conversations = [], selectedConversation: in
                             <h1 className="text-xl font-semibold text-gray-900">Messages</h1>
                             <div className="flex items-center space-x-2">
                                 <button
-                                    onClick={() => router.get('/groups/create')}
+                                    onClick={() => {
+                                        console.log('Navigating to groups/create');
+                                        try {
+                                            router.get('/groups/create');
+                                        } catch (error) {
+                                            console.error('Router navigation failed:', error);
+                                            // Fallback to window.location
+                                            window.location.href = '/groups/create';
+                                        }
+                                    }}
                                     className="p-2 text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
                                     title="Créer un groupe"
                                 >
@@ -144,25 +150,11 @@ export default function Messaging({ conversations = [], selectedConversation: in
                                     <Search className="w-5 h-5" />
                                 </button>
                                 <button
-                                    onClick={() => setShowStats(true)}
-                                    className="p-2 text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-                                    title="Statistiques"
-                                >
-                                    <BarChart3 className="w-5 h-5" />
-                                </button>
-                                <button
                                     onClick={() => setShowSettings(true)}
                                     className="p-2 text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
                                     title="Paramètres"
                                 >
                                     <Settings className="w-5 h-5" />
-                                </button>
-                                <button
-                                    onClick={() => setShowFamilySuggestions(true)}
-                                    className="p-2 text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-                                    title="Suggestions familiales"
-                                >
-                                    <Users className="w-5 h-5" />
                                 </button>
                                 <button
                                     onClick={() => setShowUserSearch(true)}
@@ -294,24 +286,7 @@ export default function Messaging({ conversations = [], selectedConversation: in
                     />
                 )}
 
-                {showStats && (
-                    <MessageStats
-                        isOpen={showStats}
-                        onClose={() => setShowStats(false)}
-                    />
-                )}
 
-                {showFamilySuggestions && (
-                    <FamilySuggestions
-                        isOpen={showFamilySuggestions}
-                        onClose={() => setShowFamilySuggestions(false)}
-                        onConversationCreated={(conversationId) => {
-                            setShowFamilySuggestions(false);
-                            // Recharger les conversations
-                            window.location.reload();
-                        }}
-                    />
-                )}
             </div>
         </KwdDashboardLayout>
     );

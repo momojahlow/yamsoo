@@ -3,9 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Schema;
 
 class Conversation extends Model
@@ -18,12 +18,18 @@ class Conversation extends Model
         'created_by',
         'last_message_at',
         'max_participants',
-        'is_active'
+        'is_active',
+        'visibility',
+        'join_approval_required',
+        'last_message_id',
+        'last_activity_at'
     ];
 
     protected $casts = [
         'last_message_at' => 'datetime',
-        'is_active' => 'boolean'
+        'is_active' => 'boolean',
+        'join_approval_required' => 'boolean',
+        'last_activity_at' => 'datetime'
     ];
 
     /**
@@ -41,19 +47,25 @@ class Conversation extends Model
         if (Schema::hasColumn('conversation_participants', 'notifications_enabled')) {
             $pivotColumns[] = 'notifications_enabled';
         }
+        if (Schema::hasColumn('conversation_participants', 'nickname')) {
+            $pivotColumns[] = 'nickname';
+        }
+        if (Schema::hasColumn('conversation_participants', 'status')) {
+            $pivotColumns[] = 'status';
+        }
+        if (Schema::hasColumn('conversation_participants', 'invited_by')) {
+            $pivotColumns[] = 'invited_by';
+        }
+        if (Schema::hasColumn('conversation_participants', 'invitation_sent_at')) {
+            $pivotColumns[] = 'invitation_sent_at';
+        }
 
         return $this->belongsToMany(User::class, 'conversation_participants')
             ->withPivot($pivotColumns)
             ->withTimestamps();
     }
 
-    /**
-     * Participants actifs (non partis)
-     */
-    public function activeParticipants(): BelongsToMany
-    {
-        return $this->participants()->whereNull('conversation_participants.left_at');
-    }
+
 
     /**
      * Administrateurs de la conversation
@@ -71,13 +83,7 @@ class Conversation extends Model
         return $this->hasMany(Message::class)->orderBy('created_at', 'desc');
     }
 
-    /**
-     * Dernier message de la conversation
-     */
-    public function lastMessage(): HasOne
-    {
-        return $this->hasOne(Message::class)->latestOfMany();
-    }
+
 
     /**
      * Créateur de la conversation
@@ -87,13 +93,7 @@ class Conversation extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    /**
-     * Activités de la conversation (historique)
-     */
-    public function activities()
-    {
-        return $this->hasMany(ConversationActivity::class)->orderBy('created_at', 'desc');
-    }
+
 
     /**
      * Obtenir le nom d'affichage de la conversation
@@ -139,18 +139,7 @@ class Conversation extends Model
         return $this->participants()->where('user_id', $user->id)->exists();
     }
 
-    /**
-     * Ajouter un participant
-     */
-    public function addParticipant(User $user, bool $isAdmin = false): void
-    {
-        if (!$this->hasParticipant($user)) {
-            $this->participants()->attach($user->id, [
-                'joined_at' => now(),
-                'is_admin' => $isAdmin
-            ]);
-        }
-    }
+
 
     /**
      * Supprimer un participant
@@ -230,5 +219,97 @@ class Conversation extends Model
         return $this->active_participants_count < $this->max_participants;
     }
 
+    /**
+     * Relation avec le dernier message
+     */
+    public function lastMessage(): BelongsTo
+    {
+        return $this->belongsTo(Message::class, 'last_message_id');
+    }
 
+    /**
+     * Relation avec les activités de la conversation
+     */
+    public function activities(): HasMany
+    {
+        return $this->hasMany(ConversationActivity::class);
+    }
+
+    /**
+     * Mettre à jour le dernier message et l'activité
+     */
+    public function updateLastActivity(Message $message): void
+    {
+        $this->update([
+            'last_message_id' => $message->id,
+            'last_activity_at' => $message->created_at,
+            'last_message_at' => $message->created_at, // Compatibilité
+        ]);
+    }
+
+    /**
+     * Vérifier si la conversation est publique
+     */
+    public function isPublic(): bool
+    {
+        return $this->visibility === 'public';
+    }
+
+    /**
+     * Vérifier si la conversation nécessite une approbation pour rejoindre
+     */
+    public function requiresApproval(): bool
+    {
+        return $this->join_approval_required;
+    }
+
+    /**
+     * Obtenir les participants actifs (non bannis, non partis)
+     */
+    public function activeParticipants(): BelongsToMany
+    {
+        return $this->participants()->wherePivot('status', 'active');
+    }
+
+    /**
+     * Obtenir les participants en attente d'approbation
+     */
+    public function pendingParticipants(): BelongsToMany
+    {
+        return $this->participants()->wherePivot('status', 'pending');
+    }
+
+    /**
+     * Ajouter un participant avec un statut spécifique
+     */
+    public function addParticipant(int $userId, array $attributes = []): void
+    {
+        $defaultAttributes = [
+            'joined_at' => now(),
+            'role' => 'member',
+            'status' => 'active',
+            'notifications_enabled' => true,
+        ];
+
+        $this->participants()->attach($userId, array_merge($defaultAttributes, $attributes));
+    }
+
+    /**
+     * Inviter un utilisateur (statut pending)
+     */
+    public function inviteUser(int $userId, int $invitedBy, ?string $nickname = null): void
+    {
+        $this->addParticipant($userId, [
+            'status' => 'invited',
+            'invited_by' => $invitedBy,
+            'invitation_sent_at' => now(),
+            'nickname' => $nickname,
+        ]);
+    }
+
+    // Compatibilité avec l'ancien modèle
+    public function users()
+    {
+        return $this->participants();
+    }
 }

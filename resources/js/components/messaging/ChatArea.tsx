@@ -297,11 +297,11 @@ export default function ChatArea({ conversation, messages = [], user, onBack }: 
             </div>
 
             {/* Zone des messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+            <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-gradient-to-b from-orange-25 via-orange-10 to-orange-25" style={{backgroundColor: 'rgba(255, 237, 213, 0.08)'}}>
                 {realtimeMessages.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-gray-500 px-4">
-                        <div className="w-20 h-20 bg-gradient-to-br from-orange-100 to-red-100 rounded-full flex items-center justify-center mb-6 shadow-lg">
-                            <Send className="w-10 h-10 text-orange-500" />
+                        <div className="w-20 h-20 bg-gradient-to-br from-orange-200 to-red-200 rounded-full flex items-center justify-center mb-6 shadow-xl border-4 border-white">
+                            <Send className="w-10 h-10 text-orange-600" />
                         </div>
                         <h3 className="text-xl font-semibold mb-3 text-gray-800">
                             {conversation.is_new ? 'Nouvelle conversation' : 'Aucun message'}
@@ -313,8 +313,8 @@ export default function ChatArea({ conversation, messages = [], user, onBack }: 
                             }
                         </p>
                         {conversation.is_new && (
-                            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                                <p className="text-sm text-blue-700 text-center">
+                            <div className="mt-6 p-4 bg-orange-50 rounded-lg border border-orange-200 shadow-sm">
+                                <p className="text-sm text-orange-700 text-center">
                                     💡 Cette conversation sera créée dès que vous enverrez votre premier message
                                 </p>
                             </div>
@@ -373,7 +373,7 @@ export default function ChatArea({ conversation, messages = [], user, onBack }: 
                     </div>
                 )}
 
-                <form onSubmit={handleSendMessage} className="flex items-end space-x-3">
+                <form onSubmit={handleSendMessage} className="flex items-end space-x-2">
                     <div className="flex-1 relative">
                         <textarea
                             ref={textareaRef}
@@ -381,25 +381,25 @@ export default function ChatArea({ conversation, messages = [], user, onBack }: 
                             onChange={(e) => setData('message', e.target.value)}
                             onKeyDown={handleKeyPress}
                             placeholder="Écrivez votre message..."
-                            className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none max-h-32"
+                            className="w-full px-4 py-3 pr-20 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none max-h-32"
                             rows={1}
                             style={{ minHeight: '48px' }}
                         />
 
-                        <div className="absolute right-3 bottom-3 flex items-center space-x-1">
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
                             <button
                                 type="button"
                                 onClick={() => fileInputRef.current?.click()}
-                                className="p-1 text-gray-400 hover:text-orange-600 transition-colors"
+                                className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-md transition-colors"
                             >
-                                <Paperclip className="w-5 h-5" />
+                                <Paperclip className="w-4 h-4" />
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                                className="p-1 text-gray-400 hover:text-orange-600 transition-colors"
+                                className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-md transition-colors"
                             >
-                                <Smile className="w-5 h-5" />
+                                <Smile className="w-4 h-4" />
                             </button>
                         </div>
                     </div>
@@ -407,7 +407,7 @@ export default function ChatArea({ conversation, messages = [], user, onBack }: 
                     <button
                         type="submit"
                         disabled={(!data.message.trim() && !selectedFile) || processing}
-                        className="p-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:from-orange-600 hover:to-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105"
+                        className="h-12 px-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:from-orange-600 hover:to-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 flex items-center justify-center"
                     >
                         {processing ? (
                             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
