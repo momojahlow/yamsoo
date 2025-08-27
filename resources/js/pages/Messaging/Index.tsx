@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Head } from '@inertiajs/react';
-import { Search, Phone, Video, MoreVertical, Paperclip, Smile, Send, ArrowLeft, Settings, BarChart3, Users, Plus } from 'lucide-react';
+import { Head, router } from '@inertiajs/react';
+import { Search, Phone, Video, MoreVertical, Paperclip, Smile, Send, ArrowLeft, Settings, Plus, Users } from 'lucide-react';
 import { KwdDashboardLayout } from '@/Layouts/modern';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useGlobalNotifications } from '@/hooks/useGlobalNotifications';
 import ConversationList from '@/components/messaging/ConversationList';
 import ChatArea from '@/components/messaging/ChatArea';
 import UserSearch from '@/components/messaging/UserSearch';
 import MessageSearch from '@/components/messaging/MessageSearch';
 import MessageSettings from '@/components/messaging/MessageSettings';
-import MessageStats from '@/components/messaging/MessageStats';
-import FamilySuggestions from '@/components/messaging/FamilySuggestions';
+import NotificationSettings from '@/components/messaging/NotificationSettings';
+
 
 interface User {
     id: number;
@@ -32,21 +33,50 @@ interface Conversation {
     is_online: boolean;
 }
 
-interface MessagingProps {
-    conversations: Conversation[];
+interface Message {
+    id: number;
+    content: string;
+    type: 'text' | 'image' | 'file' | 'audio' | 'video';
+    file_url?: string;
+    file_name?: string;
+    created_at: string;
     user: User;
 }
 
-export default function Messaging({ conversations, user }: MessagingProps) {
+interface MessagingProps {
+    conversations: Conversation[];
+    selectedConversation?: Conversation | null;
+    messages: Message[];
+    targetUser?: User | null;
+    user: User;
+    notificationsEnabled?: boolean;
+    newMessage?: {
+        id: number;
+        content: string;
+        user_id: number;
+        created_at: string;
+        user: User;
+    };
+}
+
+export default function Messaging({ conversations = [], selectedConversation: initialSelectedConversation, messages = [], targetUser, user, notificationsEnabled = true, newMessage }: MessagingProps) {
     const { t } = useTranslation();
-    const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+    const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(initialSelectedConversation || null);
+    const [currentMessages, setCurrentMessages] = useState<Message[]>(messages);
     const [showUserSearch, setShowUserSearch] = useState(false);
     const [showMessageSearch, setShowMessageSearch] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
-    const [showStats, setShowStats] = useState(false);
-    const [showFamilySuggestions, setShowFamilySuggestions] = useState(false);
+    const [showNotificationSettings, setShowNotificationSettings] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     const [showMobileChat, setShowMobileChat] = useState(false);
+
+    // Hook global pour les notifications sonores sur toutes les conversations
+    useGlobalNotifications({
+        currentUser: user,
+        conversations: conversations,
+        enabled: true, // Activé globalement, les préférences individuelles sont gérées par conversation
+        activeConversationId: selectedConversation?.id || null // Éviter les notifications pour la conversation active
+    });
 
     useEffect(() => {
         const checkMobile = () => {
@@ -58,10 +88,41 @@ export default function Messaging({ conversations, user }: MessagingProps) {
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
+    // Effet pour gérer la sélection automatique d'une conversation
+    useEffect(() => {
+        if (initialSelectedConversation) {
+            setSelectedConversation(initialSelectedConversation);
+            // Si on est sur mobile et qu'une conversation est sélectionnée, afficher directement le chat
+            if (isMobile) {
+                setShowMobileChat(true);
+            }
+        }
+    }, [initialSelectedConversation, isMobile]);
+
     const handleConversationSelect = (conversation: Conversation) => {
+        console.log('Selecting conversation:', conversation);
+        console.log('Type:', conversation.type, 'Other participant ID:', conversation.other_participant_id);
+
         setSelectedConversation(conversation);
         if (isMobile) {
             setShowMobileChat(true);
+        }
+
+        // Mettre à jour l'URL selon le type de conversation
+        if (conversation.type === 'group') {
+            console.log('Navigating to group:', `/messagerie?selectedGroupId=${conversation.id}`);
+            router.get(`/messagerie?selectedGroupId=${conversation.id}`, {}, {
+                preserveState: false,
+                preserveScroll: false,
+                replace: true
+            });
+        } else if (conversation.other_participant_id) {
+            console.log('Navigating to private:', `/messagerie?selectedContactId=${conversation.other_participant_id}`);
+            router.get(`/messagerie?selectedContactId=${conversation.other_participant_id}`, {}, {
+                preserveState: false,
+                preserveScroll: false,
+                replace: true
+            });
         }
     };
 
@@ -69,6 +130,39 @@ export default function Messaging({ conversations, user }: MessagingProps) {
         setShowMobileChat(false);
         setSelectedConversation(null);
     };
+
+    const handleMessageSent = (newMessage: Message) => {
+        setCurrentMessages(prevMessages => [...prevMessages, newMessage]);
+    };
+
+    // Mettre à jour les messages quand la conversation change
+    useEffect(() => {
+        setCurrentMessages(messages);
+    }, [messages, selectedConversation?.id]);
+
+    // Gérer l'ajout du nouveau message depuis la session
+    useEffect(() => {
+        if (newMessage && selectedConversation) {
+            const messageToAdd: Message = {
+                id: newMessage.id,
+                content: newMessage.content,
+                type: 'text',
+                created_at: newMessage.created_at,
+                is_edited: false,
+                user: newMessage.user,
+                reactions: []
+            };
+
+            // Vérifier si le message n'existe pas déjà
+            setCurrentMessages(prevMessages => {
+                const exists = prevMessages.some(msg => msg.id === newMessage.id);
+                if (!exists) {
+                    return [...prevMessages, messageToAdd];
+                }
+                return prevMessages;
+            });
+        }
+    }, [newMessage, selectedConversation?.id]);
 
     return (
         <KwdDashboardLayout title={t('messaging')}>
@@ -86,18 +180,27 @@ export default function Messaging({ conversations, user }: MessagingProps) {
                             <h1 className="text-xl font-semibold text-gray-900">Messages</h1>
                             <div className="flex items-center space-x-2">
                                 <button
+                                    onClick={() => {
+                                        console.log('Navigating to groups/create');
+                                        try {
+                                            router.get('/groups/create');
+                                        } catch (error) {
+                                            console.error('Router navigation failed:', error);
+                                            // Fallback to window.location
+                                            window.location.href = '/groups/create';
+                                        }
+                                    }}
+                                    className="p-2 text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                                    title="Créer un groupe"
+                                >
+                                    <Users className="w-5 h-5" />
+                                </button>
+                                <button
                                     onClick={() => setShowMessageSearch(true)}
                                     className="p-2 text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
                                     title="Rechercher dans les messages"
                                 >
                                     <Search className="w-5 h-5" />
-                                </button>
-                                <button
-                                    onClick={() => setShowStats(true)}
-                                    className="p-2 text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-                                    title="Statistiques"
-                                >
-                                    <BarChart3 className="w-5 h-5" />
                                 </button>
                                 <button
                                     onClick={() => setShowSettings(true)}
@@ -107,13 +210,6 @@ export default function Messaging({ conversations, user }: MessagingProps) {
                                     <Settings className="w-5 h-5" />
                                 </button>
                                 <button
-                                    onClick={() => setShowFamilySuggestions(true)}
-                                    className="p-2 text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-                                    title="Suggestions familiales"
-                                >
-                                    <Users className="w-5 h-5" />
-                                </button>
-                                <button
                                     onClick={() => setShowUserSearch(true)}
                                     className="p-2 text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
                                     title="Nouvelle conversation"
@@ -121,6 +217,30 @@ export default function Messaging({ conversations, user }: MessagingProps) {
                                     <MoreVertical className="w-5 h-5" />
                                 </button>
                             </div>
+                        </div>
+
+                        {/* Navigation Messages / Groupes */}
+                        <div className="flex mb-4 bg-gray-100 rounded-lg p-1">
+                            <button
+                                onClick={() => router.get('/messagerie')}
+                                className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                                    route().current('messaging.index')
+                                        ? 'bg-white text-orange-600 shadow-sm'
+                                        : 'text-gray-600 hover:text-gray-900'
+                                }`}
+                            >
+                                💬 Messages
+                            </button>
+                            <button
+                                onClick={() => router.get('/groups')}
+                                className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                                    route().current('groups.*')
+                                        ? 'bg-white text-orange-600 shadow-sm'
+                                        : 'text-gray-600 hover:text-gray-900'
+                                }`}
+                            >
+                                👥 Groupes
+                            </button>
                         </div>
 
                         {/* Barre de recherche */}
@@ -175,8 +295,11 @@ export default function Messaging({ conversations, user }: MessagingProps) {
                     {selectedConversation ? (
                         <ChatArea
                             conversation={selectedConversation}
+                            messages={currentMessages}
                             user={user}
                             onBack={isMobile ? handleBackToList : undefined}
+                            onMessageSent={handleMessageSent}
+                            notificationsEnabled={notificationsEnabled}
                         />
                     ) : (
                         <div className="flex-1 flex items-center justify-center bg-gray-50">
@@ -242,24 +365,7 @@ export default function Messaging({ conversations, user }: MessagingProps) {
                     />
                 )}
 
-                {showStats && (
-                    <MessageStats
-                        isOpen={showStats}
-                        onClose={() => setShowStats(false)}
-                    />
-                )}
 
-                {showFamilySuggestions && (
-                    <FamilySuggestions
-                        isOpen={showFamilySuggestions}
-                        onClose={() => setShowFamilySuggestions(false)}
-                        onConversationCreated={(conversationId) => {
-                            setShowFamilySuggestions(false);
-                            // Recharger les conversations
-                            window.location.reload();
-                        }}
-                    />
-                )}
             </div>
         </KwdDashboardLayout>
     );

@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -7,6 +8,7 @@ import { router } from '@inertiajs/react';
 
 interface FamilyMemberCardProps {
   id?: string;
+  userId?: number;
   name: string;
   avatarUrl?: string;
   relation: string;
@@ -41,6 +43,7 @@ function getBackgroundColor(relation: string | null | undefined): string {
 
 export function FamilyMemberCard({
   id,
+  userId,
   name,
   avatarUrl,
   relation,
@@ -56,8 +59,9 @@ export function FamilyMemberCard({
     : name.slice(0, 2).toUpperCase();
 
   const handleSendMessage = () => {
-    if (id && relation !== 'Moi') {
-      router.visit(`/messagerie?selectedContactId=${id}`);
+    if (userId && relation !== 'Moi') {
+      // Rediriger vers la messagerie principale
+      router.visit(`/messagerie?selectedContactId=${userId}`);
     }
   };
 

@@ -1,8 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Phone, Video, MoreVertical, Paperclip, Smile, Send, Image, File } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { ArrowLeft, Phone, Video, MoreVertical, Paperclip, Smile, Send, File, Volume2, VolumeX } from 'lucide-react';
 import MessageBubble from './MessageBubble';
 import EmojiPicker from './EmojiPicker';
-import { useMessaging } from '@/hooks/useMessaging';
+import NotificationSettings from './NotificationSettings';
+import { useForm } from '@inertiajs/react';
+import { useNotificationSound } from '@/hooks/useNotificationSound';
+
+// Déclaration globale pour Echo
+declare global {
+    interface Window {
+        Echo: any;
+    }
+}
 
 interface User {
     id: number;
@@ -11,11 +20,13 @@ interface User {
 }
 
 interface Conversation {
-    id: number;
+    id: number | null;
     name: string;
     type: 'private' | 'group';
     avatar?: string;
     is_online?: boolean;
+    other_participant_id?: number;
+    is_new?: boolean;
 }
 
 interface Message {
@@ -43,70 +54,165 @@ interface Message {
 
 interface ChatAreaProps {
     conversation: Conversation;
+    messages: Message[];
     user: User;
     onBack?: () => void;
+    onMessageSent?: (message: Message) => void;
+    notificationsEnabled?: boolean; // Préférence utilisateur pour les notifications
 }
 
-export default function ChatArea({ conversation, user, onBack }: ChatAreaProps) {
-    const [newMessage, setNewMessage] = useState('');
+export default function ChatArea({ conversation, messages = [], user, onBack, onMessageSent, notificationsEnabled = true }: ChatAreaProps) {
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [replyTo, setReplyTo] = useState<Message | null>(null);
+    const [realtimeMessages, setRealtimeMessages] = useState<Message[]>(messages);
+    const [showNotificationSettings, setShowNotificationSettings] = useState(false);
+
+
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const audioRef = useRef<HTMLAudioElement>(null);
 
-    // Utiliser le hook de messagerie
-    const {
-        messages,
-        loading,
-        sending,
-        error,
-        sendMessage,
-        markAsRead
-    } = useMessaging(conversation.id);
+    // Notifications audio avec préférences utilisateur (désactivées ici car gérées globalement)
+    const { playMessageSent } = useNotificationSound({
+        enabled: false, // Désactivé ici pour éviter les doublons avec le système global
+        volume: 0.7,
+        soundUrl: '/notifications/alert-sound.mp3'
+    });
 
+    // Utiliser Inertia pour envoyer des messages
+    const { data, setData, post, processing, errors, reset } = useForm({
+        conversation_id: conversation.id,
+        message: '',
+    });
+
+    // Fonction de scroll automatique (définie en premier)
+    const scrollToBottom = useCallback(() => {
+        // Scroll immédiat pour les nouveaux messages
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({
+                behavior: 'smooth',
+                block: 'end',
+                inline: 'nearest'
+            });
+        }
+    }, []);
+
+    // Synchroniser les messages avec les props et forcer l'ordre correct
     useEffect(() => {
-        scrollToBottom();
+        // Trier les messages par created_at pour s'assurer de l'ordre correct
+        const sortedMessages = [...messages].sort((a, b) =>
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+        setRealtimeMessages(sortedMessages);
     }, [messages]);
 
+    // Scroll automatique vers le bas quand les messages changent
     useEffect(() => {
-        // Marquer comme lu quand on ouvre la conversation
-        if (conversation.id) {
-            markAsRead(conversation.id);
-        }
-    }, [conversation.id, markAsRead]);
+        // Délai pour laisser le DOM se mettre à jour
+        const timer = setTimeout(() => {
+            scrollToBottom();
+        }, 100);
 
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    };
+        return () => clearTimeout(timer);
+    }, [realtimeMessages, scrollToBottom]);
 
-    const handleSendMessage = async (e: React.FormEvent) => {
-        e.preventDefault();
+    // Écouter les nouveaux messages via Reverb
+    const handleNewMessage = useCallback((newMessage: Message) => {
+        console.log('📨 Nouveau message reçu:', newMessage);
 
-        if ((!newMessage.trim() && !selectedFile) || sending) return;
+        setRealtimeMessages(prev => {
+            // Éviter les doublons
+            const exists = prev.some(msg => msg.id === newMessage.id);
+            if (exists) {
+                console.log('⚠️ Message déjà présent, ignoré');
+                return prev;
+            }
 
-        try {
-            await sendMessage(
-                conversation.id,
-                newMessage,
-                selectedFile || undefined,
-                replyTo?.id
+            console.log('✅ Ajout du nouveau message');
+
+            // Ajouter le nouveau message à la fin (ordre chronologique)
+            const newMessages = [...prev, newMessage];
+
+            // Trier par created_at pour s'assurer de l'ordre correct (du plus ancien au plus récent)
+            const sortedMessages = newMessages.sort((a, b) =>
+                new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
             );
 
-            // Réinitialiser le formulaire
-            setNewMessage('');
-            setSelectedFile(null);
-            setReplyTo(null);
+            return sortedMessages;
+        });
 
-            if (fileInputRef.current) {
-                fileInputRef.current.value = '';
-            }
+        // Les notifications sonores sont maintenant gérées globalement
+        // pour éviter les doublons entre les différents composants
+        console.log('📨 Message ajouté à la conversation active:', newMessage.user.name);
+    }, [user?.id]);
+
+    // Utiliser le hook useEcho pour écouter les messages
+
+
+    // Écouter les messages via Echo avec vérification de disponibilité
+    useEffect(() => {
+        if (!conversation?.id || !window.Echo) return;
+
+        console.log(`🔊 Écoute de conversation.${conversation.id}`);
+
+        try {
+            window.Echo.private(`conversation.${conversation.id}`)
+                .listen('.message.sent', (e: any) => {
+                    console.log('📨 Message reçu via Echo:', e);
+                    if (e.message) {
+                        handleNewMessage(e.message);
+                    }
+                })
+                .error((error: any) => {
+                    console.error('❌ Erreur Echo:', error);
+                });
+
+            return () => {
+                console.log(`🔇 Arrêt écoute conversation.${conversation.id}`);
+                if (window.Echo && typeof window.Echo.leave === 'function') {
+                    window.Echo.leave(`conversation.${conversation.id}`);
+                }
+            };
         } catch (error) {
-            // L'erreur est déjà gérée par le hook
-            console.error('Erreur lors de l\'envoi du message:', error);
+            console.error('🚨 Erreur lors de l\'initialisation du canal Echo:', error);
         }
+    }, [conversation?.id, handleNewMessage]);
+
+    const handleSendMessage = (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!data.message.trim() || processing) return;
+
+
+
+        post('/messagerie/send', {
+            onSuccess: () => {
+                reset('message');
+                setSelectedFile(null);
+                setReplyTo(null);
+
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                }
+
+                // Ajuster la hauteur du textarea
+                if (textareaRef.current) {
+                    textareaRef.current.style.height = '48px';
+                }
+
+                // Son d'envoi
+                playMessageSent();
+
+                // Scroll automatique vers le bas après envoi
+                setTimeout(() => scrollToBottom(), 200);
+            },
+            onError: (errors) => {
+                console.error('Erreur lors de l\'envoi du message:', errors);
+            }
+        });
     };
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -117,7 +223,7 @@ export default function ChatArea({ conversation, user, onBack }: ChatAreaProps) 
     };
 
     const handleEmojiSelect = (emoji: string) => {
-        setNewMessage(prev => prev + emoji);
+        setData('message', data.message + emoji);
         setShowEmojiPicker(false);
         textareaRef.current?.focus();
     };
@@ -183,6 +289,17 @@ export default function ChatArea({ conversation, user, onBack }: ChatAreaProps) 
                     <button className="p-2 text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors">
                         <Video className="w-5 h-5" />
                     </button>
+                    <button
+                        onClick={() => setShowNotificationSettings(true)}
+                        className={`p-2 transition-colors rounded-lg ${
+                            notificationsEnabled
+                                ? 'text-green-500 hover:text-green-600 hover:bg-green-50'
+                                : 'text-gray-400 hover:text-gray-500 hover:bg-gray-100'
+                        }`}
+                        title={notificationsEnabled ? 'Notifications activées' : 'Notifications désactivées'}
+                    >
+                        {notificationsEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+                    </button>
                     <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
                         <MoreVertical className="w-5 h-5" />
                     </button>
@@ -190,28 +307,37 @@ export default function ChatArea({ conversation, user, onBack }: ChatAreaProps) 
             </div>
 
             {/* Zone des messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
-                {loading ? (
-                    <div className="flex justify-center items-center h-full">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
-                    </div>
-                ) : messages.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-gray-500">
-                        <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-red-100 rounded-full flex items-center justify-center mb-4">
-                            <Send className="w-8 h-8 text-orange-500" />
+            <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-gradient-to-b from-orange-25 via-orange-10 to-orange-25" style={{backgroundColor: 'rgba(255, 237, 213, 0.08)'}}>
+                {realtimeMessages.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-gray-500 px-4">
+                        <div className="w-20 h-20 bg-gradient-to-br from-orange-200 to-red-200 rounded-full flex items-center justify-center mb-6 shadow-xl border-4 border-white">
+                            <Send className="w-10 h-10 text-orange-600" />
                         </div>
-                        <p className="text-lg font-medium mb-2">Aucun message</p>
-                        <p className="text-sm text-center max-w-sm">
-                            Commencez la conversation en envoyant le premier message à {conversation.name}.
+                        <h3 className="text-xl font-semibold mb-3 text-gray-800">
+                            {conversation.is_new ? 'Nouvelle conversation' : 'Aucun message'}
+                        </h3>
+                        <p className="text-sm text-center max-w-sm leading-relaxed">
+                            {conversation.is_new
+                                ? `Commencez une nouvelle conversation avec ${conversation.name}. Envoyez votre premier message !`
+                                : `Commencez la conversation en envoyant le premier message à ${conversation.name}.`
+                            }
                         </p>
+                        {conversation.is_new && (
+                            <div className="mt-6 p-4 bg-orange-50 rounded-lg border border-orange-200 shadow-sm">
+                                <p className="text-sm text-orange-700 text-center">
+                                    💡 Cette conversation sera créée dès que vous enverrez votre premier message
+                                </p>
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <>
-                        {messages.map((message) => (
+                        {realtimeMessages.filter(message => message && message.user && message.id).map((message) => (
                             <MessageBubble
                                 key={message.id}
                                 message={message}
-                                isOwn={message.user.id === user.id}
+                                isOwn={message.user?.id === user?.id}
+                                isGroup={conversation?.type === 'group'}
                                 onReply={() => setReplyTo(message)}
                             />
                         ))}
@@ -257,43 +383,43 @@ export default function ChatArea({ conversation, user, onBack }: ChatAreaProps) 
                     </div>
                 )}
 
-                <form onSubmit={handleSendMessage} className="flex items-end space-x-3">
+                <form onSubmit={handleSendMessage} className="flex items-end space-x-2">
                     <div className="flex-1 relative">
                         <textarea
                             ref={textareaRef}
-                            value={newMessage}
-                            onChange={(e) => setNewMessage(e.target.value)}
-                            onKeyPress={handleKeyPress}
+                            value={data.message}
+                            onChange={(e) => setData('message', e.target.value)}
+                            onKeyDown={handleKeyPress}
                             placeholder="Écrivez votre message..."
-                            className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none max-h-32"
+                            className="w-full px-4 py-3 pr-20 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none max-h-32"
                             rows={1}
                             style={{ minHeight: '48px' }}
                         />
 
-                        <div className="absolute right-3 bottom-3 flex items-center space-x-1">
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
                             <button
                                 type="button"
                                 onClick={() => fileInputRef.current?.click()}
-                                className="p-1 text-gray-400 hover:text-orange-600 transition-colors"
+                                className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-md transition-colors"
                             >
-                                <Paperclip className="w-5 h-5" />
+                                <Paperclip className="w-4 h-4" />
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                                className="p-1 text-gray-400 hover:text-orange-600 transition-colors"
+                                className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-md transition-colors"
                             >
-                                <Smile className="w-5 h-5" />
+                                <Smile className="w-4 h-4" />
                             </button>
                         </div>
                     </div>
 
                     <button
                         type="submit"
-                        disabled={(!newMessage.trim() && !selectedFile) || sending}
-                        className="p-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:from-orange-600 hover:to-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105"
+                        disabled={(!data.message.trim() && !selectedFile) || processing}
+                        className="h-12 px-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:from-orange-600 hover:to-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 flex items-center justify-center"
                     >
-                        {sending ? (
+                        {processing ? (
                             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                         ) : (
                             <Send className="w-5 h-5" />
@@ -315,6 +441,26 @@ export default function ChatArea({ conversation, user, onBack }: ChatAreaProps) 
                         onClose={() => setShowEmojiPicker(false)}
                     />
                 )}
+
+                {/* Paramètres de notification */}
+                {showNotificationSettings && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <NotificationSettings
+                            conversation={conversation}
+                            user={user}
+                            notificationsEnabled={notificationsEnabled}
+                            onClose={() => setShowNotificationSettings(false)}
+                        />
+                    </div>
+                )}
+
+                {/* Élément audio caché pour les notifications */}
+                <audio
+                    ref={audioRef}
+                    src="/sounds/notification.mp3"
+                    preload="auto"
+                    style={{ display: 'none' }}
+                />
             </div>
         </div>
     );

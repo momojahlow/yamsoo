@@ -219,12 +219,60 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('famille/arbre', [FamilyTreeController::class, 'index'])->name('family.tree');
     Route::post('families/{family}/members', [FamilyController::class, 'addMember'])->name('families.add-member');
 
-    // API pour l'arbre familial
-    Route::get('api/family-relations', [FamilyTreeController::class, 'getFamilyRelations'])->name('api.family.relations');
 
-    // Routes pour les messages
-    Route::get('messagerie', [MessageController::class, 'index'])->name('messages');
-    Route::get('messagerie/{conversationId}', [MessageController::class, 'show'])->name('messages.conversation');
+
+    // Routes pour les messages (ancien système - gardé pour compatibilité)
+    Route::get('messages-old', [MessageController::class, 'index'])->name('messages.old');
+    Route::get('messages-old/{conversationId}', [MessageController::class, 'show'])->name('messages.conversation.old');
+
+    // Route principale de messagerie (système propre)
+    Route::get('messagerie', [App\Http\Controllers\SimpleMessagingController::class, 'index'])->name('messages');
+    Route::post('messagerie/send', [App\Http\Controllers\SimpleMessagingController::class, 'sendMessage'])->name('messages.send');
+
+    // Gestion des préférences de notification
+    Route::patch('conversations/{conversation}/notifications', [App\Http\Controllers\SimpleMessagingController::class, 'updateNotificationSettings'])->name('conversations.notifications');
+
+
+
+    // Page de test pour diagnostiquer la messagerie
+    Route::get('test-messaging', [App\Http\Controllers\TestMessagingController::class, 'index'])->name('test.messaging');
+    Route::post('test-messaging/send', [App\Http\Controllers\TestMessagingController::class, 'sendTest'])->name('test.messaging.send');
+
+    // Test du chat temps réel
+    Route::get('test-realtime-chat', [App\Http\Controllers\SimpleMessagingController::class, 'testRealtimeChat'])->name('test.realtime-chat');
+
+    // Test des notifications sonores
+    Route::get('test-notifications', function () {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        return \Inertia\Inertia::render('TestNotifications', [
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'avatar' => $user->profile?->avatar_url ?? null
+            ]
+        ]);
+    })->name('test.notifications');
+
+    // Debug de la messagerie
+    Route::get('debug-messaging', [App\Http\Controllers\DebugMessagingController::class, 'index'])->name('debug.messaging');
+
+    // Messagerie simple et fonctionnelle
+    Route::get('simple-messaging', [App\Http\Controllers\SimpleMessagingController::class, 'index'])->name('simple.messaging');
+    Route::post('simple-messaging/send', [App\Http\Controllers\SimpleMessagingController::class, 'sendMessage'])->name('simple.messaging.send');
+
+    // Gestion des groupes
+    Route::get('groups', [App\Http\Controllers\GroupController::class, 'index'])->name('groups.index');
+    Route::get('groups/create', [App\Http\Controllers\GroupController::class, 'create'])->name('groups.create');
+    Route::post('groups', [App\Http\Controllers\GroupController::class, 'store'])->name('groups.store');
+    Route::get('groups/{conversation}', [App\Http\Controllers\GroupController::class, 'show'])->name('groups.show');
+    Route::patch('groups/{conversation}', [App\Http\Controllers\GroupController::class, 'update'])->name('groups.update');
+    Route::delete('groups/{conversation}', [App\Http\Controllers\GroupController::class, 'destroy'])->name('groups.destroy');
+    Route::post('groups/{conversation}/add-participant', [App\Http\Controllers\GroupController::class, 'addParticipant'])->name('groups.add-participant');
+    Route::delete('groups/{conversation}/participants/{user}', [App\Http\Controllers\GroupController::class, 'removeParticipant'])->name('groups.remove-participant');
+    Route::patch('groups/{conversation}/participants/{user}', [App\Http\Controllers\GroupController::class, 'updateParticipantRole'])->name('groups.update-participant-role');
+    Route::post('groups/{conversation}/leave-group', [App\Http\Controllers\GroupController::class, 'leaveGroup'])->name('groups.leave-group');
+    Route::post('groups/{conversation}/transfer-ownership', [App\Http\Controllers\GroupController::class, 'transferOwnership'])->name('groups.transfer-ownership');
+    Route::post('groups/{conversation}/leave', [App\Http\Controllers\GroupController::class, 'leave'])->name('groups.leave');
 
     // Routes pour les notifications
     Route::get('notifications', [NotificationController::class, 'index'])->name('notifications');
@@ -236,9 +284,54 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('suggestions', [SuggestionController::class, 'store'])->name('suggestions.store');
     Route::post('suggestions/refresh', [SuggestionController::class, 'refresh'])->name('suggestions.refresh');
     Route::patch('suggestions/{suggestion}', [SuggestionController::class, 'update'])->name('suggestions.update');
+    // Route principale
     Route::post('suggestions/{suggestion}/send-request', [SuggestionController::class, 'sendRelationRequest'])->name('suggestions.send-request');
+
+    // Route alternative pour debug
+    Route::post('suggestions/{id}/send-request-alt', function ($id) {
+        try {
+            $suggestion = \App\Models\Suggestion::findOrFail($id);
+
+            // Simuler l'action du contrôleur
+            return response()->json([
+                'success' => true,
+                'message' => 'Demande envoyée avec succès (route alternative)',
+                'suggestion_id' => $suggestion->id,
+                'user' => $suggestion->user->name,
+                'suggested_user' => $suggestion->suggestedUser->name,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 404);
+        }
+    });
+
+    // Route de test simple pour debug
+    Route::post('suggestions/{id}/send-request-test', function ($id) {
+        return response()->json([
+            'success' => true,
+            'message' => "Test réussi pour suggestion ID: {$id}",
+            'data' => request()->all()
+        ]);
+    });
     Route::patch('suggestions/{suggestion}/accept-with-correction', [SuggestionController::class, 'acceptWithCorrection'])->name('suggestions.accept-with-correction');
     Route::delete('suggestions/{suggestion}', [SuggestionController::class, 'destroy'])->name('suggestions.destroy');
+
+    // Route de test pour debug (à supprimer en production)
+    Route::post('suggestions/{suggestion}/test-send-request', function (\App\Models\Suggestion $suggestion) {
+        return response()->json([
+            'success' => true,
+            'message' => 'Route de test fonctionnelle',
+            'suggestion_id' => $suggestion->id,
+            'user' => $suggestion->user->name,
+            'suggested_user' => $suggestion->suggestedUser->name,
+            'relation' => $suggestion->suggested_relation_name,
+            'url' => request()->url(),
+            'method' => request()->method(),
+        ]);
+    })->name('suggestions.test-send-request');
 
     // Routes pour les réseaux
     Route::get('reseaux', [NetworkController::class, 'index'])->name('networks');
@@ -272,9 +365,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Routes pour les relations familiales
     Route::get('family-relations', [FamilyRelationController::class, 'index'])->name('family-relations.index');
-    Route::get('family-relations/suggestions', function () {
-        return inertia('Relations/Suggestions');
-    })->name('family-relations.suggestions');
+
     Route::post('family-relations', [FamilyRelationController::class, 'store'])->name('family-relations.store');
     Route::post('family-relations/{requestId}/accept', [FamilyRelationController::class, 'accept'])->name('family-relations.accept');
     Route::post('family-relations/{requestId}/reject', [FamilyRelationController::class, 'reject'])->name('family-relations.reject');
@@ -317,6 +408,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return inertia('TestPhotoDisplay');
     })->name('test.photo.display');
 
+    // Route de test pour les suggestions
+    Route::get('/test-suggestions', function () {
+        return inertia('TestSuggestions');
+    })->name('test.suggestions');
+
     // Route pour créer des données de test pour les photos
     Route::post('/test-photo-data', function () {
         try {
@@ -328,6 +424,39 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return redirect()->back()->withErrors(['error' => 'Erreur lors de la création des données : ' . $e->getMessage()]);
         }
     })->name('test.photo.data');
+
+    // Route pour nettoyer les profils en double
+    Route::post('/cleanup-profiles', function () {
+        try {
+            Artisan::call('db:seed', ['--class' => 'Database\\Seeders\\CleanupProfilesSeeder']);
+
+            return redirect()->back()->with('success', 'Profils nettoyés avec succès !');
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Erreur lors du nettoyage : ' . $e->getMessage()]);
+        }
+    })->name('cleanup.profiles');
+
+    // Route pour le seeding optimisé complet
+    Route::post('/optimized-seed', function () {
+        try {
+            Artisan::call('db:seed', ['--class' => 'Database\\Seeders\\OptimizedDatabaseSeeder']);
+
+            return redirect()->back()->with('success', 'Seeding optimisé terminé avec succès !');
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Erreur lors du seeding : ' . $e->getMessage()]);
+        }
+    })->name('optimized.seed');
+
+    // Route pour générer des suggestions de test
+    Route::post('/generate-suggestions', function () {
+        try {
+            Artisan::call('db:seed', ['--class' => 'Database\\Seeders\\SuggestionTestSeeder']);
+
+            return redirect()->back()->with('success', 'Suggestions de test générées avec succès !');
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Erreur lors de la génération : ' . $e->getMessage()]);
+        }
+    })->name('generate.suggestions');
 
     // Route de test pour les albums photo modernes
     Route::get('/test-albums', function () {
@@ -392,6 +521,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 require __DIR__.'/auth.php';
 
+// Routes de debug (à supprimer en production)
+if (app()->environment(['local', 'staging'])) {
+    require __DIR__.'/debug.php';
+}
+
 // Route de debug - à supprimer après résolution
 Route::get('/debug/relations', function () {
     $user = Auth::user();
@@ -416,30 +550,7 @@ Route::get('/debug/relations', function () {
     ]);
 })->middleware('auth');
 
-// Routes de messagerie
-Route::middleware('auth')->group(function () {
-    // Interface de messagerie
-    Route::get('/messages', [App\Http\Controllers\MessagingController::class, 'index'])->name('messages.index');
 
-    // API Routes pour la messagerie
-    Route::prefix('api')->group(function () {
-        // Conversations
-        Route::get('/conversations/{conversation}/messages', [App\Http\Controllers\MessagingController::class, 'getMessages']);
-        Route::post('/conversations/{conversation}/messages', [App\Http\Controllers\MessagingController::class, 'sendMessage']);
-        Route::post('/conversations', [App\Http\Controllers\MessagingController::class, 'createConversation']);
-
-        // Recherche
-        Route::get('/users/search', [App\Http\Controllers\MessagingController::class, 'searchUsers']);
-        Route::get('/messages/search', [App\Http\Controllers\MessagingController::class, 'searchMessages']);
-
-        // Statistiques
-        Route::get('/messages/stats', [App\Http\Controllers\MessagingController::class, 'getStats']);
-
-        // Fonctionnalités familiales
-        Route::post('/conversations/family-group', [App\Http\Controllers\MessagingController::class, 'createFamilyGroup']);
-        Route::get('/conversations/family-suggestions', [App\Http\Controllers\MessagingController::class, 'getFamilySuggestions']);
-    });
-});
 
 // Routes de langue (sans préfixe pour la compatibilité)
 Route::get('/language/{locale}', [LanguageController::class, 'switch'])->name('language.switch');
@@ -461,3 +572,7 @@ Route::get('/conditions-generales', function () {
 Route::get('/terms', function () {
     return redirect()->route('terms-of-service');
 })->name('terms');
+// Test d'authentification
+Route::get('test-auth', function () {
+    return Inertia::render('TestAuth');
+})->name('test.auth');

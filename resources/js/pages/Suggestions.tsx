@@ -102,7 +102,7 @@ export default function Suggestions({ suggestions }: Props) {
           {/* Modern header - Mobile optimized */}
           <div className="mb-6 sm:mb-8 md:mb-12">
             <div className="text-center sm:text-left">
-              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent leading-tight">
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent leading-tight">
                 Suggestions de Relations
               </h1>
               <p className="text-gray-600 mt-2 sm:mt-3 text-xs sm:text-sm md:text-base max-w-2xl mx-auto sm:mx-0 leading-relaxed">
@@ -120,7 +120,7 @@ export default function Suggestions({ suggestions }: Props) {
                 </h2>
                 <Badge
                   variant="secondary"
-                  className="bg-blue-100 text-blue-800 border-blue-200 px-2 py-1 text-xs sm:px-3 w-fit"
+                  className="bg-orange-100 text-orange-800 border-orange-200 px-2 py-1 text-xs sm:px-3 w-fit"
                 >
                   {pendingSuggestions.length}
                 </Badge>

@@ -96,7 +96,7 @@ export default function ModernDashboard({ auth, stats, recent_activities, family
       title: "Ajouter un membre",
       description: "Inviter un nouveau membre de la famille",
       icon: UserPlus,
-      href: "/network",
+      href: "/reseaux",
       color: "bg-gradient-to-br from-blue-500 to-blue-600",
       badge: badges.suggestions > 0 ? badges.suggestions : null,
       urgentBadge: badges.pending_requests > 0 ? badges.pending_requests : null
@@ -251,8 +251,8 @@ export default function ModernDashboard({ auth, stats, recent_activities, family
                   <div className={`h-2 ${action.color}`} />
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between mb-4">
-                      <div className={`p-3 rounded-xl ${action.color} bg-opacity-10 relative`}>
-                        <action.icon className={`w-6 h-6 ${action.color.replace('bg-gradient-to-br from-', 'text-').split(' ')[0]}`} />
+                      <div className={`p-3 rounded-xl ${action.color} relative`}>
+                        <action.icon className="w-6 h-6 text-white" />
                         {action.urgentBadge && (
                           <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
                             <span className="text-xs text-white font-bold">{action.urgentBadge}</span>

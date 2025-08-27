@@ -33,7 +33,7 @@ export function SuggestionActions({
         size="sm"
         onClick={onSendRequest}
         disabled={!hasSelectedRelation || isLoading}
-        className="bg-blue-600 hover:bg-blue-700 h-8 text-sm px-4 flex-1"
+        className="bg-orange-600 hover:bg-orange-700 h-8 text-sm px-4 flex-1"
       >
         {isLoading ? (
           <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-2"></div>

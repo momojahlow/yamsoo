@@ -25,7 +25,7 @@ const NEVER_CACHE = [
 // Installation du Service Worker
 self.addEventListener('install', (event) => {
   console.log('[SW] Installation en cours...');
-  
+
   event.waitUntil(
     caches.open(STATIC_CACHE)
       .then((cache) => {
@@ -45,7 +45,7 @@ self.addEventListener('install', (event) => {
 // Activation du Service Worker
 self.addEventListener('activate', (event) => {
   console.log('[SW] Activation en cours...');
-  
+
   event.waitUntil(
     caches.keys()
       .then((cacheNames) => {
@@ -70,29 +70,34 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
-  
+
   // Ignorer les requêtes non-HTTP
   if (!request.url.startsWith('http')) {
     return;
   }
-  
+
   // Ignorer les ressources à ne jamais mettre en cache
   if (NEVER_CACHE.some(path => url.pathname.startsWith(path))) {
     return;
   }
-  
+
+  // Ne pas intercepter les requêtes POST, PUT, DELETE, etc.
+  if (request.method !== 'GET') {
+    return;
+  }
+
   // Stratégie Cache First pour les assets statiques
   if (isStaticAsset(request)) {
     event.respondWith(cacheFirst(request));
     return;
   }
-  
+
   // Stratégie Network First pour les pages
   if (isPageRequest(request)) {
     event.respondWith(networkFirst(request));
     return;
   }
-  
+
   // Stratégie par défaut : Network First
   event.respondWith(networkFirst(request));
 });
@@ -105,8 +110,8 @@ function isStaticAsset(request) {
 
 // Vérifier si c'est une requête de page
 function isPageRequest(request) {
-  return request.method === 'GET' && 
-         request.headers.get('accept') && 
+  return request.method === 'GET' &&
+         request.headers.get('accept') &&
          request.headers.get('accept').includes('text/html');
 }
 
@@ -115,19 +120,19 @@ async function cacheFirst(request) {
   try {
     const cache = await caches.open(STATIC_CACHE);
     const cachedResponse = await cache.match(request);
-    
+
     if (cachedResponse) {
       console.log('[SW] Ressource servie depuis le cache:', request.url);
       return cachedResponse;
     }
-    
+
     const networkResponse = await fetch(request);
-    
+
     if (networkResponse.ok) {
       cache.put(request, networkResponse.clone());
       console.log('[SW] Ressource mise en cache:', request.url);
     }
-    
+
     return networkResponse;
   } catch (error) {
     console.error('[SW] Erreur Cache First:', error);
@@ -139,25 +144,29 @@ async function cacheFirst(request) {
 async function networkFirst(request) {
   try {
     const networkResponse = await fetch(request);
-    
-    if (networkResponse.ok) {
+
+    // Ne mettre en cache que les requêtes GET réussies (status 200)
+    if (networkResponse.ok && networkResponse.status === 200 && request.method === 'GET') {
       const cache = await caches.open(DYNAMIC_CACHE);
       cache.put(request, networkResponse.clone());
       console.log('[SW] Page mise en cache dynamiquement:', request.url);
     }
-    
+
     return networkResponse;
   } catch (error) {
     console.log('[SW] Réseau indisponible, tentative depuis le cache:', request.url);
-    
-    const cache = await caches.open(DYNAMIC_CACHE);
-    const cachedResponse = await cache.match(request);
-    
-    if (cachedResponse) {
-      console.log('[SW] Page servie depuis le cache:', request.url);
-      return cachedResponse;
+
+    // Ne chercher dans le cache que pour les requêtes GET
+    if (request.method === 'GET') {
+      const cache = await caches.open(DYNAMIC_CACHE);
+      const cachedResponse = await cache.match(request);
+
+      if (cachedResponse) {
+        console.log('[SW] Page servie depuis le cache:', request.url);
+        return cachedResponse;
+      }
     }
-    
+
     // Si c'est une page et qu'elle n'est pas en cache, servir la page hors ligne
     if (isPageRequest(request)) {
       const offlinePage = await cache.match('/offline.html');
@@ -165,7 +174,7 @@ async function networkFirst(request) {
         return offlinePage;
       }
     }
-    
+
     throw error;
   }
 }
@@ -175,7 +184,7 @@ self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
-  
+
   if (event.data && event.data.type === 'GET_VERSION') {
     event.ports[0].postMessage({ version: CACHE_VERSION });
   }
@@ -185,9 +194,9 @@ self.addEventListener('message', (event) => {
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'CHECK_UPDATE') {
     // Logique de vérification de mise à jour
-    event.ports[0].postMessage({ 
-      hasUpdate: false, 
-      version: CACHE_VERSION 
+    event.ports[0].postMessage({
+      hasUpdate: false,
+      version: CACHE_VERSION
     });
   }
 });

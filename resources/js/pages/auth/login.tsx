@@ -31,12 +31,25 @@ export default function Login({ status, canResetPassword }: LoginProps) {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
+
+        // Debug CSRF
+        console.log('🔍 Debug CSRF:', {
+            csrf_token: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+            page_props: (window as any).page?.props,
+            route_url: route('login'),
+            form_data: data
+        });
+
         post(route('login'), {
             onFinish: () => reset('password'),
             onError: (errors) => {
                 // Log des erreurs pour debug
-                console.error('Erreurs de connexion:', errors);
+                console.error('❌ Erreurs de connexion:', errors);
+                console.error('❌ Status:', (errors as any).status);
             },
+            onSuccess: () => {
+                console.log('✅ Connexion réussie');
+            }
         });
     };
 

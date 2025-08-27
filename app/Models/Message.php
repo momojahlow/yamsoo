@@ -13,18 +13,28 @@ class Message extends Model
         'user_id',
         'content',
         'type', // 'text', 'image', 'file', 'audio', 'video'
-        'file_path',
+        'file_url',
         'file_name',
         'file_size',
         'is_edited',
         'edited_at',
-        'reply_to_id'
+        'reply_to_id',
+        'mentions',
+        'is_pinned',
+        'pinned_at',
+        'pinned_by',
+        'delivery_status',
+        'delivered_at'
     ];
 
     protected $casts = [
         'is_edited' => 'boolean',
         'edited_at' => 'datetime',
-        'file_size' => 'integer'
+        'file_size' => 'integer',
+        'mentions' => 'array',
+        'is_pinned' => 'boolean',
+        'pinned_at' => 'datetime',
+        'delivered_at' => 'datetime'
     ];
 
     /**
@@ -59,13 +69,7 @@ class Message extends Model
         return $this->hasMany(Message::class, 'reply_to_id');
     }
 
-    /**
-     * Réactions au message
-     */
-    public function reactions(): HasMany
-    {
-        return $this->hasMany(MessageReaction::class);
-    }
+
 
     /**
      * Obtenir l'URL du fichier
@@ -159,6 +163,84 @@ class Message extends Model
     public function scopeInConversation($query, int $conversationId)
     {
         return $query->where('conversation_id', $conversationId);
+    }
+
+    /**
+     * Utilisateurs qui ont lu ce message
+     */
+    public function reads(): HasMany
+    {
+        return $this->hasMany(MessageRead::class);
+    }
+
+    /**
+     * Réactions à ce message
+     */
+    public function reactions(): HasMany
+    {
+        return $this->hasMany(MessageReaction::class);
+    }
+
+    /**
+     * Utilisateur qui a épinglé ce message
+     */
+    public function pinnedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'pinned_by');
+    }
+
+    /**
+     * Marquer le message comme lu par un utilisateur
+     */
+    public function markAsReadBy(int $userId): MessageRead
+    {
+        return MessageRead::markAsRead($this->id, $userId);
+    }
+
+    /**
+     * Vérifier si le message a été lu par un utilisateur
+     */
+    public function isReadBy(int $userId): bool
+    {
+        return MessageRead::hasUserReadMessage($this->id, $userId);
+    }
+
+    /**
+     * Obtenir le nombre d'utilisateurs qui ont lu ce message
+     */
+    public function getReadCountAttribute(): int
+    {
+        return $this->reads()->count();
+    }
+
+    /**
+     * Obtenir les utilisateurs qui ont lu ce message
+     */
+    public function getReadersAttribute(): \Illuminate\Database\Eloquent\Collection
+    {
+        return MessageRead::getReadersForMessage($this->id);
+    }
+
+    /**
+     * Épingler/désépingler le message
+     */
+    public function togglePin(int $userId): bool
+    {
+        if ($this->is_pinned) {
+            $this->update([
+                'is_pinned' => false,
+                'pinned_at' => null,
+                'pinned_by' => null,
+            ]);
+            return false;
+        } else {
+            $this->update([
+                'is_pinned' => true,
+                'pinned_at' => now(),
+                'pinned_by' => $userId,
+            ]);
+            return true;
+        }
     }
 
     // Compatibilité avec l'ancien modèle

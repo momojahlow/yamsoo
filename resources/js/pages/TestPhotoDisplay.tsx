@@ -5,8 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Camera, Database, CheckCircle, XCircle, AlertTriangle, 
+import {
+  Camera, Database, CheckCircle, XCircle, AlertTriangle,
   RefreshCw, Play, Image, FolderPlus, Users, Globe, Lock,
   Eye, Upload, Download, Settings, Info
 } from 'lucide-react';
@@ -125,6 +125,69 @@ export default function TestPhotoDisplay() {
     });
   };
 
+  const cleanupProfiles = () => {
+    router.post('/cleanup-profiles', {}, {
+      onSuccess: () => {
+        setTestResults(prev => [...prev, {
+          name: 'Nettoyage profils',
+          status: 'success',
+          message: 'Profils nettoyés avec succès',
+          details: 'Doublons supprimés, gender obligatoire appliqué'
+        }]);
+      },
+      onError: (errors) => {
+        setTestResults(prev => [...prev, {
+          name: 'Nettoyage profils',
+          status: 'error',
+          message: 'Erreur lors du nettoyage',
+          details: Object.values(errors).join(', ')
+        }]);
+      }
+    });
+  };
+
+  const runOptimizedSeed = () => {
+    router.post('/optimized-seed', {}, {
+      onSuccess: () => {
+        setTestResults(prev => [...prev, {
+          name: 'Seeding optimisé',
+          status: 'success',
+          message: 'Seeding optimisé terminé',
+          details: 'Relations et données créées avec performance optimisée'
+        }]);
+      },
+      onError: (errors) => {
+        setTestResults(prev => [...prev, {
+          name: 'Seeding optimisé',
+          status: 'error',
+          message: 'Erreur lors du seeding',
+          details: Object.values(errors).join(', ')
+        }]);
+      }
+    });
+  };
+
+  const generateSuggestions = () => {
+    router.post('/generate-suggestions', {}, {
+      onSuccess: () => {
+        setTestResults(prev => [...prev, {
+          name: 'Suggestions générées',
+          status: 'success',
+          message: 'Suggestions de test créées',
+          details: 'Suggestions automatiques et manuelles générées pour tous les utilisateurs'
+        }]);
+      },
+      onError: (errors) => {
+        setTestResults(prev => [...prev, {
+          name: 'Suggestions générées',
+          status: 'error',
+          message: 'Erreur lors de la génération',
+          details: Object.values(errors).join(', ')
+        }]);
+      }
+    });
+  };
+
   const getStatusIcon = (status: TestResult['status']) => {
     switch (status) {
       case 'success': return <CheckCircle className="w-4 h-4 text-green-500" />;
@@ -146,7 +209,7 @@ export default function TestPhotoDisplay() {
   return (
     <KwdDashboardLayout title="Test Affichage Photos">
       <Head title="Test Affichage Photos et Albums" />
-      
+
       <div className="space-y-8">
         {/* Header */}
         <div className="bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 rounded-2xl p-6 md:p-8 border border-purple-100 shadow-sm">
@@ -156,14 +219,14 @@ export default function TestPhotoDisplay() {
                 Test Affichage Photos et Albums
               </h1>
               <p className="text-gray-600 max-w-2xl leading-relaxed">
-                Diagnostiquez et corrigez les problèmes d'affichage des albums photo et des images. 
+                Diagnostiquez et corrigez les problèmes d'affichage des albums photo et des images.
                 Testez toutes les fonctionnalités et créez des données de démonstration.
               </p>
             </div>
-            
+
             <div className="flex flex-col sm:flex-row gap-3">
-              <Button 
-                onClick={runDiagnostics} 
+              <Button
+                onClick={runDiagnostics}
                 disabled={isRunningTests}
                 className="bg-gradient-to-r from-purple-500 to-blue-500"
               >
@@ -179,11 +242,28 @@ export default function TestPhotoDisplay() {
                   </>
                 )}
               </Button>
-              
-              <Button onClick={createTestData} variant="outline">
-                <Database className="w-4 h-4 mr-2" />
-                Créer données test
-              </Button>
+
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button onClick={createTestData} variant="outline">
+                  <Database className="w-4 h-4 mr-2" />
+                  Créer données test
+                </Button>
+
+                <Button onClick={cleanupProfiles} variant="outline" className="border-yellow-200 hover:bg-yellow-50">
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Nettoyer profils
+                </Button>
+
+                <Button onClick={runOptimizedSeed} variant="outline" className="border-green-200 hover:bg-green-50">
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Seeding optimisé
+                </Button>
+
+                <Button onClick={generateSuggestions} variant="outline" className="border-blue-200 hover:bg-blue-50">
+                  <Users className="w-4 h-4 mr-2" />
+                  Générer suggestions
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -385,7 +465,7 @@ export default function TestPhotoDisplay() {
         <Alert>
           <Info className="h-4 w-4" />
           <AlertDescription>
-            <strong>Note :</strong> Cette page de test utilise des images de démonstration depuis Unsplash. 
+            <strong>Note :</strong> Cette page de test utilise des images de démonstration depuis Unsplash.
             En production, les images seraient stockées localement avec un système d'upload complet.
           </AlertDescription>
         </Alert>

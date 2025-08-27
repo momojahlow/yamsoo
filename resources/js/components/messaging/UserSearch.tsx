@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, X, MessageCircle } from 'lucide-react';
-import { useUserSearch, useMessaging } from '@/hooks/useMessaging';
+import { router } from '@inertiajs/react';
 
 interface User {
     id: number;
@@ -22,9 +22,28 @@ export default function UserSearch({ onClose, onConversationCreated }: UserSearc
     const [query, setQuery] = useState('');
     const [creating, setCreating] = useState<number | null>(null);
 
-    // Utiliser les hooks
-    const { users, loading, searchUsers } = useUserSearch();
-    const { createConversation } = useMessaging();
+    // État local pour les utilisateurs
+    const [users, setUsers] = useState<User[]>([]);
+    const [loading, setLoading] = useState(false);
+
+    // Fonction de recherche simplifiée
+    const searchUsers = async (searchQuery: string) => {
+        if (!searchQuery.trim()) {
+            setUsers([]);
+            return;
+        }
+
+        setLoading(true);
+        try {
+            // Simuler une recherche - en réalité, cela devrait être une API
+            // Pour l'instant, on redirige directement vers la messagerie
+            setUsers([]);
+        } catch (error) {
+            console.error('Erreur lors de la recherche:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         const debounceTimer = setTimeout(() => {
@@ -32,18 +51,12 @@ export default function UserSearch({ onClose, onConversationCreated }: UserSearc
         }, 300);
 
         return () => clearTimeout(debounceTimer);
-    }, [query, searchUsers]);
+    }, [query]);
 
-    const handleCreateConversation = async (userId: number) => {
+    const handleCreateConversation = (userId: number) => {
         setCreating(userId);
-        try {
-            const conversationId = await createConversation(userId, 'private');
-            onConversationCreated(conversationId);
-        } catch (error) {
-            console.error('Erreur lors de la création de la conversation:', error);
-        } finally {
-            setCreating(null);
-        }
+        // Rediriger directement vers la messagerie avec l'utilisateur sélectionné
+        router.visit(`/messagerie?selectedContactId=${userId}`);
     };
 
     const getInitials = (name: string) => {

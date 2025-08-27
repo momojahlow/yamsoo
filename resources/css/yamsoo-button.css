@@ -65,8 +65,8 @@
 }
 
 .relation-badge-indirect {
-  @apply bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border-blue-200;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+  @apply bg-gradient-to-r from-orange-100 to-red-100 text-orange-800 border-orange-200;
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.1);
 }
 
 .relation-badge-none {
@@ -137,7 +137,7 @@
 }
 
 .relation-path-step.intermediate {
-  @apply bg-blue-50 border-blue-200 text-blue-700 font-medium;
+  @apply bg-orange-50 border-orange-200 text-orange-700 font-medium;
 }
 
 .relation-path:hover .relation-path-step {
@@ -155,7 +155,7 @@
   .yamsoo-button {
     @apply text-xs px-2 py-1;
   }
-  
+
   .yamsoo-dialog .dialog-content {
     @apply mx-4 max-w-sm;
   }
@@ -167,16 +167,16 @@
     background: rgba(17, 24, 39, 0.95);
     @apply text-white;
   }
-  
+
   .yamsoo-info-card {
     @apply bg-gray-800/50;
   }
-  
+
   .relation-path-step {
     @apply bg-gray-800/50 border-gray-700;
   }
-  
+
   .relation-path-step.intermediate {
-    @apply bg-blue-900/50 border-blue-700 text-blue-300;
+    @apply bg-orange-900/50 border-orange-700 text-orange-300;
   }
 }
