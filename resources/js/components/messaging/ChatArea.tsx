@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { ArrowLeft, Phone, Video, MoreVertical, Paperclip, Smile, Send, File } from 'lucide-react';
+import { ArrowLeft, Phone, Video, MoreVertical, Paperclip, Smile, Send, File, Volume2, VolumeX } from 'lucide-react';
 import MessageBubble from './MessageBubble';
 import EmojiPicker from './EmojiPicker';
+import NotificationSettings from './NotificationSettings';
 import { useForm } from '@inertiajs/react';
 import { useNotificationSound } from '@/hooks/useNotificationSound';
 
@@ -56,13 +57,16 @@ interface ChatAreaProps {
     messages: Message[];
     user: User;
     onBack?: () => void;
+    onMessageSent?: (message: Message) => void;
+    notificationsEnabled?: boolean; // Préférence utilisateur pour les notifications
 }
 
-export default function ChatArea({ conversation, messages = [], user, onBack }: ChatAreaProps) {
+export default function ChatArea({ conversation, messages = [], user, onBack, onMessageSent, notificationsEnabled = true }: ChatAreaProps) {
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [replyTo, setReplyTo] = useState<Message | null>(null);
     const [realtimeMessages, setRealtimeMessages] = useState<Message[]>(messages);
+    const [showNotificationSettings, setShowNotificationSettings] = useState(false);
 
 
 
@@ -71,8 +75,12 @@ export default function ChatArea({ conversation, messages = [], user, onBack }: 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const audioRef = useRef<HTMLAudioElement>(null);
 
-    // Notifications audio
-    const { playNotification, playMessageSent } = useNotificationSound();
+    // Notifications audio avec préférences utilisateur (désactivées ici car gérées globalement)
+    const { playMessageSent } = useNotificationSound({
+        enabled: false, // Désactivé ici pour éviter les doublons avec le système global
+        volume: 0.7,
+        soundUrl: '/notifications/alert-sound.mp3'
+    });
 
     // Utiliser Inertia pour envoyer des messages
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -136,19 +144,10 @@ export default function ChatArea({ conversation, messages = [], user, onBack }: 
             return sortedMessages;
         });
 
-        // Jouer le son de notification si ce n'est pas notre message
-        if (newMessage.user.id !== user?.id) {
-            console.log('🔔 Notification audio');
-            playNotification();
-
-            // Jouer aussi le son via l'élément audio
-            if (audioRef.current) {
-                audioRef.current.play().catch((err) => {
-                    console.warn("Impossible de jouer le son audio:", err);
-                });
-            }
-        }
-    }, [playNotification, user?.id]);
+        // Les notifications sonores sont maintenant gérées globalement
+        // pour éviter les doublons entre les différents composants
+        console.log('📨 Message ajouté à la conversation active:', newMessage.user.name);
+    }, [user?.id]);
 
     // Utiliser le hook useEcho pour écouter les messages
 
@@ -290,6 +289,17 @@ export default function ChatArea({ conversation, messages = [], user, onBack }: 
                     <button className="p-2 text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors">
                         <Video className="w-5 h-5" />
                     </button>
+                    <button
+                        onClick={() => setShowNotificationSettings(true)}
+                        className={`p-2 transition-colors rounded-lg ${
+                            notificationsEnabled
+                                ? 'text-green-500 hover:text-green-600 hover:bg-green-50'
+                                : 'text-gray-400 hover:text-gray-500 hover:bg-gray-100'
+                        }`}
+                        title={notificationsEnabled ? 'Notifications activées' : 'Notifications désactivées'}
+                    >
+                        {notificationsEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+                    </button>
                     <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
                         <MoreVertical className="w-5 h-5" />
                     </button>
@@ -430,6 +440,18 @@ export default function ChatArea({ conversation, messages = [], user, onBack }: 
                         onEmojiSelect={handleEmojiSelect}
                         onClose={() => setShowEmojiPicker(false)}
                     />
+                )}
+
+                {/* Paramètres de notification */}
+                {showNotificationSettings && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <NotificationSettings
+                            conversation={conversation}
+                            user={user}
+                            notificationsEnabled={notificationsEnabled}
+                            onClose={() => setShowNotificationSettings(false)}
+                        />
+                    </div>
                 )}
 
                 {/* Élément audio caché pour les notifications */}

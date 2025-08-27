@@ -6,12 +6,14 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Conversation;
 use App\Models\Message;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class GroupController extends Controller
 {
+    use AuthorizesRequests;
     /**
      * Afficher la liste des groupes de l'utilisateur
      */
@@ -299,17 +301,13 @@ class GroupController extends Controller
      */
     public function update(Request $request, Conversation $group)
     {
-        $user = Auth::user();
-
-        // Vérifier que c'est un groupe et que l'utilisateur peut le modifier
+        // Vérifier que c'est un groupe
         if ($group->type !== 'group') {
             abort(404);
         }
 
-        $userParticipant = $group->participants()->where('user_id', $user->id)->first();
-        if (!$userParticipant || !in_array($userParticipant->pivot->role, ['admin', 'owner'])) {
-            abort(403, 'Vous n\'avez pas les permissions pour modifier ce groupe');
-        }
+        // Utiliser la policy pour vérifier les permissions
+        $this->authorize('updateSettings', $group);
 
         $request->validate([
             'name' => 'required|string|max:255',
@@ -321,7 +319,7 @@ class GroupController extends Controller
 
         // Enregistrer l'activité si le nom a changé
         if ($oldName !== $request->name) {
-            \App\Models\ConversationActivity::logNameChanged($group, $user, $oldName, $request->name);
+            \App\Models\ConversationActivity::logNameChanged($group->id, Auth::id(), $oldName, $request->name);
         }
 
         return back()->with('success', 'Groupe mis à jour avec succès');
@@ -332,17 +330,13 @@ class GroupController extends Controller
      */
     public function destroy(Conversation $group)
     {
-        $user = Auth::user();
-
-        // Vérifier que c'est un groupe et que l'utilisateur est propriétaire
+        // Vérifier que c'est un groupe
         if ($group->type !== 'group') {
             abort(404);
         }
 
-        $userParticipant = $group->participants()->where('user_id', $user->id)->first();
-        if (!$userParticipant || $userParticipant->pivot->role !== 'owner') {
-            abort(403, 'Seul le propriétaire peut supprimer le groupe');
-        }
+        // Utiliser la policy pour vérifier les permissions
+        $this->authorize('delete', $group);
 
         $groupName = $group->name;
         $group->delete();
@@ -355,17 +349,13 @@ class GroupController extends Controller
      */
     public function removeParticipant(Conversation $group, User $participant)
     {
-        $user = Auth::user();
-
-        // Vérifier que c'est un groupe et que l'utilisateur peut gérer
+        // Vérifier que c'est un groupe
         if ($group->type !== 'group') {
             abort(404);
         }
 
-        $userParticipant = $group->participants()->where('user_id', $user->id)->first();
-        if (!$userParticipant || !in_array($userParticipant->pivot->role, ['admin', 'owner'])) {
-            abort(403, 'Vous n\'avez pas les permissions pour retirer des membres');
-        }
+        // Utiliser la policy pour vérifier les permissions
+        $this->authorize('removeMembers', $group);
 
         // Ne pas permettre de retirer le propriétaire
         $participantData = $group->participants()->where('user_id', $participant->id)->first();
@@ -380,7 +370,7 @@ class GroupController extends Controller
         ]);
 
         // Enregistrer l'activité
-        \App\Models\ConversationActivity::log($group->id, $user->id, 'removed', [
+        \App\Models\ConversationActivity::log($group->id, Auth::id(), 'removed', [
             'removed_user_id' => $participant->id,
             'removed_user_name' => $participant->name,
         ]);
@@ -393,17 +383,13 @@ class GroupController extends Controller
      */
     public function updateParticipantRole(Request $request, Conversation $group, User $participant)
     {
-        $user = Auth::user();
-
-        // Vérifier que c'est un groupe et que l'utilisateur peut gérer
+        // Vérifier que c'est un groupe
         if ($group->type !== 'group') {
             abort(404);
         }
 
-        $userParticipant = $group->participants()->where('user_id', $user->id)->first();
-        if (!$userParticipant || !in_array($userParticipant->pivot->role, ['admin', 'owner'])) {
-            abort(403, 'Vous n\'avez pas les permissions pour modifier les rôles');
-        }
+        // Utiliser la policy pour vérifier les permissions
+        $this->authorize('manageRoles', $group);
 
         $request->validate([
             'role' => 'required|in:member,admin',
@@ -414,11 +400,6 @@ class GroupController extends Controller
             abort(404, 'Participant non trouvé');
         }
 
-        // Seul le propriétaire peut promouvoir/rétrograder les admins
-        if ($participantData->pivot->role === 'admin' && $userParticipant->pivot->role !== 'owner') {
-            abort(403, 'Seul le propriétaire peut modifier le rôle d\'un administrateur');
-        }
-
         $oldRole = $participantData->pivot->role;
         $newRole = $request->role;
 
@@ -427,7 +408,7 @@ class GroupController extends Controller
         ]);
 
         // Enregistrer l'activité
-        \App\Models\ConversationActivity::logRoleChanged($group->id, $participant->id, $oldRole, $newRole, $user->id);
+        \App\Models\ConversationActivity::logRoleChanged($group->id, $participant->id, $oldRole, $newRole, Auth::id());
 
         $action = $newRole === 'admin' ? 'promu administrateur' : 'rétrogradé membre';
         return back()->with('success', "{$participant->name} a été {$action}");

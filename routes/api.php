@@ -49,6 +49,10 @@ Route::middleware(['auth:sanctum'])->prefix('conversations')->group(function () 
     Route::patch('/{conversation}', [App\Http\Controllers\Api\ConversationController::class, 'update']);
     Route::post('/{conversation}/leave', [App\Http\Controllers\Api\ConversationController::class, 'leave']);
     Route::post('/{conversation}/read', [App\Http\Controllers\Api\ConversationController::class, 'markAsRead']);
+
+    // Préférences de notification
+    Route::get('/{conversation}/notification-settings', [App\Http\Controllers\SimpleMessagingController::class, 'getNotificationSettings']);
+    Route::patch('/{conversation}/notification-settings', [App\Http\Controllers\SimpleMessagingController::class, 'updateNotificationSettings']);
 });
 
 // Routes pour les réactions aux messages

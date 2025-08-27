@@ -229,6 +229,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('messagerie', [App\Http\Controllers\SimpleMessagingController::class, 'index'])->name('messages');
     Route::post('messagerie/send', [App\Http\Controllers\SimpleMessagingController::class, 'sendMessage'])->name('messages.send');
 
+    // Gestion des préférences de notification
+    Route::patch('conversations/{conversation}/notifications', [App\Http\Controllers\SimpleMessagingController::class, 'updateNotificationSettings'])->name('conversations.notifications');
+
 
 
     // Page de test pour diagnostiquer la messagerie
@@ -237,6 +240,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Test du chat temps réel
     Route::get('test-realtime-chat', [App\Http\Controllers\SimpleMessagingController::class, 'testRealtimeChat'])->name('test.realtime-chat');
+
+    // Test des notifications sonores
+    Route::get('test-notifications', function () {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        return \Inertia\Inertia::render('TestNotifications', [
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'avatar' => $user->profile?->avatar_url ?? null
+            ]
+        ]);
+    })->name('test.notifications');
 
     // Debug de la messagerie
     Route::get('debug-messaging', [App\Http\Controllers\DebugMessagingController::class, 'index'])->name('debug.messaging');

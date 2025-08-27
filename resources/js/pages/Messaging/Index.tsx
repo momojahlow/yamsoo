@@ -3,11 +3,13 @@ import { Head, router } from '@inertiajs/react';
 import { Search, Phone, Video, MoreVertical, Paperclip, Smile, Send, ArrowLeft, Settings, Plus, Users } from 'lucide-react';
 import { KwdDashboardLayout } from '@/Layouts/modern';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useGlobalNotifications } from '@/hooks/useGlobalNotifications';
 import ConversationList from '@/components/messaging/ConversationList';
 import ChatArea from '@/components/messaging/ChatArea';
 import UserSearch from '@/components/messaging/UserSearch';
 import MessageSearch from '@/components/messaging/MessageSearch';
 import MessageSettings from '@/components/messaging/MessageSettings';
+import NotificationSettings from '@/components/messaging/NotificationSettings';
 
 
 interface User {
@@ -47,16 +49,34 @@ interface MessagingProps {
     messages: Message[];
     targetUser?: User | null;
     user: User;
+    notificationsEnabled?: boolean;
+    newMessage?: {
+        id: number;
+        content: string;
+        user_id: number;
+        created_at: string;
+        user: User;
+    };
 }
 
-export default function Messaging({ conversations = [], selectedConversation: initialSelectedConversation, messages = [], targetUser, user }: MessagingProps) {
+export default function Messaging({ conversations = [], selectedConversation: initialSelectedConversation, messages = [], targetUser, user, notificationsEnabled = true, newMessage }: MessagingProps) {
     const { t } = useTranslation();
     const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(initialSelectedConversation || null);
+    const [currentMessages, setCurrentMessages] = useState<Message[]>(messages);
     const [showUserSearch, setShowUserSearch] = useState(false);
     const [showMessageSearch, setShowMessageSearch] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
+    const [showNotificationSettings, setShowNotificationSettings] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     const [showMobileChat, setShowMobileChat] = useState(false);
+
+    // Hook global pour les notifications sonores sur toutes les conversations
+    useGlobalNotifications({
+        currentUser: user,
+        conversations: conversations,
+        enabled: true, // Activé globalement, les préférences individuelles sont gérées par conversation
+        activeConversationId: selectedConversation?.id || null // Éviter les notifications pour la conversation active
+    });
 
     useEffect(() => {
         const checkMobile = () => {
@@ -110,6 +130,39 @@ export default function Messaging({ conversations = [], selectedConversation: in
         setShowMobileChat(false);
         setSelectedConversation(null);
     };
+
+    const handleMessageSent = (newMessage: Message) => {
+        setCurrentMessages(prevMessages => [...prevMessages, newMessage]);
+    };
+
+    // Mettre à jour les messages quand la conversation change
+    useEffect(() => {
+        setCurrentMessages(messages);
+    }, [messages, selectedConversation?.id]);
+
+    // Gérer l'ajout du nouveau message depuis la session
+    useEffect(() => {
+        if (newMessage && selectedConversation) {
+            const messageToAdd: Message = {
+                id: newMessage.id,
+                content: newMessage.content,
+                type: 'text',
+                created_at: newMessage.created_at,
+                is_edited: false,
+                user: newMessage.user,
+                reactions: []
+            };
+
+            // Vérifier si le message n'existe pas déjà
+            setCurrentMessages(prevMessages => {
+                const exists = prevMessages.some(msg => msg.id === newMessage.id);
+                if (!exists) {
+                    return [...prevMessages, messageToAdd];
+                }
+                return prevMessages;
+            });
+        }
+    }, [newMessage, selectedConversation?.id]);
 
     return (
         <KwdDashboardLayout title={t('messaging')}>
@@ -242,9 +295,11 @@ export default function Messaging({ conversations = [], selectedConversation: in
                     {selectedConversation ? (
                         <ChatArea
                             conversation={selectedConversation}
-                            messages={messages}
+                            messages={currentMessages}
                             user={user}
                             onBack={isMobile ? handleBackToList : undefined}
+                            onMessageSent={handleMessageSent}
+                            notificationsEnabled={notificationsEnabled}
                         />
                     ) : (
                         <div className="flex-1 flex items-center justify-center bg-gray-50">

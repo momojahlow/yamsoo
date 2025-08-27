@@ -8,6 +8,7 @@ use App\Models\Conversation;
 use App\Models\Message;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use App\Events\MessageSent;
 
@@ -107,13 +108,28 @@ class SimpleMessagingController extends Controller
             }
         }
 
+        // Récupérer les préférences de notification pour la conversation sélectionnée
+        $notificationsEnabled = true; // Par défaut
+        if ($selectedConversation && isset($selectedConversation['id'])) {
+            $participant = DB::table('conversation_participants')
+                ->where('conversation_id', $selectedConversation['id'])
+                ->where('user_id', $user->id)
+                ->first();
+
+            if ($participant) {
+                $notificationsEnabled = $participant->notifications_enabled ?? true;
+            }
+        }
+
         return Inertia::render('Messaging/Index', [
             'conversations' => $conversations->toArray(),
             'selectedConversation' => $selectedConversation,
             'messages' => $messages,
+            'notificationsEnabled' => $notificationsEnabled,
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
+                'avatar' => $user->profile?->avatar_url ?? null
             ]
         ]);
     }
@@ -157,10 +173,31 @@ class SimpleMessagingController extends Controller
 
         broadcast(new MessageSent($message, $user));
 
-        // Rediriger vers la même conversation
-        $otherUser = $conversation->participants->where('id', '!=', $user->id)->first();
-
-        return redirect("/simple-messaging?selectedContactId={$otherUser->id}");
+        // Toujours rediriger avec Inertia, mais préserver l'état avec des données
+        if ($conversation->type === 'group') {
+            // Pour un groupe, rediriger avec selectedGroupId
+            return redirect("/messagerie?selectedGroupId={$conversation->id}")
+                ->with('success', 'Message envoyé dans le groupe')
+                ->with('newMessage', [
+                    'id' => $message->id,
+                    'content' => $message->content,
+                    'user_id' => $message->user_id,
+                    'created_at' => $message->created_at,
+                    'user' => $user->only(['id', 'name', 'email']),
+                ]);
+        } else {
+            // Pour une conversation privée, rediriger avec selectedContactId
+            $otherUser = $conversation->participants->where('id', '!=', $user->id)->first();
+            return redirect("/messagerie?selectedContactId={$otherUser->id}")
+                ->with('success', 'Message envoyé')
+                ->with('newMessage', [
+                    'id' => $message->id,
+                    'content' => $message->content,
+                    'user_id' => $message->user_id,
+                    'created_at' => $message->created_at,
+                    'user' => $user->only(['id', 'name', 'email']),
+                ]);
+        }
     }
 
     private function findOrCreateConversation(User $user1, User $user2)
@@ -315,5 +352,54 @@ class SimpleMessagingController extends Controller
                     'reactions' => []
                 ];
             })->toArray();
+    }
+
+    /**
+     * Mettre à jour les préférences de notification pour une conversation
+     */
+    public function updateNotificationSettings(Request $request, Conversation $conversation)
+    {
+        $user = Auth::user();
+
+        $request->validate([
+            'notifications_enabled' => 'required|boolean'
+        ]);
+
+        // Vérifier que l'utilisateur est participant de la conversation
+        $participant = $conversation->participants()->where('user_id', $user->id)->first();
+
+        if (!$participant) {
+            abort(403, 'Vous n\'êtes pas participant de cette conversation');
+        }
+
+        // Mettre à jour les préférences de notification
+        $conversation->participants()->updateExistingPivot($user->id, [
+            'notifications_enabled' => $request->notifications_enabled
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Préférences de notification mises à jour',
+            'notifications_enabled' => $request->notifications_enabled
+        ]);
+    }
+
+    /**
+     * Récupérer les préférences de notification pour une conversation
+     */
+    public function getNotificationSettings(Conversation $conversation)
+    {
+        $user = Auth::user();
+
+        // Vérifier que l'utilisateur est participant de la conversation
+        $participant = $conversation->participants()->where('user_id', $user->id)->first();
+
+        if (!$participant) {
+            abort(403, 'Vous n\'êtes pas participant de cette conversation');
+        }
+
+        return response()->json([
+            'notifications_enabled' => $participant->pivot->notifications_enabled ?? true
+        ]);
     }
 }
