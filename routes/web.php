@@ -246,10 +246,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('simple-messaging/send', [App\Http\Controllers\SimpleMessagingController::class, 'sendMessage'])->name('simple.messaging.send');
 
     // Gestion des groupes
+    Route::get('groups', [App\Http\Controllers\GroupController::class, 'index'])->name('groups.index');
     Route::get('groups/create', [App\Http\Controllers\GroupController::class, 'create'])->name('groups.create');
     Route::post('groups', [App\Http\Controllers\GroupController::class, 'store'])->name('groups.store');
     Route::get('groups/{conversation}', [App\Http\Controllers\GroupController::class, 'show'])->name('groups.show');
+    Route::patch('groups/{conversation}', [App\Http\Controllers\GroupController::class, 'update'])->name('groups.update');
+    Route::delete('groups/{conversation}', [App\Http\Controllers\GroupController::class, 'destroy'])->name('groups.destroy');
     Route::post('groups/{conversation}/add-participant', [App\Http\Controllers\GroupController::class, 'addParticipant'])->name('groups.add-participant');
+    Route::delete('groups/{conversation}/participants/{user}', [App\Http\Controllers\GroupController::class, 'removeParticipant'])->name('groups.remove-participant');
+    Route::patch('groups/{conversation}/participants/{user}', [App\Http\Controllers\GroupController::class, 'updateParticipantRole'])->name('groups.update-participant-role');
+    Route::post('groups/{conversation}/leave-group', [App\Http\Controllers\GroupController::class, 'leaveGroup'])->name('groups.leave-group');
+    Route::post('groups/{conversation}/transfer-ownership', [App\Http\Controllers\GroupController::class, 'transferOwnership'])->name('groups.transfer-ownership');
     Route::post('groups/{conversation}/leave', [App\Http\Controllers\GroupController::class, 'leave'])->name('groups.leave');
 
     // Routes pour les notifications

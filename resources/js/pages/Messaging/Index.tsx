@@ -166,6 +166,30 @@ export default function Messaging({ conversations = [], selectedConversation: in
                             </div>
                         </div>
 
+                        {/* Navigation Messages / Groupes */}
+                        <div className="flex mb-4 bg-gray-100 rounded-lg p-1">
+                            <button
+                                onClick={() => router.get('/messagerie')}
+                                className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                                    route().current('messaging.index')
+                                        ? 'bg-white text-orange-600 shadow-sm'
+                                        : 'text-gray-600 hover:text-gray-900'
+                                }`}
+                            >
+                                💬 Messages
+                            </button>
+                            <button
+                                onClick={() => router.get('/groups')}
+                                className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                                    route().current('groups.*')
+                                        ? 'bg-white text-orange-600 shadow-sm'
+                                        : 'text-gray-600 hover:text-gray-900'
+                                }`}
+                            >
+                                👥 Groupes
+                            </button>
+                        </div>
+
                         {/* Barre de recherche */}
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />

@@ -13,6 +13,72 @@ use Inertia\Inertia;
 class GroupController extends Controller
 {
     /**
+     * Afficher la liste des groupes de l'utilisateur
+     */
+    public function index()
+    {
+        $user = Auth::user();
+
+        // Récupérer tous les groupes où l'utilisateur est participant actif
+        $groups = Conversation::where('type', 'group')
+            ->whereHas('participants', function ($query) use ($user) {
+                $query->where('conversation_participants.user_id', $user->id)
+                      ->where('conversation_participants.status', 'active');
+            })
+            ->with([
+                'participants' => function ($query) {
+                    $query->select('users.id', 'users.name', 'users.email')
+                          ->where('conversation_participants.status', 'active')
+                          ->orderByRaw("CASE WHEN conversation_participants.role = 'owner' THEN 1 WHEN conversation_participants.role = 'admin' THEN 2 ELSE 3 END")
+                          ->orderBy('conversation_participants.joined_at');
+                },
+                'participants.profile:user_id,avatar_url',
+                'lastMessage:id,content,created_at,user_id',
+                'lastMessage.user:id,name'
+            ])
+            ->orderBy('last_activity_at', 'desc')
+            ->get()
+            ->map(function ($group) use ($user) {
+                // Déterminer le rôle de l'utilisateur
+                $userParticipant = $group->participants->firstWhere('id', $user->id);
+                $userRole = $userParticipant?->pivot->role ?? 'member';
+
+                return [
+                    'id' => $group->id,
+                    'name' => $group->name,
+                    'description' => $group->description,
+                    'avatar' => $group->avatar,
+                    'type' => $group->type,
+                    'visibility' => $group->visibility,
+                    'max_participants' => $group->max_participants,
+                    'participants_count' => $group->participants->count(),
+                    'last_activity_at' => $group->last_activity_at,
+                    'participants' => $group->participants->map(function ($participant) {
+                        return [
+                            'id' => $participant->id,
+                            'name' => $participant->name,
+                            'email' => $participant->email,
+                            'avatar' => $participant->profile?->avatar_url,
+                            'pivot' => [
+                                'role' => $participant->pivot->role,
+                                'status' => $participant->pivot->status,
+                                'nickname' => $participant->pivot->nickname,
+                                'joined_at' => $participant->pivot->joined_at,
+                                'notifications_enabled' => $participant->pivot->notifications_enabled,
+                            ]
+                        ];
+                    }),
+                    'can_manage' => in_array($userRole, ['admin', 'owner']),
+                    'user_role' => $userRole,
+                ];
+            });
+
+        return Inertia::render('Groups/Index', [
+            'groups' => $groups
+        ]);
+    }
+
+    /**
      * Afficher la page de création de groupe
      */
     public function create()
@@ -69,19 +135,25 @@ class GroupController extends Controller
                 'last_message_at' => now(),
             ]);
 
-            // Ajouter le créateur comme admin
+            // Ajouter le créateur comme propriétaire (owner)
             $conversation->participants()->attach($user->id, [
                 'joined_at' => now(),
-                'is_admin' => true
+                'is_admin' => true, // Compatibilité
+                'role' => 'owner',
+                'status' => 'active',
+                'notifications_enabled' => true
             ]);
 
-            // Ajouter les autres participants
+            // Ajouter les autres participants comme membres simples
             $participantIds = collect($request->participants)
                 ->filter(fn($id) => $id != $user->id)
                 ->map(fn($id) => [
                     'user_id' => $id,
                     'joined_at' => now(),
-                    'is_admin' => false
+                    'is_admin' => false, // Compatibilité
+                    'role' => 'member',
+                    'status' => 'active',
+                    'notifications_enabled' => true
                 ])
                 ->toArray();
 
@@ -220,5 +292,240 @@ class GroupController extends Controller
         ]);
 
         return redirect('/messagerie')->with('success', 'Vous avez quitté le groupe');
+    }
+
+    /**
+     * Mettre à jour un groupe (nom, description)
+     */
+    public function update(Request $request, Conversation $group)
+    {
+        $user = Auth::user();
+
+        // Vérifier que c'est un groupe et que l'utilisateur peut le modifier
+        if ($group->type !== 'group') {
+            abort(404);
+        }
+
+        $userParticipant = $group->participants()->where('user_id', $user->id)->first();
+        if (!$userParticipant || !in_array($userParticipant->pivot->role, ['admin', 'owner'])) {
+            abort(403, 'Vous n\'avez pas les permissions pour modifier ce groupe');
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
+        ]);
+
+        $oldName = $group->name;
+        $group->update($request->only(['name', 'description']));
+
+        // Enregistrer l'activité si le nom a changé
+        if ($oldName !== $request->name) {
+            \App\Models\ConversationActivity::logNameChanged($group, $user, $oldName, $request->name);
+        }
+
+        return back()->with('success', 'Groupe mis à jour avec succès');
+    }
+
+    /**
+     * Supprimer un groupe
+     */
+    public function destroy(Conversation $group)
+    {
+        $user = Auth::user();
+
+        // Vérifier que c'est un groupe et que l'utilisateur est propriétaire
+        if ($group->type !== 'group') {
+            abort(404);
+        }
+
+        $userParticipant = $group->participants()->where('user_id', $user->id)->first();
+        if (!$userParticipant || $userParticipant->pivot->role !== 'owner') {
+            abort(403, 'Seul le propriétaire peut supprimer le groupe');
+        }
+
+        $groupName = $group->name;
+        $group->delete();
+
+        return redirect('/groups')->with('success', "Le groupe \"{$groupName}\" a été supprimé");
+    }
+
+    /**
+     * Retirer un participant du groupe
+     */
+    public function removeParticipant(Conversation $group, User $participant)
+    {
+        $user = Auth::user();
+
+        // Vérifier que c'est un groupe et que l'utilisateur peut gérer
+        if ($group->type !== 'group') {
+            abort(404);
+        }
+
+        $userParticipant = $group->participants()->where('user_id', $user->id)->first();
+        if (!$userParticipant || !in_array($userParticipant->pivot->role, ['admin', 'owner'])) {
+            abort(403, 'Vous n\'avez pas les permissions pour retirer des membres');
+        }
+
+        // Ne pas permettre de retirer le propriétaire
+        $participantData = $group->participants()->where('user_id', $participant->id)->first();
+        if ($participantData && $participantData->pivot->role === 'owner') {
+            abort(403, 'Impossible de retirer le propriétaire du groupe');
+        }
+
+        // Marquer comme parti au lieu de supprimer
+        $group->participants()->updateExistingPivot($participant->id, [
+            'status' => 'banned',
+            'left_at' => now(),
+        ]);
+
+        // Enregistrer l'activité
+        \App\Models\ConversationActivity::log($group->id, $user->id, 'removed', [
+            'removed_user_id' => $participant->id,
+            'removed_user_name' => $participant->name,
+        ]);
+
+        return back()->with('success', "{$participant->name} a été retiré du groupe");
+    }
+
+    /**
+     * Modifier le rôle d'un participant
+     */
+    public function updateParticipantRole(Request $request, Conversation $group, User $participant)
+    {
+        $user = Auth::user();
+
+        // Vérifier que c'est un groupe et que l'utilisateur peut gérer
+        if ($group->type !== 'group') {
+            abort(404);
+        }
+
+        $userParticipant = $group->participants()->where('user_id', $user->id)->first();
+        if (!$userParticipant || !in_array($userParticipant->pivot->role, ['admin', 'owner'])) {
+            abort(403, 'Vous n\'avez pas les permissions pour modifier les rôles');
+        }
+
+        $request->validate([
+            'role' => 'required|in:member,admin',
+        ]);
+
+        $participantData = $group->participants()->where('user_id', $participant->id)->first();
+        if (!$participantData) {
+            abort(404, 'Participant non trouvé');
+        }
+
+        // Seul le propriétaire peut promouvoir/rétrograder les admins
+        if ($participantData->pivot->role === 'admin' && $userParticipant->pivot->role !== 'owner') {
+            abort(403, 'Seul le propriétaire peut modifier le rôle d\'un administrateur');
+        }
+
+        $oldRole = $participantData->pivot->role;
+        $newRole = $request->role;
+
+        $group->participants()->updateExistingPivot($participant->id, [
+            'role' => $newRole,
+        ]);
+
+        // Enregistrer l'activité
+        \App\Models\ConversationActivity::logRoleChanged($group->id, $participant->id, $oldRole, $newRole, $user->id);
+
+        $action = $newRole === 'admin' ? 'promu administrateur' : 'rétrogradé membre';
+        return back()->with('success', "{$participant->name} a été {$action}");
+    }
+
+    /**
+     * Permettre à un utilisateur de quitter un groupe
+     */
+    public function leaveGroup(Conversation $group)
+    {
+        $user = Auth::user();
+
+        // Vérifier que c'est un groupe
+        if ($group->type !== 'group') {
+            abort(404);
+        }
+
+        $userParticipant = $group->participants()->where('user_id', $user->id)->first();
+        if (!$userParticipant) {
+            abort(404, 'Vous ne faites pas partie de ce groupe');
+        }
+
+        // Le propriétaire ne peut pas quitter son propre groupe, il doit le supprimer
+        if ($userParticipant->pivot->role === 'owner') {
+            return back()->with('error', 'En tant que propriétaire, vous ne pouvez pas quitter le groupe. Vous devez le supprimer ou transférer la propriété.');
+        }
+
+        // Marquer comme parti
+        $group->participants()->updateExistingPivot($user->id, [
+            'status' => 'left',
+            'left_at' => now(),
+        ]);
+
+        // Enregistrer l'activité
+        \App\Models\ConversationActivity::logLeft($group->id, $user->id);
+
+        // Message système
+        \App\Models\Message::create([
+            'conversation_id' => $group->id,
+            'user_id' => $user->id,
+            'content' => "{$user->name} a quitté le groupe",
+            'type' => 'system',
+        ]);
+
+        return redirect('/groups')->with('success', "Vous avez quitté le groupe \"{$group->name}\"");
+    }
+
+    /**
+     * Transférer la propriété d'un groupe (pour permettre au propriétaire de quitter)
+     */
+    public function transferOwnership(Request $request, Conversation $group)
+    {
+        $user = Auth::user();
+
+        // Vérifier que c'est un groupe et que l'utilisateur est propriétaire
+        if ($group->type !== 'group') {
+            abort(404);
+        }
+
+        $userParticipant = $group->participants()->where('user_id', $user->id)->first();
+        if (!$userParticipant || $userParticipant->pivot->role !== 'owner') {
+            abort(403, 'Seul le propriétaire peut transférer la propriété');
+        }
+
+        $request->validate([
+            'new_owner_id' => 'required|exists:users,id',
+        ]);
+
+        $newOwner = $group->participants()->where('user_id', $request->new_owner_id)->first();
+        if (!$newOwner) {
+            return back()->with('error', 'Le nouvel propriétaire doit être membre du groupe');
+        }
+
+        DB::beginTransaction();
+        try {
+            // Transférer la propriété
+            $group->participants()->updateExistingPivot($request->new_owner_id, [
+                'role' => 'owner',
+                'is_admin' => true,
+            ]);
+
+            // Rétrograder l'ancien propriétaire en membre
+            $group->participants()->updateExistingPivot($user->id, [
+                'role' => 'member',
+                'is_admin' => false,
+            ]);
+
+            // Enregistrer l'activité
+            \App\Models\ConversationActivity::log($group->id, $user->id, 'ownership_transferred', [
+                'new_owner_id' => $request->new_owner_id,
+                'new_owner_name' => $newOwner->name,
+            ]);
+
+            DB::commit();
+            return back()->with('success', "La propriété du groupe a été transférée à {$newOwner->name}");
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->with('error', 'Erreur lors du transfert de propriété');
+        }
     }
 }
