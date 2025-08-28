@@ -3,6 +3,7 @@
 use App\Http\Middleware\ErrorHandlingMiddleware;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\InjectMessengerData;
 use App\Http\Middleware\SetLocale;
 use App\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Foundation\Application;
@@ -32,6 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
             SetLocale::class,
             HandleAppearance::class,
             HandleInertiaRequests::class,
+            InjectMessengerData::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
 

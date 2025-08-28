@@ -14,6 +14,7 @@ class ConversationPolicy
     {
         return $conversation->participants()->where('user_id', $user->id)
             ->where('status', 'active')
+            ->whereNull('left_at')
             ->exists();
     }
 
@@ -33,6 +34,7 @@ class ConversationPolicy
         $participant = $conversation->participants()
             ->where('user_id', $user->id)
             ->where('status', 'active')
+            ->whereNull('left_at')
             ->first();
 
         return $participant && in_array($participant->pivot->role, ['admin', 'owner']);
@@ -46,6 +48,7 @@ class ConversationPolicy
         $participant = $conversation->participants()
             ->where('user_id', $user->id)
             ->where('status', 'active')
+            ->whereNull('left_at')
             ->first();
 
         return $participant && $participant->pivot->role === 'owner';
@@ -75,6 +78,7 @@ class ConversationPolicy
         $participant = $conversation->participants()
             ->where('user_id', $user->id)
             ->where('status', 'active')
+            ->whereNull('left_at')
             ->first();
 
         // Seul le propriétaire peut gérer les rôles
@@ -89,6 +93,7 @@ class ConversationPolicy
         $participant = $conversation->participants()
             ->where('user_id', $user->id)
             ->where('status', 'active')
+            ->whereNull('left_at')
             ->first();
 
         // Le propriétaire ne peut pas quitter, il doit transférer la propriété ou supprimer

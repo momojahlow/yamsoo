@@ -173,6 +173,17 @@ class SimpleMessagingController extends Controller
 
         broadcast(new MessageSent($message, $user));
 
+        // Envoyer des notifications aux autres participants
+        $otherParticipants = $conversation->participants()
+            ->where('user_id', '!=', $user->id)
+            ->where('conversation_participants.status', 'active')
+            ->where('conversation_participants.notifications_enabled', true)
+            ->get();
+
+        foreach ($otherParticipants as $participant) {
+            $participant->notify(new \App\Notifications\NewMessageNotification($message, $user));
+        }
+
         // Toujours rediriger avec Inertia, mais préserver l'état avec des données
         if ($conversation->type === 'group') {
             // Pour un groupe, rediriger avec selectedGroupId
@@ -400,6 +411,120 @@ class SimpleMessagingController extends Controller
 
         return response()->json([
             'notifications_enabled' => $participant->pivot->notifications_enabled ?? true
+        ]);
+    }
+
+    /**
+     * API pour récupérer les conversations avec compteurs de messages non lus
+     * Optimisée pour le dropdown Messenger
+     */
+    public function getConversationsSummary()
+    {
+        $user = Auth::user();
+
+        // Requête optimisée avec jointures pour éviter le problème N+1
+        $conversations = DB::table('conversations as c')
+            ->join('conversation_participants as cp', 'c.id', '=', 'cp.conversation_id')
+            ->leftJoin('messages as m', function ($join) {
+                $join->on('c.id', '=', 'm.conversation_id')
+                     ->whereRaw('m.id = (SELECT MAX(id) FROM messages WHERE conversation_id = c.id)');
+            })
+            ->leftJoin('users as msg_user', 'm.user_id', '=', 'msg_user.id')
+            ->leftJoin('profiles as msg_profile', 'msg_user.id', '=', 'msg_profile.user_id')
+            ->where('cp.user_id', $user->id)
+            ->where('cp.status', 'active')
+            ->select([
+                'c.id',
+                'c.name',
+                'c.type',
+                'c.updated_at',
+                'm.content as last_message_content',
+                'm.created_at as last_message_time',
+                'm.user_id as last_message_user_id',
+                'msg_user.name as last_message_user_name'
+            ])
+            ->orderBy('c.updated_at', 'desc')
+            ->limit(20)
+            ->get();
+
+        // Traiter les conversations et calculer les messages non lus
+        $conversationsSummary = collect();
+        $totalUnreadCount = 0;
+
+        foreach ($conversations as $conv) {
+            // Calculer le nombre de messages non lus pour cette conversation
+            $unreadCount = DB::table('messages')
+                ->where('conversation_id', $conv->id)
+                ->where('user_id', '!=', $user->id)
+                ->whereNotExists(function ($query) use ($user, $conv) {
+                    $query->select(DB::raw(1))
+                          ->from('message_reads')
+                          ->whereColumn('message_reads.message_id', 'messages.id')
+                          ->where('message_reads.user_id', $user->id);
+                })
+                ->count();
+
+            // Récupérer l'autre participant pour les conversations privées
+            $otherParticipant = null;
+            if ($conv->type === 'private') {
+                $otherParticipant = DB::table('users')
+                    ->join('conversation_participants', 'users.id', '=', 'conversation_participants.user_id')
+                    ->leftJoin('profiles', 'users.id', '=', 'profiles.user_id')
+                    ->where('conversation_participants.conversation_id', $conv->id)
+                    ->where('users.id', '!=', $user->id)
+                    ->select('users.id', 'users.name', 'profiles.avatar_url', 'users.is_online')
+                    ->first();
+            }
+
+            // Préparer les données du dernier message
+            $lastMessage = null;
+            if ($conv->last_message_content) {
+                $lastMessage = [
+                    'content' => $conv->last_message_content,
+                    'created_at' => $conv->last_message_time,
+                    'user_name' => $conv->last_message_user_name,
+                    'is_own' => $conv->last_message_user_id === $user->id
+                ];
+            }
+
+            $conversationData = [
+                'id' => $conv->id,
+                'name' => $conv->type === 'private'
+                    ? ($otherParticipant ? $otherParticipant->name : 'Conversation privée')
+                    : $conv->name,
+                'type' => $conv->type,
+                'avatar' => $conv->type === 'private'
+                    ? ($otherParticipant->avatar_url ?? null)
+                    : null,
+                'last_message' => $lastMessage,
+                'unread_count' => $unreadCount,
+                'is_online' => $conv->type === 'private'
+                    ? ($otherParticipant->is_online ?? false)
+                    : null,
+                'participants_count' => $conv->type === 'group'
+                    ? DB::table('conversation_participants')->where('conversation_id', $conv->id)->count()
+                    : null,
+                'other_participant' => $conv->type === 'private' && $otherParticipant
+                    ? [
+                        'id' => $otherParticipant->id,
+                        'name' => $otherParticipant->name,
+                        'avatar' => $otherParticipant->avatar_url ?? null
+                    ]
+                    : null
+            ];
+
+            $conversationsSummary->push($conversationData);
+            $totalUnreadCount += $unreadCount;
+        }
+
+        return response()->json([
+            'conversations' => $conversationsSummary->values(), // Réindexer la collection
+            'total_unread_count' => $totalUnreadCount,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'avatar' => $user->profile?->avatar_url ?? null
+            ]
         ]);
     }
 }

@@ -2,7 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\MessagingController;
+use App\Http\Controllers\SimpleMessagingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -55,6 +55,11 @@ Route::middleware(['auth:sanctum'])->prefix('conversations')->group(function () 
     Route::patch('/{conversation}/notification-settings', [App\Http\Controllers\SimpleMessagingController::class, 'updateNotificationSettings']);
 });
 
+// API pour le dropdown Messenger
+Route::middleware('auth')->group(function () {
+    Route::get('/messenger/conversations-summary', [App\Http\Controllers\SimpleMessagingController::class, 'getConversationsSummary']);
+});
+
 // Routes pour les réactions aux messages
 Route::middleware(['auth:sanctum'])->prefix('messages')->group(function () {
     Route::post('/{message}/reactions', [App\Http\Controllers\Api\MessageReactionController::class, 'toggle']);
@@ -69,9 +74,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
 // Anciennes routes pour compatibilité
 Route::middleware(['auth:sanctum'])->group(function () {
     // Groupes familiaux (compatibilité)
-    Route::post('/conversations/family-group', [MessagingController::class, 'createFamilyGroup']);
-    Route::get('/conversations/family-suggestions', [MessagingController::class, 'getFamilySuggestions']);
+    Route::post('/conversations/family-group', [SimpleMessagingController::class, 'createFamilyGroup']);
+    Route::get('/conversations/family-suggestions', [SimpleMessagingController::class, 'getFamilySuggestions']);
 
     // Recherche d'utilisateurs
-    Route::get('/users/search', [MessagingController::class, 'searchUsers']);
+    Route::get('/users/search', [SimpleMessagingController::class, 'searchUsers']);
 });

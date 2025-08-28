@@ -38,6 +38,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import SimpleMessengerIcon from '@/components/messaging/SimpleMessengerIcon';
 
 interface DynamicBadges {
   notifications: number;
@@ -70,11 +71,15 @@ interface PageProps {
   auth: {
     user: User;
   };
+  messengerData?: {
+    conversations: any[];
+    totalUnreadCount: number;
+  };
 }
 
 const KwdDashboardLayout: React.FC<Props> = ({ children, title = 'Dashboard', badges }) => {
   const { t, isRTL } = useTranslation();
-  const { auth } = usePage<PageProps>().props;
+  const { auth, messengerData } = usePage<PageProps>().props;
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarHovered, setSidebarHovered] = useState(false);
@@ -354,6 +359,18 @@ const KwdDashboardLayout: React.FC<Props> = ({ children, title = 'Dashboard', ba
               >
                 {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               </Button>
+
+              {/* Messenger Dropdown */}
+              <SimpleMessengerIcon
+                currentUser={{
+                  id: auth?.user?.id || 0,
+                  name: auth?.user?.name || '',
+                  avatar: auth?.user?.profile?.avatar_url || undefined
+                }}
+                conversations={messengerData?.conversations || []}
+                totalUnreadCount={messengerData?.totalUnreadCount || 0}
+                className="mr-2"
+              />
 
               {/* Notifications */}
               <Link

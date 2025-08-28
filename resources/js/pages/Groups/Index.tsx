@@ -32,6 +32,12 @@ interface Group {
     last_activity_at?: string;
     participants: GroupParticipant[];
     can_manage: boolean;
+    can_delete: boolean;
+    can_add_members: boolean;
+    can_remove_members: boolean;
+    can_manage_roles: boolean;
+    can_leave: boolean;
+    can_update_settings: boolean;
     user_role: 'member' | 'admin' | 'owner';
 }
 
@@ -95,7 +101,7 @@ export default function GroupsIndex({ groups, auth }: Props) {
         }
 
         if (confirm(`Êtes-vous sûr de vouloir quitter le groupe "${group.name}" ?`)) {
-            router.post(`/groups/${group.id}/leave-group`, {}, {
+            router.post(`/groups/${group.id}/leave`, {}, {
                 onSuccess: () => {
                     setSelectedGroup(null);
                     setShowManageModal(false);
@@ -231,16 +237,16 @@ export default function GroupsIndex({ groups, auth }: Props) {
                                             )}
                                         </div>
 
-                                        {group.description && (
+                                        {/* {group.description && (
                                             <p className="mt-3 text-gray-600 text-sm">{group.description}</p>
-                                        )}
+                                        )} */}
                                     </div>
 
                                     {/* Actions */}
                                     <div className="p-4 bg-gray-50">
                                         <div className="flex items-center space-x-2">
                                             <button
-                                                onClick={() => router.get(`/messagerie?conversation=${group.id}`)}
+                                                onClick={() => router.get(`/messagerie?selectedGroupId=${group.id}`)}
                                                 className="flex-1 px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 transition-colors"
                                             >
                                                 💬 Ouvrir
@@ -258,8 +264,8 @@ export default function GroupsIndex({ groups, auth }: Props) {
                                                 </button>
                                             )}
 
-                                            {/* Bouton Quitter (sauf pour le propriétaire) */}
-                                            {group.user_role !== 'owner' && (
+                                            {/* Bouton Quitter */}
+                                            {group.can_leave && (
                                                 <button
                                                     onClick={() => handleLeaveGroup(group)}
                                                     className="px-4 py-2 bg-red-100 text-red-700 text-sm font-medium rounded-lg hover:bg-red-200 transition-colors"
@@ -377,7 +383,7 @@ export default function GroupsIndex({ groups, auth }: Props) {
                                     <h3 className="text-sm font-medium text-gray-700">
                                         Membres
                                     </h3>
-                                    {selectedGroup.can_manage && (
+                                    {selectedGroup.can_add_members && (
                                         <button
                                             onClick={() => router.get(`/groups/${selectedGroup.id}/invite`)}
                                             className="inline-flex items-center px-3 py-1.5 bg-orange-500 text-white text-xs font-medium rounded-md hover:bg-orange-600 transition-colors"
@@ -419,9 +425,9 @@ export default function GroupsIndex({ groups, auth }: Props) {
                                                 </div>
                                             </div>
 
-                                            {selectedGroup.can_manage && participant.id !== auth.user.id && participant.pivot.role !== 'owner' && (
+                                            {participant.id !== auth.user.id && participant.pivot.role !== 'owner' && (
                                                 <div className="flex items-center space-x-1">
-                                                    {participant.pivot.role === 'member' && (
+                                                    {selectedGroup.can_manage_roles && participant.pivot.role === 'member' && (
                                                         <button
                                                             onClick={() => handlePromoteParticipant(selectedGroup, participant)}
                                                             className="p-1.5 text-blue-500 hover:text-blue-600 hover:bg-blue-50 rounded"
@@ -430,7 +436,7 @@ export default function GroupsIndex({ groups, auth }: Props) {
                                                             <Shield className="w-4 h-4" />
                                                         </button>
                                                     )}
-                                                    {participant.pivot.role === 'admin' && selectedGroup.user_role === 'owner' && (
+                                                    {selectedGroup.can_manage_roles && participant.pivot.role === 'admin' && (
                                                         <button
                                                             onClick={() => handlePromoteParticipant(selectedGroup, participant)}
                                                             className="p-1.5 text-gray-500 hover:text-gray-600 hover:bg-gray-100 rounded"
@@ -439,13 +445,15 @@ export default function GroupsIndex({ groups, auth }: Props) {
                                                             <UserMinus className="w-4 h-4" />
                                                         </button>
                                                     )}
-                                                    <button
-                                                        onClick={() => handleRemoveParticipant(selectedGroup, participant)}
-                                                        className="p-1.5 text-red-500 hover:text-red-600 hover:bg-red-50 rounded"
-                                                        title="Retirer du groupe"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
+                                                    {selectedGroup.can_remove_members && (
+                                                        <button
+                                                            onClick={() => handleRemoveParticipant(selectedGroup, participant)}
+                                                            className="p-1.5 text-red-500 hover:text-red-600 hover:bg-red-50 rounded"
+                                                            title="Retirer du groupe"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
@@ -455,34 +463,32 @@ export default function GroupsIndex({ groups, auth }: Props) {
 
                             {/* Actions du groupe */}
                             <div className="pt-6 border-t border-gray-200">
-                                {selectedGroup.user_role === 'owner' ? (
-                                    <>
-                                        <h3 className="text-sm font-medium text-gray-700 mb-4">Actions du propriétaire</h3>
-                                        <div className="flex space-x-3">
-                                            <button
-                                                onClick={() => router.get(`/groups/${selectedGroup.id}/settings`)}
-                                                className="flex-1 inline-flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
-                                            >
-                                                <Settings className="w-4 h-4 mr-2" />
-                                                Paramètres
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeleteGroup(selectedGroup)}
-                                                className="flex-1 inline-flex items-center justify-center px-4 py-2 bg-red-100 text-red-700 text-sm font-medium rounded-lg hover:bg-red-200 transition-colors"
-                                            >
-                                                <Trash2 className="w-4 h-4 mr-2" />
-                                                Supprimer le groupe
-                                            </button>
-                                        </div>
-                                        <div className="mt-3">
-                                            <p className="text-xs text-gray-500">
-                                                💡 En tant que propriétaire, vous ne pouvez pas quitter le groupe. Vous devez le supprimer ou transférer la propriété.
-                                            </p>
-                                        </div>
-                                    </>
-                                ) : (
-                                    <>
-                                        <h3 className="text-sm font-medium text-gray-700 mb-4">Actions</h3>
+                                <h3 className="text-sm font-medium text-gray-700 mb-4">Actions</h3>
+                                <div className="space-y-3">
+                                    {/* Boutons pour tous les membres autorisés */}
+                                    {selectedGroup.can_update_settings && (
+                                        <button
+                                            onClick={() => router.get(`/groups/${selectedGroup.id}/settings`)}
+                                            className="w-full inline-flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                                        >
+                                            <Settings className="w-4 h-4 mr-2" />
+                                            Paramètres
+                                        </button>
+                                    )}
+
+                                    {/* Bouton supprimer pour le propriétaire */}
+                                    {selectedGroup.can_delete && (
+                                        <button
+                                            onClick={() => handleDeleteGroup(selectedGroup)}
+                                            className="w-full inline-flex items-center justify-center px-4 py-2 bg-red-100 text-red-700 text-sm font-medium rounded-lg hover:bg-red-200 transition-colors"
+                                        >
+                                            <Trash2 className="w-4 h-4 mr-2" />
+                                            Supprimer le groupe
+                                        </button>
+                                    )}
+
+                                    {/* Bouton quitter pour les non-propriétaires */}
+                                    {selectedGroup.can_leave && (
                                         <button
                                             onClick={() => handleLeaveGroup(selectedGroup)}
                                             className="w-full inline-flex items-center justify-center px-4 py-2 bg-red-100 text-red-700 text-sm font-medium rounded-lg hover:bg-red-200 transition-colors"
@@ -490,11 +496,21 @@ export default function GroupsIndex({ groups, auth }: Props) {
                                             <Trash2 className="w-4 h-4 mr-2" />
                                             Quitter le groupe
                                         </button>
-                                        <p className="text-xs text-gray-500 mt-2">
+                                    )}
+
+                                    {/* Message d'information */}
+                                    {!selectedGroup.can_leave && selectedGroup.user_role === 'owner' && (
+                                        <p className="text-xs text-gray-500 p-3 bg-yellow-50 rounded-lg">
+                                            💡 En tant que propriétaire, vous ne pouvez pas quitter le groupe. Vous devez le supprimer ou transférer la propriété.
+                                        </p>
+                                    )}
+
+                                    {selectedGroup.can_leave && (
+                                        <p className="text-xs text-gray-500">
                                             ⚠️ Vous ne pourrez plus voir les messages de ce groupe après l'avoir quitté.
                                         </p>
-                                    </>
-                                )}
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>

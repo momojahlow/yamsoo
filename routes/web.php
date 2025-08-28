@@ -17,6 +17,7 @@ use App\Http\Controllers\LanguageController;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Artisan;
 use Inertia\Inertia;
 
@@ -253,6 +254,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
     })->name('test.notifications');
 
+    // Test du système Messenger
+    Route::get('test-messenger', function () {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        return \Inertia\Inertia::render('TestMessenger', [
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'avatar' => $user->profile?->avatar_url ?? null
+            ]
+        ]);
+    })->name('test.messenger');
+
     // Debug de la messagerie
     Route::get('debug-messaging', [App\Http\Controllers\DebugMessagingController::class, 'index'])->name('debug.messaging');
 
@@ -265,14 +278,187 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('groups/create', [App\Http\Controllers\GroupController::class, 'create'])->name('groups.create');
     Route::post('groups', [App\Http\Controllers\GroupController::class, 'store'])->name('groups.store');
     Route::get('groups/{conversation}', [App\Http\Controllers\GroupController::class, 'show'])->name('groups.show');
+    Route::get('groups/{conversation}/settings', [App\Http\Controllers\GroupController::class, 'settings'])->name('groups.settings');
+    Route::get('groups/{conversation}/invite', [App\Http\Controllers\GroupController::class, 'invite'])->name('groups.invite');
     Route::patch('groups/{conversation}', [App\Http\Controllers\GroupController::class, 'update'])->name('groups.update');
     Route::delete('groups/{conversation}', [App\Http\Controllers\GroupController::class, 'destroy'])->name('groups.destroy');
     Route::post('groups/{conversation}/add-participant', [App\Http\Controllers\GroupController::class, 'addParticipant'])->name('groups.add-participant');
     Route::delete('groups/{conversation}/participants/{user}', [App\Http\Controllers\GroupController::class, 'removeParticipant'])->name('groups.remove-participant');
     Route::patch('groups/{conversation}/participants/{user}', [App\Http\Controllers\GroupController::class, 'updateParticipantRole'])->name('groups.update-participant-role');
-    Route::post('groups/{conversation}/leave-group', [App\Http\Controllers\GroupController::class, 'leaveGroup'])->name('groups.leave-group');
-    Route::post('groups/{conversation}/transfer-ownership', [App\Http\Controllers\GroupController::class, 'transferOwnership'])->name('groups.transfer-ownership');
     Route::post('groups/{conversation}/leave', [App\Http\Controllers\GroupController::class, 'leave'])->name('groups.leave');
+    Route::post('groups/{conversation}/transfer-ownership', [App\Http\Controllers\GroupController::class, 'transferOwnership'])->name('groups.transfer-ownership');
+
+    // Route de test pour diagnostiquer les problèmes de mise à jour
+    Route::get('test-group-update/{id}', function($id) {
+        $group = \App\Models\Conversation::find($id);
+        if (!$group) {
+            return response()->json(['error' => 'Groupe non trouvé', 'id' => $id], 404);
+        }
+
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['error' => 'Utilisateur non connecté'], 401);
+        }
+
+        $canUpdate = Gate::allows('updateSettings', $group);
+        $userParticipant = $group->participants->firstWhere('id', $user->id);
+
+        return response()->json([
+            'group_exists' => true,
+            'group_id' => $group->id,
+            'group_name' => $group->name,
+            'group_type' => $group->type,
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'user_is_participant' => $userParticipant ? true : false,
+            'user_role' => $userParticipant ? $userParticipant->pivot->role : null,
+            'user_status' => $userParticipant ? $userParticipant->pivot->status : null,
+            'user_left_at' => $userParticipant ? $userParticipant->pivot->left_at : null,
+            'can_update' => $canUpdate,
+            'update_url' => "/groups/{$group->id}",
+            'participants' => $group->participants->map(function($p) {
+                return [
+                    'id' => $p->id,
+                    'name' => $p->name,
+                    'role' => $p->pivot->role,
+                    'status' => $p->pivot->status,
+                    'left_at' => $p->pivot->left_at
+                ];
+            })
+        ]);
+    });
+
+    // Route pour tester quels groupes un utilisateur peut voir
+    Route::get('test-user-groups/{userId?}', function($userId = null) {
+        $userId = $userId ?? Auth::id();
+        $user = \App\Models\User::find($userId);
+
+        if (!$user) {
+            return response()->json(['error' => 'Utilisateur non trouvé', 'user_id' => $userId], 404);
+        }
+
+        // Tous les groupes
+        $allGroups = \App\Models\Conversation::where('type', 'group')->get(['id', 'name']);
+
+        // Groupes où l'utilisateur est participant actif
+        $userGroups = \App\Models\Conversation::where('type', 'group')
+            ->whereHas('participants', function ($query) use ($user) {
+                $query->where('conversation_participants.user_id', $user->id)
+                      ->where('conversation_participants.status', 'active')
+                      ->whereNull('conversation_participants.left_at');
+            })
+            ->get(['id', 'name']);
+
+        return response()->json([
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email
+            ],
+            'all_groups' => $allGroups,
+            'user_groups' => $userGroups,
+            'should_see_count' => $userGroups->count(),
+            'total_groups_count' => $allGroups->count()
+        ]);
+    });
+
+    // Route pour tester la suppression d'un participant
+    Route::get('test-remove-participant/{groupId}/{userId}', function($groupId, $userId) {
+        $group = \App\Models\Conversation::find($groupId);
+        $user = \App\Models\User::find($userId);
+        $currentUser = Auth::user();
+
+        if (!$group) {
+            return response()->json(['error' => 'Groupe non trouvé', 'group_id' => $groupId], 404);
+        }
+
+        if (!$user) {
+            return response()->json(['error' => 'Utilisateur non trouvé', 'user_id' => $userId], 404);
+        }
+
+        if (!$currentUser) {
+            return response()->json(['error' => 'Utilisateur non connecté'], 401);
+        }
+
+        // Vérifier si l'utilisateur cible est participant
+        $participant = $group->participants()->where('user_id', $user->id)->first();
+
+        // Vérifier les permissions de l'utilisateur connecté
+        $currentUserParticipant = $group->participants()->where('user_id', $currentUser->id)->first();
+        $canRemove = Gate::allows('removeMembers', $group);
+
+        return response()->json([
+            'group' => [
+                'id' => $group->id,
+                'name' => $group->name,
+                'type' => $group->type
+            ],
+            'target_user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'is_participant' => $participant ? true : false,
+                'role' => $participant ? $participant->pivot->role : null,
+                'status' => $participant ? $participant->pivot->status : null,
+                'left_at' => $participant ? $participant->pivot->left_at : null
+            ],
+            'current_user' => [
+                'id' => $currentUser->id,
+                'name' => $currentUser->name,
+                'is_participant' => $currentUserParticipant ? true : false,
+                'role' => $currentUserParticipant ? $currentUserParticipant->pivot->role : null,
+                'can_remove_members' => $canRemove
+            ],
+            'remove_url' => "/groups/{$groupId}/participants/{$userId}",
+            'method' => 'DELETE'
+        ]);
+    });
+
+    // Route pour créer rapidement l'utilisateur ID 18 et l'ajouter au groupe 1
+    Route::get('fix-user-18', function() {
+        // Créer ou récupérer l'utilisateur ID 18
+        $user = \App\Models\User::firstOrCreate(
+            ['email' => 'bob.martin@example.com'],
+            [
+                'name' => 'Bob Martin',
+                'password' => bcrypt('password'),
+                'email_verified_at' => now()
+            ]
+        );
+
+        // Récupérer le groupe ID 1
+        $group = \App\Models\Conversation::find(1);
+        if (!$group) {
+            return response()->json(['error' => 'Groupe ID 1 non trouvé'], 404);
+        }
+
+        // Ajouter l'utilisateur au groupe s'il n'y est pas déjà
+        $isParticipant = $group->participants()->where('user_id', $user->id)->exists();
+
+        if (!$isParticipant) {
+            $group->participants()->attach($user->id, [
+                'role' => 'member',
+                'status' => 'active',
+                'notifications_enabled' => true,
+                'joined_at' => now()
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email
+            ],
+            'group' => [
+                'id' => $group->id,
+                'name' => $group->name
+            ],
+            'was_participant' => $isParticipant,
+            'message' => $isParticipant ? 'Utilisateur déjà participant' : 'Utilisateur ajouté au groupe',
+            'test_url' => "http://yamsoo.test/test-remove-participant/1/{$user->id}"
+        ]);
+    });
 
     // Routes pour les notifications
     Route::get('notifications', [NotificationController::class, 'index'])->name('notifications');
