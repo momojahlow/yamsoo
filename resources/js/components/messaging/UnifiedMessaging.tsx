@@ -62,7 +62,7 @@ export default function UnifiedMessaging({ currentUser, initialConversations = [
     const [loading, setLoading] = useState(false);
     const [sending, setSending] = useState(false);
     const [showMobileChat, setShowMobileChat] = useState(false);
-    
+
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -78,8 +78,19 @@ export default function UnifiedMessaging({ currentUser, initialConversations = [
 
     const loadConversations = async () => {
         try {
-            const response = await axios.get('/api/conversations');
-            setConversations(response.data.conversations);
+            const response = await fetch('/messenger/conversations', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setConversations(data.conversations);
+            }
         } catch (error) {
             console.error('Erreur lors du chargement des conversations:', error);
         }
@@ -88,8 +99,19 @@ export default function UnifiedMessaging({ currentUser, initialConversations = [
     const loadMessages = async (conversation: Conversation) => {
         setLoading(true);
         try {
-            const response = await axios.get(`/api/conversations/${conversation.id}/messages`);
-            setMessages(response.data.messages.reverse()); // Inverser pour affichage chronologique
+            const response = await fetch(`/messenger/conversations/${conversation.id}/messages`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setMessages(data.messages.reverse()); // Inverser pour affichage chronologique
+            }
         } catch (error) {
             console.error('Erreur lors du chargement des messages:', error);
         } finally {
@@ -99,22 +121,37 @@ export default function UnifiedMessaging({ currentUser, initialConversations = [
 
     const sendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (!newMessage.trim() || !selectedConversation || sending) return;
 
         setSending(true);
         try {
-            const response = await axios.post(`/api/conversations/${selectedConversation.id}/messages`, {
-                content: newMessage
+            const response = await fetch(`/messenger/conversations/${selectedConversation.id}/messages`, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    content: newMessage
+                })
             });
 
-            const newMsg = response.data.message;
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            const newMsg = data.message;
             setMessages(prev => [...prev, newMsg]);
             setNewMessage('');
-            
+
             // Mettre à jour la conversation dans la liste
-            setConversations(prev => prev.map(conv => 
-                conv.id === selectedConversation.id 
+            setConversations(prev => prev.map(conv =>
+                conv.id === selectedConversation.id
                     ? { ...conv, last_message: {
                         id: newMsg.id,
                         content: newMsg.content,
@@ -154,12 +191,12 @@ export default function UnifiedMessaging({ currentUser, initialConversations = [
         if (conversation.avatar) {
             return conversation.avatar;
         }
-        
+
         // Avatar par défaut pour les groupes
         if (conversation.is_group) {
             return '/images/group-avatar.png';
         }
-        
+
         return '/images/default-avatar.png';
     };
 
@@ -195,7 +232,7 @@ export default function UnifiedMessaging({ currentUser, initialConversations = [
                                         </div>
                                     )}
                                 </div>
-                                
+
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between">
                                         <h3 className="text-sm font-medium text-gray-900 truncate">
@@ -210,7 +247,7 @@ export default function UnifiedMessaging({ currentUser, initialConversations = [
                                             {formatTime(conversation.last_message_at)}
                                         </span>
                                     </div>
-                                    
+
                                     <div className="flex items-center justify-between mt-1">
                                         <p className="text-sm text-gray-600 truncate">
                                             {conversation.last_message && (
@@ -224,7 +261,7 @@ export default function UnifiedMessaging({ currentUser, initialConversations = [
                                                 </>
                                             )}
                                         </p>
-                                        
+
                                         {conversation.unread_count > 0 && (
                                             <span className="bg-blue-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
                                                 {conversation.unread_count}
@@ -252,13 +289,13 @@ export default function UnifiedMessaging({ currentUser, initialConversations = [
                                     >
                                         <ArrowLeft className="w-5 h-5" />
                                     </button>
-                                    
+
                                     <img
                                         src={getConversationAvatar(selectedConversation)}
                                         alt={selectedConversation.name}
                                         className="w-10 h-10 rounded-full object-cover"
                                     />
-                                    
+
                                     <div>
                                         <h2 className="text-lg font-semibold text-gray-900">
                                             {selectedConversation.name}
@@ -270,7 +307,7 @@ export default function UnifiedMessaging({ currentUser, initialConversations = [
                                         )}
                                     </div>
                                 </div>
-                                
+
                                 <div className="flex items-center space-x-2">
                                     <button className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
                                         <Phone className="w-5 h-5" />
@@ -307,9 +344,9 @@ export default function UnifiedMessaging({ currentUser, initialConversations = [
                                                     {message.user.name}
                                                 </p>
                                             )}
-                                            
+
                                             <p className="text-sm">{message.content}</p>
-                                            
+
                                             <p className={`text-xs mt-1 ${
                                                 message.is_own ? 'text-blue-100' : 'text-gray-500'
                                             }`}>
@@ -332,14 +369,14 @@ export default function UnifiedMessaging({ currentUser, initialConversations = [
                                 >
                                     <Paperclip className="w-5 h-5" />
                                 </button>
-                                
+
                                 <input
                                     type="file"
                                     ref={fileInputRef}
                                     className="hidden"
                                     accept="image/*,video/*,audio/*,.pdf,.doc,.docx"
                                 />
-                                
+
                                 <div className="flex-1 relative">
                                     <input
                                         type="text"
@@ -350,14 +387,14 @@ export default function UnifiedMessaging({ currentUser, initialConversations = [
                                         disabled={sending}
                                     />
                                 </div>
-                                
+
                                 <button
                                     type="button"
                                     className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100"
                                 >
                                     <Smile className="w-5 h-5" />
                                 </button>
-                                
+
                                 <button
                                     type="submit"
                                     disabled={!newMessage.trim() || sending}

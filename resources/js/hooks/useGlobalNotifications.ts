@@ -45,11 +45,20 @@ export function useGlobalNotifications({ currentUser, conversations, enabled = t
     // Fonction pour vérifier les préférences de notification d'une conversation
     const checkNotificationSettings = useCallback(async (conversationId: number): Promise<boolean> => {
         try {
-            const response = await fetch(`/api/conversations/${conversationId}/notification-settings`, {
+            // Vérifier que conversationId est valide
+            if (!conversationId || conversationId === undefined) {
+                console.warn('⚠️ ID de conversation invalide:', conversationId);
+                return true; // Par défaut, activer les notifications
+            }
+
+            // Utiliser une route web au lieu d'API pour éviter les problèmes d'authentification
+            const response = await fetch(`/groups/${conversationId}/notification-settings-check`, {
                 headers: {
                     'Accept': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                }
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin' // Inclure les cookies de session
             });
 
             if (response.ok) {
@@ -80,6 +89,12 @@ export function useGlobalNotifications({ currentUser, conversations, enabled = t
         }
 
         console.log('📨 Nouveau message global reçu:', message);
+
+        // Vérifier que le message a un conversation_id valide
+        if (!message.conversation_id) {
+            console.warn('⚠️ Message sans conversation_id:', message);
+            return;
+        }
 
         // Vérifier les préférences de notification pour cette conversation
         const notificationsEnabled = await checkNotificationSettings(message.conversation_id);

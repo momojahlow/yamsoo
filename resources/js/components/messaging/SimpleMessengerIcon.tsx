@@ -36,8 +36,8 @@ interface SimpleMessengerIconProps {
     className?: string;
 }
 
-export default function SimpleMessengerIcon({ 
-    currentUser, 
+export default function SimpleMessengerIcon({
+    currentUser,
     conversations = [],
     totalUnreadCount = 0,
     className = ''
@@ -64,7 +64,7 @@ export default function SimpleMessengerIcon({
                 const userChannel = window.Echo.private(`App.Models.User.${currentUser.id}`)
                     .notification((notification: any) => {
                         console.log('🔔 Notification reçue:', notification);
-                        
+
                         if (notification.type === 'App\\Notifications\\NewMessageNotification') {
                             handleNewMessage(notification);
                         }
@@ -112,7 +112,7 @@ export default function SimpleMessengerIcon({
 
     const handleNewMessage = (event: any) => {
         const message = event.message || event;
-        
+
         // Ne pas traiter ses propres messages
         if (message.user?.id === currentUser.id) {
             return;
@@ -154,19 +154,19 @@ export default function SimpleMessengerIcon({
             const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
-            
+
             oscillator.connect(gainNode);
             gainNode.connect(audioContext.destination);
-            
+
             oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
             oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
-            
+
             gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-            
+
             oscillator.start(audioContext.currentTime);
             oscillator.stop(audioContext.currentTime + 0.3);
-            
+
             console.log('🔊 Son de notification joué');
         } catch (error) {
             console.error('❌ Erreur son de notification:', error);
@@ -175,7 +175,7 @@ export default function SimpleMessengerIcon({
 
     const handleToggleDropdown = () => {
         setIsDropdownOpen(!isDropdownOpen);
-        
+
         // Actualiser les données quand on ouvre le dropdown
         if (!isDropdownOpen) {
             refreshConversations();
@@ -228,7 +228,7 @@ export default function SimpleMessengerIcon({
                 onClose={handleCloseDropdown}
                 onConversationClick={handleConversationClick}
             />
-            
+
             {/* Debug info en développement */}
             {process.env.NODE_ENV === 'development' && (
                 <div className="absolute top-full left-0 mt-2 p-2 bg-black text-white text-xs rounded shadow-lg z-50 whitespace-nowrap">

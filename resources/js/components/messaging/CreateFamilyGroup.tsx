@@ -36,7 +36,7 @@ export default function CreateFamilyGroup({ isOpen, onClose, onGroupCreated }: C
         try {
             const response = await axios.get('/api/conversations/family-members');
             setFamilyMembers(response.data.family_members);
-            
+
             if (response.data.family_members.length === 0) {
                 setError(response.data.message || 'Aucun membre de famille disponible');
             }
@@ -61,12 +61,12 @@ export default function CreateFamilyGroup({ isOpen, onClose, onGroupCreated }: C
 
     const createGroup = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (!groupName.trim()) {
             setError('Le nom du groupe est requis');
             return;
         }
-        
+
         if (selectedMembers.length === 0) {
             setError('Sélectionnez au moins un membre de famille');
             return;
@@ -74,22 +74,37 @@ export default function CreateFamilyGroup({ isOpen, onClose, onGroupCreated }: C
 
         setCreating(true);
         setError('');
-        
+
         try {
-            const response = await axios.post('/api/conversations/group', {
-                name: groupName,
-                description: groupDescription,
-                participant_ids: selectedMembers.map(m => m.id)
+            const response = await fetch('/messenger/conversations/group', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    name: groupName,
+                    description: groupDescription,
+                    participant_ids: selectedMembers.map(m => m.id)
+                })
             });
 
-            onGroupCreated(response.data.conversation);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            onGroupCreated(data.conversation);
             onClose();
-            
+
             // Reset form
             setGroupName('');
             setGroupDescription('');
             setSelectedMembers([]);
-            
+
         } catch (error: any) {
             console.error('Erreur lors de la création du groupe:', error);
             if (error.response?.data?.error) {
@@ -192,7 +207,7 @@ export default function CreateFamilyGroup({ isOpen, onClose, onGroupCreated }: C
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Sélectionner les membres de famille
                             </label>
-                            
+
                             {loading ? (
                                 <div className="flex justify-center py-4">
                                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500"></div>
@@ -212,8 +227,8 @@ export default function CreateFamilyGroup({ isOpen, onClose, onGroupCreated }: C
                                                 key={member.id}
                                                 onClick={() => toggleMember(member)}
                                                 className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-colors ${
-                                                    isSelected 
-                                                        ? 'bg-orange-50 border-2 border-orange-200' 
+                                                    isSelected
+                                                        ? 'bg-orange-50 border-2 border-orange-200'
                                                         : 'hover:bg-gray-50 border-2 border-transparent'
                                                 }`}
                                             >
@@ -235,7 +250,7 @@ export default function CreateFamilyGroup({ isOpen, onClose, onGroupCreated }: C
                                                         </div>
                                                     )}
                                                 </div>
-                                                
+
                                                 <div className="flex-1">
                                                     <p className="font-medium text-gray-900">{member.name}</p>
                                                     <p className="text-sm text-gray-500">{member.email}</p>

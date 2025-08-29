@@ -4,13 +4,13 @@ namespace App\Events;
 
 use App\Models\Message;
 use App\Models\User;
-use Illuminate\Broadcasting\Channel;
+
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class MessageSent implements ShouldBroadcastNow
 {
@@ -26,6 +26,18 @@ class MessageSent implements ShouldBroadcastNow
     {
         $this->message = $message;
         $this->user = $user;
+
+        // Log pour debug
+        Log::info('🚀 MessageSent Event créé', [
+            'message_id' => $message->id,
+            'conversation_id' => $message->conversation_id,
+            'user_id' => $user->id,
+            'channel' => 'private-conversation.' . $message->conversation_id,
+            'event' => 'message.sent'
+        ]);
+
+        // Log visible dans error_log
+        error_log("🚀 EVENT MESSAGESENT CRÉÉ - Message: {$message->id}, Conversation: {$message->conversation_id}");
     }
 
     /**
@@ -35,8 +47,12 @@ class MessageSent implements ShouldBroadcastNow
      */
     public function broadcastOn(): array
     {
+        $channel = 'conversation.' . $this->message->conversation_id;
+        Log::info('📡 MessageSent BROADCASTING ON', ['channel' => $channel]);
+
+        // Configuration standard Laravel avec canal privé
         return [
-            new PrivateChannel('conversation.' . $this->message->conversation_id)            
+            new PrivateChannel($channel)
         ];
     }
 
@@ -78,4 +94,5 @@ class MessageSent implements ShouldBroadcastNow
             ]
         ];
     }
+
 }

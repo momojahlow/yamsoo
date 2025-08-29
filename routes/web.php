@@ -286,6 +286,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('groups/{conversation}/participants/{user}', [App\Http\Controllers\GroupController::class, 'removeParticipant'])->name('groups.remove-participant');
     Route::patch('groups/{conversation}/participants/{user}', [App\Http\Controllers\GroupController::class, 'updateParticipantRole'])->name('groups.update-participant-role');
     Route::post('groups/{conversation}/leave', [App\Http\Controllers\GroupController::class, 'leave'])->name('groups.leave');
+    Route::patch('groups/{conversation}/notification-settings', [App\Http\Controllers\GroupController::class, 'updateNotificationSettings'])->name('groups.update-notification-settings');
+    Route::get('groups/{conversation}/notification-settings-check', [App\Http\Controllers\GroupController::class, 'getNotificationSettings'])->name('groups.get-notification-settings');
+
+    // Routes web pour la messagerie (au lieu d'API)
+    Route::get('messenger/conversations-summary', [App\Http\Controllers\SimpleMessagingController::class, 'getConversationsSummary'])->name('messenger.conversations-summary');
+    Route::get('messenger/conversations', [App\Http\Controllers\SimpleMessagingController::class, 'getConversations'])->name('messenger.conversations');
+    Route::get('messenger/conversations/{conversation}/messages', [App\Http\Controllers\SimpleMessagingController::class, 'getMessages'])->name('messenger.messages');
+    Route::post('messenger/conversations/{conversation}/messages', [App\Http\Controllers\SimpleMessagingController::class, 'sendMessageWeb'])->name('messenger.send-message');
+    Route::post('messenger/conversations/group', [App\Http\Controllers\SimpleMessagingController::class, 'createGroupWeb'])->name('messenger.create-group');
     Route::post('groups/{conversation}/transfer-ownership', [App\Http\Controllers\GroupController::class, 'transferOwnership'])->name('groups.transfer-ownership');
 
     // Route de test pour diagnostiquer les problèmes de mise à jour
@@ -458,6 +467,123 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'message' => $isParticipant ? 'Utilisateur déjà participant' : 'Utilisateur ajouté au groupe',
             'test_url' => "http://yamsoo.test/test-remove-participant/1/{$user->id}"
         ]);
+    });
+
+    // Route pour tester la configuration Ably
+    Route::get('test-ably', function() {
+        $broadcastDriver = config('broadcasting.default');
+        $ablyKey = config('broadcasting.connections.ably.key');
+
+        return response()->json([
+            'broadcast_driver' => $broadcastDriver,
+            'ably_configured' => !empty($ablyKey),
+            'ably_key_preview' => $ablyKey ? substr($ablyKey, 0, 10) . '...' : null,
+            'env_broadcast_connection' => env('BROADCAST_CONNECTION'),
+            'env_ably_key' => env('ABLY_KEY') ? substr(env('ABLY_KEY'), 0, 10) . '...' : null,
+            'vite_vars' => [
+                'VITE_ABLY_PUBLIC_KEY' => env('VITE_ABLY_PUBLIC_KEY'),
+                'VITE_BROADCAST_CONNECTION' => env('VITE_BROADCAST_CONNECTION')
+            ]
+        ]);
+    });
+
+    // Route pour tester les événements Ably
+    Route::get('test-ably-event', function() {
+        $user = Auth::user();
+
+        // Créer un message de test temporaire
+        $testMessage = new \App\Models\Message([
+            'id' => 999,
+            'content' => 'Message de test Ably - ' . now()->format('H:i:s'),
+            'type' => 'text',
+            'user_id' => $user->id,
+            'conversation_id' => 1,
+            'created_at' => now()
+        ]);
+
+        // Déclencher un événement de test
+        broadcast(new \App\Events\MessageSent($testMessage, $user));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Événement Ably déclenché',
+            'user' => $user->name,
+            'broadcast_driver' => config('broadcasting.default'),
+            'test_message' => $testMessage->content
+        ]);
+    });
+
+    // Page de test pour la connexion temps réel
+    Route::get('test-realtime', function() {
+        return inertia('TestRealtime', [
+            'user' => Auth::user(),
+            'broadcast_config' => [
+                'driver' => config('broadcasting.default'),
+                'ably_key' => config('broadcasting.connections.ably.key') ? 'Configuré' : 'Non configuré'
+            ]
+        ]);
+    });
+
+    // Route pour tester les permissions Ably
+    Route::get('test-ably-permissions', function() {
+        try {
+            $broadcastManager = app('broadcast');
+            $driver = $broadcastManager->driver('ably');
+
+            // Test simple de publication
+            $testData = [
+                'test' => true,
+                'message' => 'Test de permissions Ably',
+                'timestamp' => now()->toISOString()
+            ];
+
+            // Essayer de publier sur un canal de test
+            $driver->broadcast(['test-channel'], 'test-event', $testData);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Publication Ably réussie',
+                'driver' => get_class($driver),
+                'config' => [
+                    'key_preview' => substr(config('broadcasting.connections.ably.key'), 0, 15) . '...',
+                    'default_driver' => config('broadcasting.default')
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'type' => get_class($e),
+                'config' => [
+                    'key_preview' => substr(config('broadcasting.connections.ably.key'), 0, 15) . '...',
+                    'default_driver' => config('broadcasting.default')
+                ]
+            ], 500);
+        }
+    });
+
+    // Route pour tester un message simple
+    Route::get('test-simple-message', function() {
+        try {
+            // Diffuser un message simple sur un canal public
+            broadcast(new \App\Events\MessageSent(
+                \App\Models\Message::first(),
+                auth()->user()
+            ));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Message diffusé',
+                'timestamp' => now()
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'type' => get_class($e)
+            ], 500);
+        }
     });
 
     // Routes pour les notifications

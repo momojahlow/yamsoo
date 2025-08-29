@@ -1,34 +1,43 @@
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 
-// Configuration globale de Pusher pour Reverb
-window.Pusher = Pusher;
+console.log('🚀 Initialisation Laravel Echo avec Pusher...');
 
-// Configuration et initialisation d'Echo
-window.Echo = new Echo({
-    broadcaster: 'reverb',
-    key: import.meta.env.VITE_REVERB_APP_KEY,
-    wsHost: import.meta.env.VITE_REVERB_HOST,
-    wsPort: import.meta.env.VITE_REVERB_PORT ?? 4010,
-    wssPort: import.meta.env.VITE_REVERB_PORT ?? 4010,
-    forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'http') === 'https',
-    enabledTransports: ['ws', 'wss'],
-    authEndpoint: '/broadcasting/auth',
-    auth: {
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-            'Accept': 'application/json',
-        },
-    },
+// Vérifier les variables d'environnement
+const broadcastDriver = import.meta.env.VITE_BROADCAST_CONNECTION;
+
+console.log('🔧 Configuration:', {
+    driver: broadcastDriver,
+    pusher_key: import.meta.env.VITE_PUSHER_APP_KEY ? '✅ Configuré' : '❌ Manquant',
+    pusher_cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
 });
 
-// Debug pour vérifier la configuration
-console.log('🔊 Laravel Echo initialisé avec Reverb');
-console.log('📡 Configuration:', {
-    key: import.meta.env.VITE_REVERB_APP_KEY,
-    host: import.meta.env.VITE_REVERB_HOST,
-    port: import.meta.env.VITE_REVERB_PORT,
-    scheme: import.meta.env.VITE_REVERB_SCHEME,
-});
+try {
+    if (broadcastDriver === 'pusher') {
+        console.log('📡 Configuration Pusher...');
 
-export default window.Echo;
+        if (!import.meta.env.VITE_PUSHER_APP_KEY) {
+            throw new Error('VITE_PUSHER_APP_KEY manquant pour Pusher');
+        }
+
+        // Exposer Pusher globalement
+        window.Pusher = Pusher;
+
+        // Configuration SIMPLE selon la documentation Laravel officielle
+        window.Echo = new Echo({
+            broadcaster: 'pusher',
+            key: import.meta.env.VITE_PUSHER_APP_KEY,
+            cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
+            forceTLS: true
+        });
+
+        console.log('✅ Echo configuré avec Pusher');
+        console.log('🔑 Clé Pusher:', import.meta.env.VITE_PUSHER_APP_KEY);
+        console.log('🌍 Cluster:', import.meta.env.VITE_PUSHER_APP_CLUSTER);
+
+    } else {
+        console.log('⚠️ Driver de diffusion non supporté:', broadcastDriver);
+    }
+} catch (error) {
+    console.error('🚨 ERREUR CRITIQUE lors de l\'initialisation d\'Echo:', error);
+}

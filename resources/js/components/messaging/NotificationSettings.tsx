@@ -22,11 +22,11 @@ interface NotificationSettingsProps {
     onClose?: () => void;
 }
 
-export default function NotificationSettings({ 
-    conversation, 
-    user, 
-    notificationsEnabled: initialNotificationsEnabled, 
-    onClose 
+export default function NotificationSettings({
+    conversation,
+    user,
+    notificationsEnabled: initialNotificationsEnabled,
+    onClose
 }: NotificationSettingsProps) {
     const [notificationsEnabled, setNotificationsEnabled] = useState(initialNotificationsEnabled);
     const [isUpdating, setIsUpdating] = useState(false);
@@ -42,7 +42,7 @@ export default function NotificationSettings({
         setIsUpdating(true);
 
         try {
-            router.patch(`/conversations/${conversation.id}/notifications`, {
+            router.patch(`/groups/${conversation.id}/notification-settings`, {
                 notifications_enabled: !notificationsEnabled
             }, {
                 onSuccess: () => {
@@ -113,8 +113,8 @@ export default function NotificationSettings({
                         <div>
                             <h4 className="font-medium text-gray-900">Notifications sonores</h4>
                             <p className="text-sm text-gray-500">
-                                {notificationsEnabled 
-                                    ? 'Son activé pour les nouveaux messages' 
+                                {notificationsEnabled
+                                    ? 'Son activé pour les nouveaux messages'
                                     : 'Son désactivé pour cette conversation'
                                 }
                             </p>
@@ -160,8 +160,8 @@ export default function NotificationSettings({
                 {/* Informations */}
                 <div className="p-4 bg-blue-50 rounded-lg">
                     <p className="text-sm text-blue-700">
-                        💡 <strong>Astuce :</strong> Les notifications sonores ne sont jouées que pour les messages reçus, 
-                        pas pour vos propres messages. Le son peut être bloqué par votre navigateur si vous n'avez pas 
+                        💡 <strong>Astuce :</strong> Les notifications sonores ne sont jouées que pour les messages reçus,
+                        pas pour vos propres messages. Le son peut être bloqué par votre navigateur si vous n'avez pas
                         encore interagi avec la page.
                     </p>
                 </div>

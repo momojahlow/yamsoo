@@ -56,11 +56,13 @@ export function useMessengerState(currentUser: User) {
 
         try {
             setError(null);
-            const response = await fetch('/api/messenger/conversations-summary', {
+            const response = await fetch('/messenger/conversations-summary', {
                 headers: {
                     'Accept': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                }
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin' // Inclure les cookies de session
             });
 
             if (!response.ok) {
@@ -68,10 +70,10 @@ export function useMessengerState(currentUser: User) {
             }
 
             const data: MessengerData = await response.json();
-            
+
             setConversations(data.conversations);
             setTotalUnreadCount(data.total_unread_count);
-            
+
             console.log('📨 Conversations mises à jour:', data.conversations.length, 'conversations,', data.total_unread_count, 'messages non lus');
         } catch (err) {
             console.error('❌ Erreur lors de la récupération des conversations:', err);
@@ -84,7 +86,7 @@ export function useMessengerState(currentUser: User) {
     // Gérer les nouveaux messages reçus via Echo
     const handleNewMessage = useCallback((event: any) => {
         const message = event.message;
-        
+
         // Ne pas traiter ses propres messages
         if (message.user.id === currentUser.id) {
             return;
@@ -149,13 +151,13 @@ export function useMessengerState(currentUser: User) {
         // S'abonner aux notifications globales via Echo
         if (window.Echo && !isSubscribedRef.current) {
             console.log('🔊 Abonnement aux notifications globales Messenger');
-            
+
             try {
                 // S'abonner au canal privé de l'utilisateur pour recevoir toutes les notifications
                 const userChannel = window.Echo.private(`App.Models.User.${currentUser.id}`)
                     .notification((notification: any) => {
                         console.log('🔔 Notification reçue:', notification);
-                        
+
                         // Si c'est une notification de nouveau message
                         if (notification.type === 'App\\Notifications\\NewMessage') {
                             handleNewMessage({ message: notification.message });

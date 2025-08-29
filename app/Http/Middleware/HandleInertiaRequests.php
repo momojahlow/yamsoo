@@ -20,6 +20,38 @@ class HandleInertiaRequests extends Middleware
     protected $rootView = 'app';
 
     /**
+     * Handle the incoming request.
+     */
+    public function handle(Request $request, \Closure $next)
+    {
+        // Exclure les fichiers statiques du traitement Inertia
+        if ($this->isStaticFile($request)) {
+            return $next($request);
+        }
+
+        return parent::handle($request, $next);
+    }
+
+    /**
+     * Vérifier si la requête concerne un fichier statique
+     */
+    private function isStaticFile(Request $request): bool
+    {
+        $path = $request->path();
+
+        // Liste des extensions de fichiers statiques
+        $staticExtensions = ['ico', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'css', 'js', 'woff', 'woff2', 'ttf', 'eot', 'mp3', 'wav'];
+
+        foreach ($staticExtensions as $ext) {
+            if (str_ends_with($path, '.' . $ext)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Determines the current asset version.
      *
      * @see https://inertiajs.com/asset-versioning

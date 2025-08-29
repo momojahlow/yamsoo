@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef, ReactNode } from 'react';
 
 interface User {
     id: number;
@@ -84,8 +84,8 @@ function messengerReducer(state: MessengerState, action: MessengerAction): Messe
                             user_name: message.user.name,
                             is_own: message.user.id === message.currentUserId
                         },
-                        unread_count: message.user.id !== message.currentUserId 
-                            ? conv.unread_count + 1 
+                        unread_count: message.user.id !== message.currentUserId
+                            ? conv.unread_count + 1
                             : conv.unread_count
                     };
                 }
@@ -159,11 +159,13 @@ export function MessengerProvider({ children, currentUser }: MessengerProviderPr
         dispatch({ type: 'SET_LOADING', payload: true });
 
         try {
-            const response = await fetch('/api/messenger/conversations-summary', {
+            const response = await fetch('/messenger/conversations-summary', {
                 headers: {
                     'Accept': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                }
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin' // Inclure les cookies de session
             });
 
             if (!response.ok) {
@@ -172,7 +174,7 @@ export function MessengerProvider({ children, currentUser }: MessengerProviderPr
 
             const data = await response.json();
             dispatch({ type: 'SET_CONVERSATIONS', payload: data.conversations });
-            
+
             console.log('📨 Conversations Messenger mises à jour:', data.conversations.length);
         } catch (error) {
             console.error('❌ Erreur fetchConversations:', error);
@@ -185,16 +187,16 @@ export function MessengerProvider({ children, currentUser }: MessengerProviderPr
         dispatch({ type: 'MARK_AS_READ', payload: conversationId });
     };
 
-    // Ajouter un nouveau message
-    const addMessage = (conversationId: number, message: any, currentUserId: number) => {
-        dispatch({ 
-            type: 'ADD_MESSAGE', 
-            payload: { 
-                conversationId, 
-                message: { ...message, currentUserId } 
-            } 
+    // Ajouter un nouveau message (stable avec useCallback)
+    const addMessage = useCallback((conversationId: number, message: any, currentUserId: number) => {
+        dispatch({
+            type: 'ADD_MESSAGE',
+            payload: {
+                conversationId,
+                message: { ...message, currentUserId }
+            }
         });
-    };
+    }, []); // Pas de dépendances - fonction stable
 
     // Initialisation
     useEffect(() => {
@@ -206,39 +208,86 @@ export function MessengerProvider({ children, currentUser }: MessengerProviderPr
         return () => clearInterval(interval);
     }, [currentUser.id]);
 
-    // Écouter les nouveaux messages via Echo
+
+
+    // Référence pour tracker les canaux actifs
+    const activeChannels = useRef<Map<number, any>>(new Map());
+
+    // Écouter les nouveaux messages via Echo avec Pusher
     useEffect(() => {
-        if (window.Echo && state.conversations.length > 0) {
-            console.log('🔊 Abonnement Echo pour', state.conversations.length, 'conversations');
+        if (!window.Echo || !state.conversations.length) return;
 
-            const channels: any[] = [];
+        console.log('🔊 Mise à jour des abonnements Echo');
+        const newChannels = new Map();
 
-            state.conversations.forEach(conversation => {
+        // Abonnement aux canaux privés pour chaque conversation
+        state.conversations.forEach(conversation => {
+            const conversationId = conversation.id;
+
+            // Si déjà abonné, on conserve le canal
+            if (activeChannels.current.has(conversationId)) {
+                const existingChannel = activeChannels.current.get(conversationId);
+                newChannels.set(conversationId, existingChannel);
+                console.log(`✓ Canal conversation.${conversationId} déjà abonné`);
+                return;
+            }
+
+            // Nouvel abonnement
+            try {
+                console.log(`🔗 Nouvel abonnement: conversation.${conversationId}`);
+
+                const channel = window.Echo.private(`conversation.${conversationId}`)
+                    .listen('.message.sent', (event: any) => {
+                        console.log('📨 Message reçu', conversationId, event);
+                        addMessage(conversationId, event.message, currentUser.id);
+                    });
+
+                newChannels.set(conversationId, channel);
+                console.log(`✅ Abonné: conversation.${conversationId}`);
+            } catch (error) {
+                console.error(`❌ Erreur abonnement ${conversationId}:`, error);
+            }
+        });
+
+        // Nettoyer seulement les canaux qui ne sont plus dans les conversations
+        activeChannels.current.forEach((channel, conversationId) => {
+            if (!newChannels.has(conversationId)) {
                 try {
-                    const channel = window.Echo.private(`conversation.${conversation.id}`)
-                        .listen('.message.sent', (event: any) => {
-                            console.log('📨 Message Echo reçu pour conversation', conversation.id);
-                            addMessage(conversation.id, event.message, currentUser.id);
-                        });
-
-                    channels.push(channel);
+                    console.log(`🧹 Désabonnement: conversation.${conversationId}`);
+                    channel.stopListening('.message.sent');
                 } catch (error) {
-                    console.error(`❌ Erreur abonnement conversation ${conversation.id}:`, error);
+                    console.error(`❌ Erreur désabonnement ${conversationId}:`, error);
+                }
+            }
+        });
+
+        // Mettre à jour la référence
+        activeChannels.current = newChannels;
+
+        // Gestion de la reconnexion Pusher
+        const handlePusherConnected = () => {
+            console.log('🔄 Pusher reconnecté - vérification des abonnements');
+            // Réabonner tous les canaux actifs en cas de reconnexion
+            activeChannels.current.forEach((channel, conversationId) => {
+                try {
+                    channel.stopListening('.message.sent');
+                    channel.listen('.message.sent', (event: any) => {
+                        console.log('📨 Message reçu après reconnexion', conversationId, event);
+                        addMessage(conversationId, event.message, currentUser.id);
+                    });
+                } catch (error) {
+                    console.error(`❌ Erreur réabonnement ${conversationId}:`, error);
                 }
             });
+        };
 
-            return () => {
-                console.log('🔇 Nettoyage abonnements Echo Messenger');
-                channels.forEach((_, index) => {
-                    try {
-                        window.Echo.leave(`conversation.${state.conversations[index]?.id}`);
-                    } catch (error) {
-                        console.error('❌ Erreur nettoyage Echo:', error);
-                    }
-                });
-            };
-        }
-    }, [state.conversations, currentUser.id]);
+        window.Echo.connector.pusher.connection.bind('connected', handlePusherConnected);
+
+        return () => {
+            // Détacher le listener de connexion
+            window.Echo.connector.pusher.connection.unbind('connected', handlePusherConnected);
+        };
+    }, [state.conversations, addMessage, currentUser.id]);
 
     const contextValue: MessengerContextType = {
         state,

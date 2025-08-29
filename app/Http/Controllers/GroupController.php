@@ -369,6 +369,69 @@ class GroupController extends Controller
         return redirect('/groups')->with('success', "Vous avez quitté le groupe \"{$conversation->name}\"");
     }
 
+    /**
+     * Mettre à jour les paramètres de notification d'un participant
+     */
+    public function updateNotificationSettings(Request $request, Conversation $conversation)
+    {
+        // Vérifier que c'est un groupe
+        if ($conversation->type !== 'group') {
+            abort(404);
+        }
+
+        $user = Auth::user();
+
+        // Vérifier que l'utilisateur est participant du groupe
+        $participant = $conversation->participants()
+            ->where('user_id', $user->id)
+            ->where('status', 'active')
+            ->whereNull('left_at')
+            ->first();
+
+        if (!$participant) {
+            abort(403, 'Vous ne faites pas partie de ce groupe');
+        }
+
+        $request->validate([
+            'notifications_enabled' => 'required|boolean'
+        ]);
+
+        // Mettre à jour les paramètres de notification
+        $conversation->participants()->updateExistingPivot($user->id, [
+            'notifications_enabled' => $request->notifications_enabled
+        ]);
+
+        return back()->with('success', 'Paramètres de notification mis à jour');
+    }
+
+    /**
+     * Récupérer les paramètres de notification d'un participant
+     */
+    public function getNotificationSettings(Conversation $conversation)
+    {
+        // Vérifier que c'est un groupe
+        if ($conversation->type !== 'group') {
+            abort(404);
+        }
+
+        $user = Auth::user();
+
+        // Vérifier que l'utilisateur est participant du groupe
+        $participant = $conversation->participants()
+            ->where('user_id', $user->id)
+            ->where('status', 'active')
+            ->whereNull('left_at')
+            ->first();
+
+        if (!$participant) {
+            abort(403, 'Vous ne faites pas partie de ce groupe');
+        }
+
+        return response()->json([
+            'notifications_enabled' => $participant->pivot->notifications_enabled ?? true
+        ]);
+    }
+
 
 
     /**

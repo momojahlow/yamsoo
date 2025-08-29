@@ -171,7 +171,13 @@ class SimpleMessagingController extends Controller
             'content' => $message->content
         ]);
 
+        // Log avant broadcast
+        error_log("🚀 AVANT BROADCAST - Message ID: {$message->id}, Conversation: {$conversation->id}");
+
         broadcast(new MessageSent($message, $user));
+
+        // Log après broadcast
+        error_log("✅ APRÈS BROADCAST - Message ID: {$message->id}");
 
         // Envoyer des notifications aux autres participants
         $otherParticipants = $conversation->participants()
@@ -524,6 +530,212 @@ class SimpleMessagingController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'avatar' => $user->profile?->avatar_url ?? null
+            ]
+        ]);
+    }
+
+    /**
+     * Récupérer toutes les conversations pour UnifiedMessaging
+     */
+    public function getConversations()
+    {
+        $user = Auth::user();
+
+        $conversations = Conversation::whereHas('participants', function ($query) use ($user) {
+                $query->where('user_id', $user->id)
+                      ->where('status', 'active')
+                      ->whereNull('left_at');
+            })
+            ->with([
+                'participants' => function ($query) {
+                    $query->where('status', 'active')
+                          ->whereNull('left_at');
+                },
+                'lastMessage'
+            ])
+            ->orderBy('last_activity_at', 'desc')
+            ->get()
+            ->map(function ($conversation) use ($user) {
+                return [
+                    'id' => $conversation->id,
+                    'name' => $conversation->name,
+                    'type' => $conversation->type,
+                    'participants' => $conversation->participants,
+                    'last_message' => $conversation->lastMessage ? [
+                        'id' => $conversation->lastMessage->id,
+                        'content' => $conversation->lastMessage->content,
+                        'created_at' => $conversation->lastMessage->created_at,
+                        'user_name' => $conversation->lastMessage->user->name ?? 'Utilisateur supprimé'
+                    ] : null
+                ];
+            });
+
+        return response()->json([
+            'conversations' => $conversations
+        ]);
+    }
+
+    /**
+     * Récupérer les messages d'une conversation pour UnifiedMessaging
+     */
+    public function getMessages(Conversation $conversation)
+    {
+        $user = Auth::user();
+
+        // Vérifier que l'utilisateur fait partie de la conversation
+        $participant = $conversation->participants()
+            ->where('user_id', $user->id)
+            ->where('status', 'active')
+            ->whereNull('left_at')
+            ->first();
+
+        if (!$participant) {
+            abort(403, 'Vous n\'avez pas accès à cette conversation');
+        }
+
+        $messages = $conversation->messages()
+            ->with('user:id,name')
+            ->orderBy('created_at', 'asc')
+            ->get()
+            ->map(function ($message) use ($user) {
+                return [
+                    'id' => $message->id,
+                    'content' => $message->content,
+                    'type' => $message->type,
+                    'created_at' => $message->created_at,
+                    'user' => [
+                        'id' => $message->user->id,
+                        'name' => $message->user->name
+                    ],
+                    'is_own' => $message->user_id === $user->id
+                ];
+            });
+
+        return response()->json([
+            'messages' => $messages
+        ]);
+    }
+
+    /**
+     * Envoyer un message via route web (pour UnifiedMessaging)
+     */
+    public function sendMessageWeb(Request $request, Conversation $conversation)
+    {
+        $request->validate([
+            'content' => 'required|string|max:1000',
+        ]);
+
+        $user = Auth::user();
+
+        // Vérifier que l'utilisateur fait partie de la conversation
+        $participant = $conversation->participants()
+            ->where('user_id', $user->id)
+            ->where('status', 'active')
+            ->whereNull('left_at')
+            ->first();
+
+        if (!$participant) {
+            abort(403, 'Vous n\'avez pas accès à cette conversation');
+        }
+
+        // Créer le message
+        $message = Message::create([
+            'conversation_id' => $conversation->id,
+            'user_id' => $user->id,
+            'content' => $request->content,
+            'type' => 'text',
+        ]);
+
+        // Charger les relations nécessaires
+        $message->load('user:id,name');
+
+        // Mettre à jour la conversation
+        $conversation->update(['last_activity_at' => now()]);
+
+        return response()->json([
+            'message' => [
+                'id' => $message->id,
+                'content' => $message->content,
+                'type' => $message->type,
+                'created_at' => $message->created_at,
+                'user' => [
+                    'id' => $message->user->id,
+                    'name' => $message->user->name
+                ],
+                'is_own' => true
+            ]
+        ]);
+    }
+
+    /**
+     * Créer un groupe via route web (pour CreateFamilyGroup)
+     */
+    public function createGroupWeb(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
+            'participant_ids' => 'required|array|min:1',
+            'participant_ids.*' => 'exists:users,id'
+        ]);
+
+        $user = Auth::user();
+
+        // Créer la conversation de groupe
+        $conversation = Conversation::create([
+            'name' => $request->name,
+            'description' => $request->description,
+            'type' => 'group',
+            'visibility' => 'private',
+            'max_participants' => 50,
+            'created_by' => $user->id,
+            'is_active' => true,
+            'last_activity_at' => now()
+        ]);
+
+        // Ajouter le créateur comme propriétaire
+        $conversation->participants()->attach($user->id, [
+            'role' => 'owner',
+            'status' => 'active',
+            'notifications_enabled' => true,
+            'joined_at' => now()
+        ]);
+
+        // Ajouter les autres participants comme membres
+        foreach ($request->participant_ids as $participantId) {
+            if ($participantId != $user->id) {
+                $conversation->participants()->attach($participantId, [
+                    'role' => 'member',
+                    'status' => 'active',
+                    'notifications_enabled' => true,
+                    'joined_at' => now()
+                ]);
+            }
+        }
+
+        // Message de création
+        Message::create([
+            'conversation_id' => $conversation->id,
+            'user_id' => $user->id,
+            'content' => "Groupe \"{$conversation->name}\" créé par {$user->name}",
+            'type' => 'system',
+        ]);
+
+        // Charger les relations pour la réponse
+        $conversation->load([
+            'participants' => function ($query) {
+                $query->where('status', 'active')
+                      ->whereNull('left_at');
+            }
+        ]);
+
+        return response()->json([
+            'conversation' => [
+                'id' => $conversation->id,
+                'name' => $conversation->name,
+                'description' => $conversation->description,
+                'type' => $conversation->type,
+                'participants' => $conversation->participants
             ]
         ]);
     }
