@@ -186,11 +186,14 @@ export default function ChatArea({ conversation, messages = [], user, onBack, on
 
         if (!data.message.trim() || processing) return;
 
-
+        // Sauvegarder le message avant envoi
+        const messageToSend = data.message;
 
         post('/messagerie/send', {
             onSuccess: () => {
-                reset('message');
+                // Réinitialisation immédiate et forcée
+                setData('message', '');
+                reset();
                 setSelectedFile(null);
                 setReplyTo(null);
 
@@ -198,8 +201,9 @@ export default function ChatArea({ conversation, messages = [], user, onBack, on
                     fileInputRef.current.value = '';
                 }
 
-                // Ajuster la hauteur du textarea
+                // Forcer la valeur vide du textarea
                 if (textareaRef.current) {
+                    textareaRef.current.value = '';
                     textareaRef.current.style.height = '48px';
                 }
 
