@@ -35,6 +35,14 @@ try {
         console.log('🔑 Clé Pusher:', import.meta.env.VITE_PUSHER_APP_KEY);
         console.log('🌍 Cluster:', import.meta.env.VITE_PUSHER_APP_CLUSTER);
 
+        // Test simple pour vérifier que Pusher fonctionne
+        window.Echo.channel('test-channel')
+            .listen('.test-event', (event) => {
+                console.log('🎯 TEST EVENT REÇU:', event);
+            });
+
+        console.log('🧪 Canal de test créé - tapez dans la console: window.Echo.channel("test-channel").whisper("test-event", {test: "data"})');
+
     } else {
         console.log('⚠️ Driver de diffusion non supporté:', broadcastDriver);
     }

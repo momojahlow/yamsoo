@@ -215,7 +215,21 @@ export function MessengerProvider({ children, currentUser }: MessengerProviderPr
 
     // Écouter les nouveaux messages via Echo avec Pusher
     useEffect(() => {
-        if (!window.Echo || !state.conversations.length) return;
+        console.log('🔄 useEffect Echo déclenché', {
+            hasEcho: !!window.Echo,
+            conversationsCount: state.conversations.length,
+            conversations: state.conversations.map(c => c.id)
+        });
+
+        if (!window.Echo) {
+            console.log('❌ window.Echo non disponible');
+            return;
+        }
+
+        if (!state.conversations.length) {
+            console.log('❌ Aucune conversation disponible');
+            return;
+        }
 
         console.log('🔊 Mise à jour des abonnements Echo');
         const newChannels = new Map();

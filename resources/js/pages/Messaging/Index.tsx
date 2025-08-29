@@ -78,6 +78,57 @@ export default function Messaging({ conversations = [], selectedConversation: in
         activeConversationId: selectedConversation?.id || null // Éviter les notifications pour la conversation active
     });
 
+    // Abonnements Echo pour les messages en temps réel
+    useEffect(() => {
+        console.log('🔄 Echo useEffect dans Messaging/Index', {
+            hasEcho: !!window.Echo,
+            conversationsCount: conversations.length,
+            conversations: conversations.map(c => c.id)
+        });
+
+        if (!window.Echo || !conversations.length) {
+            console.log('❌ Echo ou conversations manquants');
+            return;
+        }
+
+        console.log('🔊 Abonnement Echo dans Messaging/Index');
+        const channels: any[] = [];
+
+        conversations.forEach(conversation => {
+            try {
+                console.log(`🔗 Abonnement: conversation.${conversation.id}`);
+
+                const channel = window.Echo.private(`conversation.${conversation.id}`)
+                    .listen('.message.sent', (event: any) => {
+                        console.log('📨 Message reçu dans Index:', conversation.id, event);
+
+                        // Ajouter le message à la liste actuelle
+                        if (selectedConversation?.id === conversation.id) {
+                            setCurrentMessages(prev => [...prev, event.message]);
+                        }
+                    });
+
+                channels.push(channel);
+                console.log(`✅ Abonné: conversation.${conversation.id}`);
+            } catch (error) {
+                console.error(`❌ Erreur abonnement ${conversation.id}:`, error);
+            }
+        });
+
+        return () => {
+            console.log('🧹 Nettoyage abonnements Index');
+            channels.forEach(channel => {
+                try {
+                    if (channel && typeof channel.stopListening === 'function') {
+                        channel.stopListening();
+                    }
+                } catch (error) {
+                    console.error('❌ Erreur nettoyage:', error);
+                }
+            });
+        };
+    }, [conversations, selectedConversation?.id]);
+
     useEffect(() => {
         const checkMobile = () => {
             setIsMobile(window.innerWidth < 768);
